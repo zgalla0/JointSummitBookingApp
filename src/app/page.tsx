@@ -1,4 +1,4 @@
-import { config, companyPaidNights } from "@/lib/config";
+import { config, extendedRange, defaultCompanyPaidNights } from "@/lib/config";
 import { toISODate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import BookingForm from "@/components/BookingForm";
@@ -13,20 +13,19 @@ export default async function Home() {
   const formConfig = {
     bookableStart: toISODate(config.bookableStart),
     bookableEnd: toISODate(config.bookableEnd),
+    extendedStart: toISODate(extendedRange.start),
+    extendedEnd: toISODate(extendedRange.end),
     discountStart: toISODate(config.discountStart),
     discountEnd: toISODate(config.discountEnd),
     discountRateUsd: config.discountRateUsd,
     happyHourDate: toISODate(config.happyHourDate),
     allHandsDate: toISODate(config.allHandsDate),
     dinnerDate: toISODate(config.dinnerDate),
-    companyPaidAlways: companyPaidNights(false).map(toISODate),
-    companyPaidSelect: companyPaidNights(true)
-      .map(toISODate)
-      .filter((d) => !companyPaidNights(false).map(toISODate).includes(d)),
+    defaultCompanyPaidNights: defaultCompanyPaidNights().map(toISODate),
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
+    <main className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
       <BookingForm
         formConfig={formConfig}
         staticContent={staticContent.map((s) => ({ key: s.key, title: s.title, body: s.body }))}

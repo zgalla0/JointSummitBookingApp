@@ -1,4 +1,4 @@
-import { companyPaidNights, isWithinDiscountWindow } from "./config";
+import { isWithinDiscountWindow } from "./config";
 
 export type NightPayer = "company" | "self";
 
@@ -14,20 +14,19 @@ function sameDay(a: Date, b: Date): boolean {
 
 /**
  * Expands a [stayStart, stayEnd) date range into one entry per night, tagging
- * each as company-paid or self-paid based on the select-eligible checkbox,
- * and flagging nights that fall outside the $105 discount window.
+ * each as company-paid (per the attendee's own per-night toggle, stored on
+ * the booking) or self-paid, and flagging nights outside the discount window.
  */
 export function nightsInRange(
   stayStart: Date,
   stayEnd: Date,
-  selectEligible: boolean,
+  companyPaidNights: Date[],
 ): NightBreakdown[] {
-  const paidNights = companyPaidNights(selectEligible);
   const nights: NightBreakdown[] = [];
   const cursor = new Date(stayStart);
   while (cursor < stayEnd) {
     const date = new Date(cursor);
-    const payer: NightPayer = paidNights.some((n) => sameDay(n, date)) ? "company" : "self";
+    const payer: NightPayer = companyPaidNights.some((n) => sameDay(n, date)) ? "company" : "self";
     nights.push({ date, payer, inDiscountWindow: isWithinDiscountWindow(date) });
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }

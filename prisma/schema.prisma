@@ -34,25 +34,33 @@ model Booking {
   hotelEmail      String // email used for the hotel booking
   detailsEmail    String // email for transportation / schedule / other details
 
-  // Event attendance
+  // Event attendance, each with an optional plus-one joining that event
+  // (Dinner has no plus-one option, capacity is fixed)
   attendingHappyHour Boolean @default(false)
+  happyHourPlusOne   Boolean @default(false)
   attendingAllHands  Boolean @default(false)
+  allHandsPlusOne    Boolean @default(false)
   attendingDinner    Boolean @default(false)
 
-  // Stay dates (within the configured bookable range)
+  // Stay dates: stayStart is the first selected night, stayEnd is the
+  // morning-after checkout date (one day after the last selected night)
   stayStart DateTime
   stayEnd   DateTime
 
-  // Self-attested eligibility for company-paid Tue/Wed nights
-  selectEligible Boolean @default(false)
+  // Which Tue-Fri nights within [stayStart, stayEnd) the attendee toggled to
+  // "company pays", as a JSON-encoded string[] of ISO dates (e.g.
+  // ["2026-01-22", "2026-01-23"]). Nights not in this list are self-paid.
+  // Only Tue-Fri nights are ever toggleable; all others are always self-paid.
+  companyPaidNights String? // JSON-encoded string[] of ISO dates
 
   // Extra self-paid nights outside the standard block, stored as an array of
   // ISO date strings (e.g. ["2026-01-13", "2026-01-30"])
   needsExtraNights Boolean @default(false)
   extraNights      String? // JSON-encoded string[] of ISO dates, null/empty if none
 
-  // Dietary / allergies
-  dietaryRestrictions String?
+  // Dietary / allergies: multi-select checklist plus a free-text "Other"
+  dietaryOptions String? // JSON-encoded string[] of option keys
+  dietaryOther   String? // free text, used only when "Other" is selected
 
   // Flight details
   flightAirline    String?

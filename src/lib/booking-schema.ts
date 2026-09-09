@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DIETARY_OPTION_KEYS } from "./dietary-options";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
 
@@ -24,20 +25,22 @@ export const bookingFormSchema = z
     detailsEmail: z.string().trim().email("Enter a valid email"),
 
     attendingHappyHour: z.boolean(),
+    happyHourPlusOne: z.boolean(),
     attendingAllHands: z.boolean(),
+    allHandsPlusOne: z.boolean(),
     attendingDinner: z.boolean(),
 
     stayStart: isoDate,
     stayEnd: isoDate,
-
-    selectEligible: z.boolean(),
+    companyPaidNights: z.array(isoDate).max(31),
 
     needsExtraNights: z.boolean(),
     extraNights: z.array(isoDate).max(10),
 
     guests: z.array(guestSchema).max(3, "Up to 3 additional guests"),
 
-    dietaryRestrictions: z.string().trim().max(2000),
+    dietaryOptions: z.array(z.enum(DIETARY_OPTION_KEYS)).max(DIETARY_OPTION_KEYS.length),
+    dietaryOther: z.string().trim().max(500),
 
     flightAirline: z.string().trim().max(200),
     flightNumber: z.string().trim().max(50),

@@ -3,26 +3,34 @@
 import { useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DayPicker, type DateRange } from "react-day-picker";
-import "react-day-picker/style.css";
 
-import { bookingFormSchema, identitySchema, type BookingFormInput, type IdentityInput } from "@/lib/booking-schema";
-import { formatShortDate, formatDateRangeShort, isoToLocalDate, localDateToIso } from "@/lib/format";
-import { PROCESS_NOTICE_FULL, PROCESS_NOTICE_SHORT } from "@/lib/copy";
+import {
+  bookingFormSchema,
+  identitySchema,
+  type BookingFormInput,
+  type IdentityInput,
+} from "@/lib/booking-schema";
+import { formatShortDate } from "@/lib/format";
+import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
+import Card from "./ui/Card";
+import Button from "./ui/Button";
+import Checkbox from "./ui/Checkbox";
 import GuestFields from "./GuestFields";
-import NightBreakdownTable from "./NightBreakdownTable";
+import DietaryChecklist from "./DietaryChecklist";
+import StayDatesPicker from "./StayDatesPicker";
 
 export type FormConfig = {
   bookableStart: string;
   bookableEnd: string;
+  extendedStart: string;
+  extendedEnd: string;
   discountStart: string;
   discountEnd: string;
   discountRateUsd: number;
   happyHourDate: string;
   allHandsDate: string;
   dinnerDate: string;
-  companyPaidAlways: string[];
-  companyPaidSelect: string[];
+  defaultCompanyPaidNights: string[];
 };
 
 type StaticContentItem = { key: string; title: string | null; body: string | null };
@@ -36,15 +44,18 @@ const emptyDefaults: BookingFormInput = {
   hotelEmail: "",
   detailsEmail: "",
   attendingHappyHour: false,
+  happyHourPlusOne: false,
   attendingAllHands: false,
+  allHandsPlusOne: false,
   attendingDinner: false,
   stayStart: "",
   stayEnd: "",
-  selectEligible: false,
+  companyPaidNights: [],
   needsExtraNights: false,
   extraNights: [],
   guests: [],
-  dietaryRestrictions: "",
+  dietaryOptions: [],
+  dietaryOther: "",
   flightAirline: "",
   flightNumber: "",
   flightArrival: "",
@@ -78,10 +89,14 @@ export default function BookingForm({
 
   const stayStart = mainForm.watch("stayStart");
   const stayEnd = mainForm.watch("stayEnd");
-  const selectEligible = mainForm.watch("selectEligible");
+  const companyPaidNights = mainForm.watch("companyPaidNights");
   const needsExtraNights = mainForm.watch("needsExtraNights");
   const extraNights = mainForm.watch("extraNights");
   const hotelEmail = mainForm.watch("hotelEmail");
+  const attendingHappyHour = mainForm.watch("attendingHappyHour");
+  const attendingAllHands = mainForm.watch("attendingAllHands");
+  const dietaryOptions = mainForm.watch("dietaryOptions");
+  const dietaryOther = mainForm.watch("dietaryOther");
 
   async function onIdentitySubmit(values: IdentityInput) {
     setChecking(true);
@@ -132,239 +147,198 @@ export default function BookingForm({
     }
   }
 
-  const range: DateRange | undefined = stayStart
-    ? { from: isoToLocalDate(stayStart), to: stayEnd ? isoToLocalDate(stayEnd) : undefined }
-    : undefined;
-
-  const extraNightDates = (extraNights ?? []).map(isoToLocalDate);
-
-  const bookableStartDate = isoToLocalDate(formConfig.bookableStart);
-  const bookableEndDate = isoToLocalDate(formConfig.bookableEnd);
-
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Q1 Summit Hotel Block Booking</h1>
-
-      <div className="rounded border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-        {PROCESS_NOTICE_FULL}
+      <div className="animate-in space-y-1">
+        <p className="eyebrow">Q1 Summit</p>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Hotel Block Booking</h1>
       </div>
 
+      <NoticeBannerFull />
+
       {submitError && (
-        <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">{submitError}</div>
+        <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{submitError}</div>
       )}
 
       {step === "identity" && (
-        <form
-          onSubmit={identityForm.handleSubmit(onIdentitySubmit)}
-          className="space-y-4 rounded border p-4"
-        >
-          <h2 className="font-medium">Let&apos;s start with your name and email</h2>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="First name" error={identityForm.formState.errors.firstName?.message}>
-              <input className="w-full rounded border px-2 py-1" {...identityForm.register("firstName")} />
+        <Card eyebrow="Step 01" title="Let's find your name and email">
+          <form onSubmit={identityForm.handleSubmit(onIdentitySubmit)} className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="First name" error={identityForm.formState.errors.firstName?.message}>
+                <input className="field" {...identityForm.register("firstName")} />
+              </Field>
+              <Field label="Last name" error={identityForm.formState.errors.lastName?.message}>
+                <input className="field" {...identityForm.register("lastName")} />
+              </Field>
+            </div>
+            <Field label="Email" error={identityForm.formState.errors.email?.message}>
+              <input className="field" {...identityForm.register("email")} />
             </Field>
-            <Field label="Last name" error={identityForm.formState.errors.lastName?.message}>
-              <input className="w-full rounded border px-2 py-1" {...identityForm.register("lastName")} />
-            </Field>
-          </div>
-          <Field label="Email" error={identityForm.formState.errors.email?.message}>
-            <input className="w-full rounded border px-2 py-1" {...identityForm.register("email")} />
-          </Field>
-          <button
-            type="submit"
-            disabled={checking}
-            className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
-          >
-            {checking ? "Checking..." : "Continue"}
-          </button>
-        </form>
+            <Button type="submit" disabled={checking}>
+              {checking ? "Checking..." : "Continue"}
+            </Button>
+          </form>
+        </Card>
       )}
 
       {step === "duplicate" && (
-        <div className="space-y-3 rounded border p-4">
-          <p>
-            Looks like you&apos;ve already submitted a booking. We&apos;ve emailed a link to manage
-            your existing booking to the email you entered. If you don&apos;t see it, use
-            &quot;Resend my link&quot; on the lookup page.
-          </p>
-          <p className="text-sm text-gray-600">{PROCESS_NOTICE_SHORT}</p>
-          <a href="/my-booking" className="text-blue-600 underline">
-            Go to my booking lookup page
-          </a>
-        </div>
+        <Card>
+          <div className="space-y-3">
+            <p>
+              Looks like you&apos;ve already submitted a booking. We&apos;ve emailed a link to
+              manage your existing booking. If you don&apos;t see it, use &quot;Resend my link&quot;
+              on the lookup page.
+            </p>
+            <NoticeBannerShort />
+            <a href="/my-booking" className="font-semibold text-accent-dark hover:underline">
+              Go to my booking lookup page →
+            </a>
+          </div>
+        </Card>
       )}
 
       {step === "form" && (
-        <form onSubmit={mainForm.handleSubmit(onMainSubmit)} className="space-y-6">
-          <section className="space-y-3 rounded border p-4">
-            <h2 className="font-medium">Your details</h2>
-            <Field label="Full name for hotel reservation" error={mainForm.formState.errors.reservationName?.message}>
-              <input className="w-full rounded border px-2 py-1" {...mainForm.register("reservationName")} />
-            </Field>
-            <Field label="Email for hotel booking" error={mainForm.formState.errors.hotelEmail?.message}>
-              <input className="w-full rounded border px-2 py-1" {...mainForm.register("hotelEmail")} />
-            </Field>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+        <form onSubmit={mainForm.handleSubmit(onMainSubmit)} className="space-y-5">
+          <Card eyebrow="Step 02" title="Your details">
+            <div className="space-y-4">
+              <Field label="Full name for hotel reservation" error={mainForm.formState.errors.reservationName?.message}>
+                <input className="field" {...mainForm.register("reservationName")} />
+              </Field>
+              <Field label="Email for hotel booking" error={mainForm.formState.errors.hotelEmail?.message}>
+                <input className="field" {...mainForm.register("hotelEmail")} />
+              </Field>
+              <Field label="Email for summit details" error={mainForm.formState.errors.detailsEmail?.message}>
+                <input
+                  className="field"
+                  disabled={sameEmail}
+                  {...mainForm.register("detailsEmail")}
+                />
+              </Field>
+              <Checkbox
+                label="Use the same email for summit details"
                 checked={sameEmail}
                 onChange={(e) => {
                   setSameEmail(e.target.checked);
                   if (e.target.checked) mainForm.setValue("detailsEmail", hotelEmail);
                 }}
               />
-              Use the same email for other details (transportation, schedule, etc.)
-            </label>
-            {!sameEmail && (
-              <Field label="Email for other details" error={mainForm.formState.errors.detailsEmail?.message}>
-                <input className="w-full rounded border px-2 py-1" {...mainForm.register("detailsEmail")} />
-              </Field>
-            )}
-          </section>
+            </div>
+          </Card>
 
-          <section className="space-y-2 rounded border p-4">
-            <h2 className="font-medium">Which events are you attending?</h2>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" {...mainForm.register("attendingHappyHour")} />
-              Happy Hour ({formatShortDate(formConfig.happyHourDate)})
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" {...mainForm.register("attendingAllHands")} />
-              All Hands ({formatShortDate(formConfig.allHandsDate)})
-            </label>
-            <label className="flex items-center gap-2">
-              <input type="checkbox" {...mainForm.register("attendingDinner")} />
-              Dinner ({formatShortDate(formConfig.dinnerDate)})
-            </label>
-          </section>
+          <Card eyebrow="Step 03" title="Which events are you attending?">
+            <div className="space-y-3">
+              <Checkbox label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`} {...mainForm.register("attendingHappyHour")} />
+              {attendingHappyHour && (
+                <div className="ml-7">
+                  <Checkbox label="Will your plus one join Happy Hour too?" {...mainForm.register("happyHourPlusOne")} />
+                </div>
+              )}
+              <Checkbox label={`All Hands (${formatShortDate(formConfig.allHandsDate)})`} {...mainForm.register("attendingAllHands")} />
+              {attendingAllHands && (
+                <div className="ml-7">
+                  <Checkbox label="Will your plus one join All Hands too?" {...mainForm.register("allHandsPlusOne")} />
+                </div>
+              )}
+              <Checkbox label={`Dinner (${formatShortDate(formConfig.dinnerDate)})`} {...mainForm.register("attendingDinner")} />
+            </div>
+          </Card>
 
-          <section className="space-y-3 rounded border p-4">
-            <h2 className="font-medium">Stay dates</h2>
-            <p className="text-sm text-amber-800">
-              Rooms booked outside {formatDateRangeShort(formConfig.discountStart, formConfig.discountEnd)}{" "}
-              are not guaranteed the ${formConfig.discountRateUsd}/night group rate.
-            </p>
-            <DayPicker
-              mode="range"
-              selected={range}
-              onSelect={(r) => {
-                mainForm.setValue("stayStart", r?.from ? localDateToIso(r.from) : "");
-                mainForm.setValue("stayEnd", r?.to ? localDateToIso(r.to) : "");
-              }}
-              disabled={{ before: bookableStartDate, after: bookableEndDate }}
-              defaultMonth={bookableStartDate}
-            />
-            {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
-              <p className="text-sm text-red-600">Please select both a start and end date.</p>
-            )}
-
-            <label className="flex items-center gap-2">
-              <input type="checkbox" {...mainForm.register("selectEligible")} />
-              I am eligible for company-paid Tuesday/Wednesday nights
-            </label>
-
-            <label className="flex items-center gap-2">
-              <input type="checkbox" {...mainForm.register("needsExtraNights")} />
-              I need additional night(s) outside the standard block, paid by me
-            </label>
-
-            {needsExtraNights && (
-              <div>
-                <DayPicker
-                  mode="multiple"
-                  selected={extraNightDates}
-                  onSelect={(dates) => mainForm.setValue("extraNights", (dates ?? []).map(localDateToIso))}
-                  disabled={{ before: bookableStartDate, after: bookableEndDate }}
-                  defaultMonth={bookableStartDate}
-                />
-                {mainForm.formState.errors.extraNights && (
-                  <p className="text-sm text-red-600">{mainForm.formState.errors.extraNights.message as string}</p>
-                )}
-              </div>
-            )}
-
-            <NightBreakdownTable
-              stayStart={stayStart}
-              stayEnd={stayEnd}
-              selectEligible={selectEligible}
-              companyPaidAlways={formConfig.companyPaidAlways}
-              companyPaidSelect={formConfig.companyPaidSelect}
+          <Card eyebrow="Step 04" title="Stay dates">
+            <StayDatesPicker
+              bookableStart={formConfig.bookableStart}
+              bookableEnd={formConfig.bookableEnd}
+              extendedStart={formConfig.extendedStart}
+              extendedEnd={formConfig.extendedEnd}
               discountStart={formConfig.discountStart}
               discountEnd={formConfig.discountEnd}
-              extraNights={needsExtraNights ? extraNights ?? [] : []}
+              discountRateUsd={formConfig.discountRateUsd}
+              defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
+              value={{ stayStart, stayEnd, companyPaidNights, needsExtraNights, extraNights }}
+              onChange={(patch) => {
+                for (const [key, val] of Object.entries(patch)) {
+                  mainForm.setValue(key as keyof BookingFormInput, val as never, { shouldValidate: false });
+                }
+              }}
             />
-          </section>
+            {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
+              <p className="mt-2 text-sm text-red-600">Please select your stay nights.</p>
+            )}
+          </Card>
 
-          <section className="rounded border p-4">
+          <Card eyebrow="Step 05" title="Additional guests">
             <GuestFields control={mainForm.control} register={mainForm.register} />
-          </section>
+          </Card>
 
-          <section className="space-y-2 rounded border p-4">
-            <h2 className="font-medium">Dietary restrictions / allergies</h2>
-            <textarea className="w-full rounded border px-2 py-1" rows={3} {...mainForm.register("dietaryRestrictions")} />
-          </section>
+          <Card eyebrow="Step 06" title="Dietary restrictions">
+            <DietaryChecklist
+              selected={dietaryOptions}
+              other={dietaryOther}
+              onChange={(next) => mainForm.setValue("dietaryOptions", next)}
+              onOtherChange={(val) => mainForm.setValue("dietaryOther", val)}
+            />
+          </Card>
 
-          <section className="space-y-3 rounded border p-4">
-            <h2 className="font-medium">Flight details</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Airline">
-                <input className="w-full rounded border px-2 py-1" {...mainForm.register("flightAirline")} />
-              </Field>
-              <Field label="Flight #">
-                <input className="w-full rounded border px-2 py-1" {...mainForm.register("flightNumber")} />
-              </Field>
-              <Field label="Arrival date/time">
-                <input type="datetime-local" className="w-full rounded border px-2 py-1" {...mainForm.register("flightArrival")} />
-              </Field>
-              <Field label="Departure date/time">
-                <input type="datetime-local" className="w-full rounded border px-2 py-1" {...mainForm.register("flightDeparture")} />
+          <Card eyebrow="Step 07" title="Flight details">
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Airline">
+                  <input className="field" {...mainForm.register("flightAirline")} />
+                </Field>
+                <Field label="Flight #">
+                  <input className="field" {...mainForm.register("flightNumber")} />
+                </Field>
+                <Field label="Arrival date/time">
+                  <input type="datetime-local" className="field" {...mainForm.register("flightArrival")} />
+                </Field>
+                <Field label="Departure date/time">
+                  <input type="datetime-local" className="field" {...mainForm.register("flightDeparture")} />
+                </Field>
+              </div>
+              <Field label="Other flight notes">
+                <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
               </Field>
             </div>
-            <Field label="Other flight notes">
-              <textarea className="w-full rounded border px-2 py-1" rows={2} {...mainForm.register("flightNotes")} />
-            </Field>
-          </section>
+          </Card>
 
           {staticContent.length > 0 && (
-            <section className="space-y-2 rounded border p-4">
-              <h2 className="font-medium">Event info, Q&amp;A, and timing</h2>
-              {staticContent.map((item) => (
-                <div key={item.key}>
-                  {item.title && <h3 className="font-medium">{item.title}</h3>}
-                  {item.body && <p className="whitespace-pre-wrap text-sm text-gray-700">{item.body}</p>}
-                </div>
-              ))}
-            </section>
+            <Card eyebrow="Reference" title="Event info, Q&A, and timing">
+              <div className="space-y-3">
+                {staticContent.map((item) => (
+                  <div key={item.key}>
+                    {item.title && <h3 className="font-semibold">{item.title}</h3>}
+                    {item.body && <p className="whitespace-pre-wrap text-sm text-muted">{item.body}</p>}
+                  </div>
+                ))}
+              </div>
+            </Card>
           )}
 
-          <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-            {PROCESS_NOTICE_SHORT}
-          </div>
+          <NoticeBannerShort />
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
-          >
+          <Button type="submit" disabled={submitting}>
             {submitting ? "Submitting..." : "Submit booking"}
-          </button>
+          </Button>
         </form>
       )}
 
       {step === "success" && (
-        <div className="space-y-3 rounded border p-4">
-          <h2 className="font-medium">You&apos;re all set!</h2>
-          <p>We&apos;ve saved your booking. A confirmation email is on its way with your details and your personal link.</p>
-          {successLink && (
-            <p>
-              Your personal link (save this to make future changes):{" "}
-              <a href={successLink} className="text-blue-600 underline">
-                {successLink}
-              </a>
+        <Card title="You're all set!">
+          <div className="space-y-3">
+            <p className="text-muted">
+              We&apos;ve saved your booking. A confirmation email is on its way with your details
+              and your personal link.
             </p>
-          )}
-          <p className="text-sm text-gray-600">{PROCESS_NOTICE_SHORT}</p>
-        </div>
+            {successLink && (
+              <p className="break-all">
+                Your personal link (save this to make future changes):{" "}
+                <a href={successLink} className="font-semibold text-accent-dark hover:underline">
+                  {successLink}
+                </a>
+              </p>
+            )}
+            <NoticeBannerShort />
+          </div>
+        </Card>
       )}
     </div>
   );
@@ -380,10 +354,10 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block space-y-1 text-sm">
-      <span>{label}</span>
+    <label className="block">
+      <span className="field-label">{label}</span>
       {children}
-      {error && <span className="block text-red-600">{error}</span>}
+      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
     </label>
   );
 }

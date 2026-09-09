@@ -12,9 +12,8 @@ Being built in stages:
 
 - Next.js (App Router, TypeScript)
 - Prisma + SQLite for local dev (swap to Postgres for production, see below)
-- Tailwind CSS
+- Tailwind CSS, Inter + JetBrains Mono (via `next/font/google`)
 - react-hook-form + zod for form validation
-- react-day-picker for the stay-date picker
 - Resend for transactional email (wired up in Stage 4)
 
 ## Setup
@@ -37,10 +36,14 @@ for the full list and current defaults:
 - `EVENT_DISCOUNT_START` / `EVENT_DISCOUNT_END` / `EVENT_DISCOUNT_RATE_USD` -
   the $105/night group rate window.
 - `EVENT_HAPPY_HOUR_DATE` / `EVENT_ALL_HANDS_DATE` / `EVENT_DINNER_DATE` -
-  program dates. Company-paid nights are derived from these: the All Hands
-  date and the night after are paid for everyone, the night before Happy Hour
-  and Happy Hour night itself are paid only for "select" (self-attested)
-  attendees.
+  program dates. The All Hands date and the night after are the default
+  company-paid nights seeded on the stay-dates picker; attendees can toggle
+  any Tue-Fri night between company-pays and self-pays themselves (that
+  toggle *is* the "select" self-attestation, stored per booking rather than
+  a single yes/no field).
+- `EVENT_EXTRA_NIGHTS_BUFFER_DAYS` - how many extra self-pay-only days the
+  "+ Add extra nights outside the block" control reveals on either side of
+  the bookable range.
 - `EVENT_LOCK_IN_DATE` - after this date, edits/cancellations stop being
   automatic (Stage 2).
 - `EVENT_CANCEL_HOTEL_NOTICE_DAYS` - days-out cutoff for the automatic hotel

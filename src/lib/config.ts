@@ -20,6 +20,10 @@ export const config = {
   bookableStart: envDate("EVENT_BOOKABLE_START", "2026-01-14"),
   bookableEnd: envDate("EVENT_BOOKABLE_END", "2026-01-29"),
 
+  // "+ Add extra nights" reveals this many extra days of tiles on either
+  // side of the bookable range (self-paid only, no company-pay toggle).
+  extraNightsBufferDays: Number(process.env.EVENT_EXTRA_NIGHTS_BUFFER_DAYS ?? "5"),
+
   // $105/night group rate is only guaranteed inside this window.
   discountStart: envDate("EVENT_DISCOUNT_START", "2026-01-16"),
   discountEnd: envDate("EVENT_DISCOUNT_END", "2026-01-26"),
@@ -39,16 +43,24 @@ export const config = {
   cancelHotelNoticeDays: Number(process.env.EVENT_CANCEL_HOTEL_NOTICE_DAYS ?? "10"),
 };
 
-/**
- * Company-paid nights, expressed as the night's start date.
- * Thu/Fri (the All Hands date and the day after) are paid for everyone.
- * Tue/Wed (the day before Happy Hour and the Happy Hour date itself) are
- * additionally paid only for self-attested "select" attendees.
- */
-export function companyPaidNights(selectEligible: boolean): Date[] {
-  const always = [config.allHandsDate, addDays(config.allHandsDate, 1)];
-  const selectOnly = [addDays(config.happyHourDate, -1), config.happyHourDate];
-  return selectEligible ? [...selectOnly, ...always] : always;
+export const extendedRange = {
+  start: addDays(config.bookableStart, -config.extraNightsBufferDays),
+  end: addDays(config.bookableEnd, config.extraNightsBufferDays),
+};
+
+/** Tue/Wed/Thu/Fri nights are the only ones with a company-pays/self-pays
+ *  toggle; everything else (weekend nights, extra nights outside the block)
+ *  is always self-paid. */
+export function isToggleableNight(date: Date): boolean {
+  const day = date.getUTCDay(); // Sun=0 ... Sat=6
+  return day >= 2 && day <= 5;
+}
+
+/** Sensible default toggle state before the attendee touches anything:
+ *  the All Hands date and the night after (Thu/Fri) default to company-paid,
+ *  since that's guaranteed to every attendee regardless of "select" status. */
+export function defaultCompanyPaidNights(): Date[] {
+  return [config.allHandsDate, addDays(config.allHandsDate, 1)];
 }
 
 export function isWithinDiscountWindow(nightStart: Date): boolean {
