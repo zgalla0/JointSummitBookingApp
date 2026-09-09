@@ -9,7 +9,7 @@ export function NoticeBannerFull() {
           {NOTICE.pill}
         </span>
         <span className="inline-flex items-center gap-1.5 text-sm font-bold text-accent-dark">
-          {NOTICE.playfulEmoji} {NOTICE.playful}
+          {NOTICE.playfulEmoji} {NOTICE.playful} {NOTICE.playfulEmoji}
         </span>
       </div>
       <p className="mt-3 text-sm text-muted">{NOTICE.closer}</p>

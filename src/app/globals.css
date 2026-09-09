@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf7f5;
+  --background: #ffffff;
   --surface: #ffffff;
-  --foreground: #2a2420;
-  --muted: #8a7f78;
-  --accent: #ff6a52;
-  --accent-dark: #e6543d;
-  --accent-soft: #ffe4dc;
-  --hairline: rgba(42, 36, 32, 0.08);
+  --foreground: #1f2937;
+  --muted: #6b7280;
+  --accent: #85abc9;
+  --accent-dark: #5c768a;
+  --accent-soft: #edf9ff;
+  --hairline: rgba(31, 41, 55, 0.08);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
 }

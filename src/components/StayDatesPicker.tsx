@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import {
   addIsoDays,
+  buildCalendarGrid,
   isoDateRange,
   isoMonthDay,
   isoWeekdayLabel,
   isToggleableIso,
+  WEEKDAY_HEADER_MON_FIRST,
 } from "@/lib/stay-tiles-client";
 
 export type StayDatesValue = {
@@ -52,7 +54,10 @@ export default function StayDatesPicker({
   const companyPaidSet = useMemo(() => new Set(value.companyPaidNights), [value.companyPaidNights]);
   const extraSet = useMemo(() => new Set(value.extraNights), [value.extraNights]);
 
-  const blockDays = useMemo(() => isoDateRange(bookableStart, bookableEnd), [bookableStart, bookableEnd]);
+  const calendarRows = useMemo(
+    () => buildCalendarGrid(bookableStart, bookableEnd),
+    [bookableStart, bookableEnd],
+  );
   const preBufferDays = useMemo(
     () => isoDateRange(extendedStart, addIsoDays(bookableStart, -1)),
     [extendedStart, bookableStart],
@@ -124,13 +129,34 @@ export default function StayDatesPicker({
         {isoMonthDay(discountEnd)} only.
       </p>
 
-      <TileGrid
-        days={blockDays}
-        selectedSet={selectedSet}
-        companyPaidSet={companyPaidSet}
-        onTileClick={toggleNight}
-        onToggleClick={toggleCompanyPaid}
-      />
+      <div className="space-y-2">
+        <div className="grid grid-cols-7 gap-2">
+          {WEEKDAY_HEADER_MON_FIRST.map((label) => (
+            <div key={label} className="text-center text-[10px] font-semibold tracking-wide text-muted uppercase">
+              {label}
+            </div>
+          ))}
+        </div>
+        {calendarRows.map((row, i) => (
+          <div key={i} className="grid grid-cols-7 gap-2">
+            {row.map((day, j) =>
+              day ? (
+                <DayTile
+                  key={day}
+                  day={day}
+                  selected={selectedSet.has(day)}
+                  companyPaid={companyPaidSet.has(day)}
+                  toggleable={isToggleableIso(day)}
+                  onClick={() => toggleNight(day)}
+                  onToggleClick={(e) => toggleCompanyPaid(day, e)}
+                />
+              ) : (
+                <div key={j} />
+              ),
+            )}
+          </div>
+        ))}
+      </div>
 
       {selectedNights.length > 0 && (
         <p className="text-sm text-muted">
@@ -157,24 +183,18 @@ export default function StayDatesPicker({
         {showExtraNights && (
           <div className="mt-3 space-y-3">
             {preBufferDays.length > 0 && (
-              <TileGrid
+              <FlowGrid
                 days={preBufferDays}
                 selectedSet={extraSet}
-                companyPaidSet={new Set()}
                 onTileClick={toggleExtraNight}
-                onToggleClick={() => {}}
-                muted
                 showMonth
               />
             )}
             {postBufferDays.length > 0 && (
-              <TileGrid
+              <FlowGrid
                 days={postBufferDays}
                 selectedSet={extraSet}
-                companyPaidSet={new Set()}
                 onTileClick={toggleExtraNight}
-                onToggleClick={() => {}}
-                muted
                 showMonth
               />
             )}
@@ -186,69 +206,86 @@ export default function StayDatesPicker({
   );
 }
 
-function TileGrid({
+function FlowGrid({
   days,
   selectedSet,
-  companyPaidSet,
   onTileClick,
-  onToggleClick,
-  muted = false,
   showMonth = false,
 }: {
   days: string[];
   selectedSet: Set<string>;
-  companyPaidSet: Set<string>;
   onTileClick: (day: string) => void;
-  onToggleClick: (day: string, e: React.MouseEvent) => void;
-  muted?: boolean;
   showMonth?: boolean;
 }) {
   return (
     <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
-      {days.map((day) => {
-        const selected = selectedSet.has(day);
-        const companyPaid = companyPaidSet.has(day);
-        const toggleable = isToggleableIso(day) && !muted;
-        return (
-          <button
-            key={day}
-            type="button"
-            onClick={() => onTileClick(day)}
-            className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${
-              selected
-                ? companyPaid
-                  ? "border-accent bg-accent-soft"
-                  : "border-foreground/20 bg-foreground/10"
-                : "border-hairline bg-surface hover:border-accent/40"
-            }`}
-          >
-            <span className="text-[10px] font-semibold tracking-wide text-muted uppercase">
-              {isoWeekdayLabel(day)}
-            </span>
-            <span className="font-mono text-base font-semibold">
-              {showMonth ? isoMonthDay(day) : day.slice(-2)}
-            </span>
-            {selected && toggleable && (
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => onToggleClick(day, e)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onToggleClick(day, e as unknown as React.MouseEvent);
-                  }
-                }}
-                className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
-                  companyPaid ? "bg-accent text-white" : "bg-foreground/15 text-foreground"
-                }`}
-              >
-                {companyPaid ? "CO. PAYS" : "I PAY"}
-              </span>
-            )}
-          </button>
-        );
-      })}
+      {days.map((day) => (
+        <DayTile
+          key={day}
+          day={day}
+          selected={selectedSet.has(day)}
+          companyPaid={false}
+          toggleable={false}
+          onClick={() => onTileClick(day)}
+          onToggleClick={() => {}}
+          showMonth={showMonth}
+        />
+      ))}
     </div>
+  );
+}
+
+function DayTile({
+  day,
+  selected,
+  companyPaid,
+  toggleable,
+  onClick,
+  onToggleClick,
+  showMonth = false,
+}: {
+  day: string;
+  selected: boolean;
+  companyPaid: boolean;
+  toggleable: boolean;
+  onClick: () => void;
+  onToggleClick: (e: React.MouseEvent) => void;
+  showMonth?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${
+        selected
+          ? companyPaid
+            ? "border-accent bg-accent-soft"
+            : "border-foreground/20 bg-foreground/10"
+          : "border-hairline bg-surface hover:border-accent/40"
+      }`}
+    >
+      <span className="text-[10px] font-semibold tracking-wide text-muted uppercase">
+        {isoWeekdayLabel(day)}
+      </span>
+      <span className="font-mono text-base font-semibold">{showMonth ? isoMonthDay(day) : day.slice(-2)}</span>
+      {selected && toggleable && (
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={onToggleClick}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onToggleClick(e as unknown as React.MouseEvent);
+            }
+          }}
+          className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
+            companyPaid ? "bg-accent text-white" : "bg-foreground/15 text-foreground"
+          }`}
+        >
+          {companyPaid ? "CO. PAYS" : "I PAY"}
+        </span>
+      )}
+    </button>
   );
 }
