@@ -1,0 +1,102 @@
+// Prisma schema for the Hotel Block Booking App.
+// Dev uses SQLite (see .env DATABASE_URL). For production, point DATABASE_URL at
+// a Postgres instance (e.g. Vercel Postgres / Neon / Render Postgres) and change
+// the datasource provider below to "postgresql" before deploying.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum GuestType {
+  ADULT
+  CHILD
+}
+
+enum BookingStatus {
+  ACTIVE
+  CANCELLED
+}
+
+model Booking {
+  id String @id @default(cuid())
+
+  // Identity (used for the name + email duplicate check)
+  firstName String
+  lastName  String
+
+  // Hotel reservation details
+  reservationName String // full name for the hotel reservation, may differ from work name
+  hotelEmail      String // email used for the hotel booking
+  detailsEmail    String // email for transportation / schedule / other details
+
+  // Event attendance
+  attendingHappyHour Boolean @default(false)
+  attendingAllHands  Boolean @default(false)
+  attendingDinner    Boolean @default(false)
+
+  // Stay dates (within the configured bookable range)
+  stayStart DateTime
+  stayEnd   DateTime
+
+  // Self-attested eligibility for company-paid Tue/Wed nights
+  selectEligible Boolean @default(false)
+
+  // Extra self-paid nights outside the standard block, stored as an array of
+  // ISO date strings (e.g. ["2026-01-13", "2026-01-30"])
+  needsExtraNights Boolean @default(false)
+  extraNights      String? // JSON-encoded string[] of ISO dates, null/empty if none
+
+  // Dietary / allergies
+  dietaryRestrictions String?
+
+  // Flight details
+  flightAirline    String?
+  flightNumber     String?
+  flightArrival    DateTime?
+  flightDeparture  DateTime?
+  flightNotes      String?
+
+  // Status / admin flags
+  status           BookingStatus @default(ACTIVE)
+  cancelledAt      DateTime?
+  cancelledByAdmin Boolean       @default(false)
+  flaggedForReview Boolean       @default(false)
+  flagReason       String? // free-text note on why this record needs admin attention
+
+  // Magic link
+  magicLinkToken     String    @unique
+  magicLinkExpiresAt DateTime
+
+  guests BookingGuest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lastName, firstName, hotelEmail])
+  @@index([magicLinkToken])
+}
+
+model BookingGuest {
+  id        String    @id @default(cuid())
+  bookingId String
+  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String
+  type      GuestType
+
+  @@index([bookingId])
+}
+
+// Simple key/value store for admin-editable static content (event info,
+// Q&A, links) shown on the public form page. Populated/edited in Stage 3.
+model StaticContent {
+  key       String   @id
+  title     String?
+  body      String? // markdown / plain text
+  updatedAt DateTime @updatedAt
+}
