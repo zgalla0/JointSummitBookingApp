@@ -46,8 +46,8 @@ const emptyDefaults: BookingFormInput = {
   attendingHappyHour: false,
   happyHourPlusOne: false,
   attendingAllHands: false,
-  allHandsPlusOne: false,
   attendingDinner: false,
+  dinnerPlusOne: false,
   stayStart: "",
   stayEnd: "",
   companyPaidNights: [],
@@ -94,7 +94,7 @@ export default function BookingForm({
   const extraNights = mainForm.watch("extraNights");
   const hotelEmail = mainForm.watch("hotelEmail");
   const attendingHappyHour = mainForm.watch("attendingHappyHour");
-  const attendingAllHands = mainForm.watch("attendingAllHands");
+  const attendingDinner = mainForm.watch("attendingDinner");
   const dietaryOptions = mainForm.watch("dietaryOptions");
   const dietaryOther = mainForm.watch("dietaryOther");
 
@@ -232,16 +232,16 @@ export default function BookingForm({
               <Checkbox label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`} {...mainForm.register("attendingHappyHour")} />
               {attendingHappyHour && (
                 <div className="ml-7">
-                  <Checkbox label="Will your plus one join Happy Hour too?" {...mainForm.register("happyHourPlusOne")} />
+                  <Checkbox label="Will your +1 join Happy Hour too?" {...mainForm.register("happyHourPlusOne")} />
                 </div>
               )}
               <Checkbox label={`All Hands (${formatShortDate(formConfig.allHandsDate)})`} {...mainForm.register("attendingAllHands")} />
-              {attendingAllHands && (
+              <Checkbox label={`Dinner (${formatShortDate(formConfig.dinnerDate)})`} {...mainForm.register("attendingDinner")} />
+              {attendingDinner && (
                 <div className="ml-7">
-                  <Checkbox label="Will your plus one join All Hands too?" {...mainForm.register("allHandsPlusOne")} />
+                  <Checkbox label="Will your +1 join Dinner too?" {...mainForm.register("dinnerPlusOne")} />
                 </div>
               )}
-              <Checkbox label={`Dinner (${formatShortDate(formConfig.dinnerDate)})`} {...mainForm.register("attendingDinner")} />
             </div>
           </Card>
 

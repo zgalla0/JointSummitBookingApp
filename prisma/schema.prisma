@@ -34,13 +34,13 @@ model Booking {
   hotelEmail      String // email used for the hotel booking
   detailsEmail    String // email for transportation / schedule / other details
 
-  // Event attendance, each with an optional plus-one joining that event
-  // (Dinner has no plus-one option, capacity is fixed)
+  // Event attendance, each with an optional +1 joining that event
+  // (All Hands has no +1 option, capacity is fixed)
   attendingHappyHour Boolean @default(false)
   happyHourPlusOne   Boolean @default(false)
   attendingAllHands  Boolean @default(false)
-  allHandsPlusOne    Boolean @default(false)
   attendingDinner    Boolean @default(false)
+  dinnerPlusOne      Boolean @default(false)
 
   // Stay dates: stayStart is the first selected night, stayEnd is the
   // morning-after checkout date (one day after the last selected night)

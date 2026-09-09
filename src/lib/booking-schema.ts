@@ -27,8 +27,8 @@ export const bookingFormSchema = z
     attendingHappyHour: z.boolean(),
     happyHourPlusOne: z.boolean(),
     attendingAllHands: z.boolean(),
-    allHandsPlusOne: z.boolean(),
     attendingDinner: z.boolean(),
+    dinnerPlusOne: z.boolean(),
 
     stayStart: isoDate,
     stayEnd: isoDate,
