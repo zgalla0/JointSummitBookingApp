@@ -1,5 +1,5 @@
 export const NOTICE = {
-  opener: "First time doing it this way, here's what to know!",
+  opener: "Here's what you need to know before you get started.",
   pill: "Make all changes right here on this page",
   playfulEmoji: "✨",
   playful: "Don't email the planning committee!",

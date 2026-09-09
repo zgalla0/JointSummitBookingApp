@@ -35,6 +35,13 @@ export function isToggleableIso(iso: string): boolean {
   return day >= 2 && day <= 5;
 }
 
+/** Tue/Wed nights use the "Paid by Cuesta" label and its approval warning,
+ *  since (unlike Thu/Fri) company-pay there means arriving early. */
+export function isTueOrWedIso(iso: string): boolean {
+  const day = isoWeekday(iso);
+  return day === 2 || day === 3;
+}
+
 export function isoMonthDay(iso: string): string {
   const d = new Date(`${iso}T00:00:00.000Z`);
   const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

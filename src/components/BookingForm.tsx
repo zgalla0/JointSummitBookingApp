@@ -150,8 +150,10 @@ export default function BookingForm({
   return (
     <div className="space-y-6">
       <div className="animate-in space-y-1">
-        <p className="eyebrow">Q1 Summit</p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Hotel Block Booking</h1>
+        <p className="eyebrow">Hotel Booking</p>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          Q1 Joint All Hands Summit Hotel Booking
+        </h1>
       </div>
 
       <NoticeBannerFull />
@@ -161,7 +163,7 @@ export default function BookingForm({
       )}
 
       {step === "identity" && (
-        <Card eyebrow="Step 01" title="Let's find your name and email">
+        <Card eyebrow="Get started" title="Let's find your name and email">
           <form onSubmit={identityForm.handleSubmit(onIdentitySubmit)} className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="First name" error={identityForm.formState.errors.firstName?.message}>
@@ -199,7 +201,7 @@ export default function BookingForm({
 
       {step === "form" && (
         <form onSubmit={mainForm.handleSubmit(onMainSubmit)} className="space-y-5">
-          <Card eyebrow="Step 02" title="Your details">
+          <Card eyebrow="About you" title="Your details">
             <div className="space-y-4">
               <Field label="Full name for hotel reservation" error={mainForm.formState.errors.reservationName?.message}>
                 <input className="field" {...mainForm.register("reservationName")} />
@@ -225,7 +227,7 @@ export default function BookingForm({
             </div>
           </Card>
 
-          <Card eyebrow="Step 03" title="Which events are you attending?">
+          <Card eyebrow="Events" title="Which events are you attending?">
             <div className="space-y-3">
               <Checkbox label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`} {...mainForm.register("attendingHappyHour")} />
               {attendingHappyHour && (
@@ -243,7 +245,7 @@ export default function BookingForm({
             </div>
           </Card>
 
-          <Card eyebrow="Step 04" title="Stay dates">
+          <Card eyebrow="Lodging" title="Stay dates">
             <StayDatesPicker
               bookableStart={formConfig.bookableStart}
               bookableEnd={formConfig.bookableEnd}
@@ -265,11 +267,11 @@ export default function BookingForm({
             )}
           </Card>
 
-          <Card eyebrow="Step 05" title="Additional guests">
+          <Card eyebrow="Plus ones" title="Additional guests">
             <GuestFields control={mainForm.control} register={mainForm.register} />
           </Card>
 
-          <Card eyebrow="Step 06" title="Dietary restrictions">
+          <Card eyebrow="Food" title="Dietary restrictions">
             <DietaryChecklist
               selected={dietaryOptions}
               other={dietaryOther}
@@ -278,8 +280,12 @@ export default function BookingForm({
             />
           </Card>
 
-          <Card eyebrow="Step 07" title="Flight details">
+          <Card eyebrow="Travel" title="Flight details">
             <div className="space-y-4">
+              <p className="text-sm text-muted">
+                This helps us group people with similar arrival times into carpools to and from
+                the hotel.
+              </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Airline">
                   <input className="field" {...mainForm.register("flightAirline")} />

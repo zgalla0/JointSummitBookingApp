@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
 
 export const metadata: Metadata = {
-  title: "Q1 Summit Hotel Block Booking",
+  title: "Q1 Joint All Hands Summit Hotel Booking",
   description: "Book, edit, or cancel your hotel block reservation for the Q1 Summit.",
 };
 

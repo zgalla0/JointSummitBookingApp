@@ -39,3 +39,10 @@ export async function sendHotelCancellationNotice(data: Record<string, unknown>)
 export async function sendAdminCancellationNotice(data: Record<string, unknown>) {
   logStubEmail("admin-cancellation-notice", data);
 }
+
+// Admin-triggered (Stage 3), not sent automatically: a reminder to
+// attendees who haven't filled in flight details yet, so carpool groups
+// can be finalized closer to the event.
+export async function sendFlightDetailsReminderEmail(data: BookingEmailData) {
+  logStubEmail("flight-details-reminder", data);
+}

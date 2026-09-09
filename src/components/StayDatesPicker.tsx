@@ -7,9 +7,13 @@ import {
   isoDateRange,
   isoMonthDay,
   isoWeekdayLabel,
+  isTueOrWedIso,
   isToggleableIso,
   WEEKDAY_HEADER_MON_FIRST,
 } from "@/lib/stay-tiles-client";
+
+const CUESTA_APPROVAL_NOTE =
+  "Only check this if arriving early has been approved by a partner or principal, this stay will be paid for by Cuesta.";
 
 export type StayDatesValue = {
   stayStart: string;
@@ -137,25 +141,38 @@ export default function StayDatesPicker({
             </div>
           ))}
         </div>
-        {calendarRows.map((row, i) => (
-          <div key={i} className="grid grid-cols-7 gap-2">
-            {row.map((day, j) =>
-              day ? (
-                <DayTile
-                  key={day}
-                  day={day}
-                  selected={selectedSet.has(day)}
-                  companyPaid={companyPaidSet.has(day)}
-                  toggleable={isToggleableIso(day)}
-                  onClick={() => toggleNight(day)}
-                  onToggleClick={(e) => toggleCompanyPaid(day, e)}
-                />
-              ) : (
-                <div key={j} />
-              ),
-            )}
-          </div>
-        ))}
+        {calendarRows.map((row, i) => {
+          const rowNeedsApprovalNote = row.some(
+            (day) => day && isTueOrWedIso(day) && companyPaidSet.has(day),
+          );
+          return (
+            <div key={i}>
+              <div className="grid grid-cols-7 gap-2">
+                {row.map((day, j) =>
+                  day ? (
+                    <DayTile
+                      key={day}
+                      day={day}
+                      selected={selectedSet.has(day)}
+                      companyPaid={companyPaidSet.has(day)}
+                      toggleable={isToggleableIso(day)}
+                      isTueWed={isTueOrWedIso(day)}
+                      onClick={() => toggleNight(day)}
+                      onToggleClick={(e) => toggleCompanyPaid(day, e)}
+                    />
+                  ) : (
+                    <div key={j} />
+                  ),
+                )}
+              </div>
+              {rowNeedsApprovalNote && (
+                <p className="mt-2 rounded-xl bg-accent-soft p-3 text-xs font-medium text-accent-dark">
+                  {CUESTA_APPROVAL_NOTE}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {selectedNights.length > 0 && (
@@ -240,6 +257,7 @@ function DayTile({
   selected,
   companyPaid,
   toggleable,
+  isTueWed = false,
   onClick,
   onToggleClick,
   showMonth = false,
@@ -248,6 +266,7 @@ function DayTile({
   selected: boolean;
   companyPaid: boolean;
   toggleable: boolean;
+  isTueWed?: boolean;
   onClick: () => void;
   onToggleClick: (e: React.MouseEvent) => void;
   showMonth?: boolean;
@@ -283,7 +302,7 @@ function DayTile({
             companyPaid ? "bg-accent text-white" : "bg-foreground/15 text-foreground"
           }`}
         >
-          {companyPaid ? "CO. PAYS" : "I PAY"}
+          {companyPaid ? (isTueWed ? "PAID BY CUESTA" : "CO. PAYS") : "I PAY"}
         </span>
       )}
     </button>
