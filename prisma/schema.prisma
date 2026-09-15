@@ -1,14 +1,14 @@
 // Prisma schema for the Hotel Block Booking App.
-// Dev uses SQLite (see .env DATABASE_URL). For production, point DATABASE_URL at
-// a Postgres instance (e.g. Vercel Postgres / Neon / Render Postgres) and change
-// the datasource provider below to "postgresql" before deploying.
+// Uses Postgres (see .env.example / README for DATABASE_URL setup, e.g.
+// Vercel Postgres, Neon, Render Postgres). Point DATABASE_URL at your own
+// instance for local development too - there's no SQLite fallback.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

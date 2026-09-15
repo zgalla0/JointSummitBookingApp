@@ -11,18 +11,24 @@ Being built in stages:
 ## Stack
 
 - Next.js (App Router, TypeScript)
-- Prisma + SQLite for local dev (swap to Postgres for production, see below)
+- Prisma + Postgres (see `.env.example` for `DATABASE_URL` - no SQLite fallback)
 - Tailwind CSS, Inter + JetBrains Mono (via `next/font/google`)
 - react-hook-form + zod for form validation
 - Resend for transactional email (wired up in Stage 4)
 
 ## Setup
 
+Needs a Postgres database (Vercel Postgres, Neon, Render Postgres, or a local
+install all work). Set `DATABASE_URL` in `.env` first, then:
+
 ```bash
 npm install
-npx prisma migrate deploy   # creates prisma/dev.db from the committed migrations
+npx prisma migrate deploy   # applies the committed migrations to DATABASE_URL
 npm run dev
 ```
+
+`npm run build` also runs `prisma migrate deploy` first (see `package.json`),
+so a deploy platform that only calls `build` still gets migrations applied.
 
 Open http://localhost:3000.
 
@@ -58,17 +64,17 @@ Update these (and re-deploy) for a future event rather than editing code.
 The current defaults assume a Jan 2026 event; update the year when reusing
 this for a different event.
 
-## Database: SQLite (dev) vs Postgres (production)
+## Deploying (e.g. to Vercel)
 
-Dev uses a local SQLite file (`prisma/dev.db`, gitignored) for zero-setup
-local development. Before deploying (e.g. to Vercel/Render), switch to
-Postgres:
-
-1. Change `provider = "sqlite"` to `provider = "postgresql"` in
-   `prisma/schema.prisma`.
-2. Point `DATABASE_URL` at your Postgres instance (Vercel Postgres, Neon,
-   Render Postgres, etc.) in your deployment's env vars.
-3. Run `npx prisma migrate deploy` against that database.
+1. Create a Postgres database (Vercel's Storage tab offers a Neon
+   integration; Neon/Render also work standalone) and copy its connection
+   string.
+2. In your deploy platform's project settings, set `DATABASE_URL` to that
+   connection string, plus `ADMIN_PASSWORD`, `NEXT_PUBLIC_BASE_URL` (the
+   deployed URL), and the `EVENT_*` vars from `.env.example`.
+3. Deploy. The build step (`prisma generate && prisma migrate deploy && next
+   build`) applies migrations automatically - no manual migration step
+   needed.
 
 ## Admin dashboard
 
