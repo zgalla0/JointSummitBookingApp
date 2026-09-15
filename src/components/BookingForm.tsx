@@ -162,9 +162,10 @@ export default function BookingForm({
         <Card>
           <div className="space-y-3">
             <p>
-              Looks like you&apos;ve already submitted a booking. We&apos;ve emailed a link to
-              manage your existing booking. If you don&apos;t see it, use &quot;Resend my link&quot;
-              on the lookup page.
+              Looks like you&apos;ve already submitted a booking. We&apos;ve emailed a link to the
+              email associated with your original form (note this may not be your Cuesta email) to
+              manage your existing booking. If you don&apos;t see it, use &quot;Resend my
+              link&quot; on the lookup page.
             </p>
             <NoticeBannerShort />
             <Link href="/my-booking" className="font-semibold text-accent-dark hover:underline">

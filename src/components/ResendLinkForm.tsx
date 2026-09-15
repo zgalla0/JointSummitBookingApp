@@ -36,8 +36,9 @@ export default function ResendLinkForm() {
     return (
       <Card title="Check your email">
         <p className="text-muted">
-          If we found a booking matching that name and email, we&apos;ve sent your personal link
-          to manage it. Give it a minute to arrive.
+          If we found a booking under that name, we&apos;ve emailed a link to the email
+          associated with your original form (note this may not be your Cuesta email) to manage
+          your existing booking. Give it a minute to arrive.
         </p>
       </Card>
     );
