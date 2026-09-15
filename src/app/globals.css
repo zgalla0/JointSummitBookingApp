@@ -8,6 +8,8 @@
   --accent: #85abc9;
   --accent-dark: #5c768a;
   --accent-soft: #edf9ff;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
   --hairline: rgba(31, 41, 55, 0.08);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -21,6 +23,8 @@
   --color-accent: var(--accent);
   --color-accent-dark: var(--accent-dark);
   --color-accent-soft: var(--accent-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-hairline: var(--hairline);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);

@@ -4,9 +4,13 @@ import { ROOM_TYPE_KEYS } from "./room-types";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
 
+// No min-length here: a fully blank row (added via "+ Add guest" then left
+// untouched) is filtered out by the guests array transform below rather than
+// blocking submission. A partially filled row still needs both names, which
+// the array-level refine enforces after filtering.
 export const guestSchema = z.object({
-  firstName: z.string().trim().min(1, "First name is required"),
-  lastName: z.string().trim().min(1, "Last name is required"),
+  firstName: z.string().trim(),
+  lastName: z.string().trim(),
   type: z.enum(["ADULT", "CHILD"]),
 });
 
@@ -42,14 +46,24 @@ export const bookingFormSchema = z
 
     ptoDates: z.array(isoDate).max(31),
 
-    guests: z.array(guestSchema).max(2, "Up to 2 additional guests (max room occupancy is 3)"),
+    guests: z
+      .array(guestSchema)
+      .transform((guests) => guests.filter((g) => g.firstName !== "" || g.lastName !== ""))
+      .refine((guests) => guests.length <= 2, {
+        message: "Up to 2 additional guests (max room occupancy is 3)",
+      })
+      .refine((guests) => guests.every((g) => g.firstName !== "" && g.lastName !== ""), {
+        message: "Please fill in both first and last name for each additional guest",
+      }),
 
     dietaryOptions: z.array(z.enum(DIETARY_OPTION_KEYS)).max(DIETARY_OPTION_KEYS.length),
     dietaryOther: z.string().trim().max(500),
 
-    flightAirline: z.string().trim().max(200),
-    flightNumber: z.string().trim().max(50),
+    flightArrivalAirline: z.string().trim().max(200),
+    flightArrivalNumber: z.string().trim().max(50),
     flightArrival: z.string().trim(), // datetime-local string, may be empty
+    flightDepartureAirline: z.string().trim().max(200),
+    flightDepartureNumber: z.string().trim().max(50),
     flightDeparture: z.string().trim(),
     flightNotes: z.string().trim().max(2000),
   })

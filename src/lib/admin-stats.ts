@@ -81,7 +81,14 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
     }
 
     if (b.flaggedForReview) flaggedForReview++;
-    if (!b.flightAirline && !b.flightNumber) missingFlightDetails++;
+    if (
+      !b.flightArrivalAirline &&
+      !b.flightArrivalNumber &&
+      !b.flightDepartureAirline &&
+      !b.flightDepartureNumber
+    ) {
+      missingFlightDetails++;
+    }
 
     ptoDatesCount += parseJsonArray(b.ptoDates).length;
 

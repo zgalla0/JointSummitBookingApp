@@ -8,6 +8,7 @@ import {
   isoDateRange,
   isoMonthDay,
   isoWeekdayLabel,
+  isThuOrFriIso,
   isTueOrWedIso,
   isToggleableIso,
   WEEKDAY_HEADER_MON_FIRST,
@@ -15,7 +16,7 @@ import {
 import { ROOM_TYPES, type RoomTypeKey } from "@/lib/room-types";
 
 const CUESTA_APPROVAL_NOTE =
-  "Only check this if arriving early has been approved by a partner or principal, this stay will be paid for by Cuesta.";
+  "* Tuesday and Wednesday nights can only be paid by the company if arriving early has been approved by a partner or principal.";
 
 export type StayDatesValue = {
   stayStart: string;
@@ -72,6 +73,22 @@ export default function StayDatesPicker({
   function isCompanyToggleable(day: string): boolean {
     return isToggleableIso(day) && isInBlock(day);
   }
+
+  // PTO applies to any Mon/Tue/Wed, plus any Thu/Fri except the specific
+  // Thu/Fri the event itself falls on (those are always paid, not PTO).
+  function showsPtoCheckbox(day: string): boolean {
+    if (isMonTueWedIso(day)) return true;
+    if (isThuOrFriIso(day)) return !defaultCompanyPaidNights.includes(day);
+    return false;
+  }
+
+  const hasTueWedCompanyPaid = useMemo(
+    () =>
+      selectedNights.some(
+        (d) => d >= blockStart && d <= blockEnd && isTueOrWedIso(d) && companyPaidSet.has(d),
+      ),
+    [selectedNights, companyPaidSet, blockStart, blockEnd],
+  );
 
   function togglePto(day: string) {
     const next = new Set(value.ptoDates);
@@ -147,6 +164,14 @@ export default function StayDatesPicker({
 
   return (
     <div className="space-y-4">
+      <p className="rounded-xl bg-background p-3 text-xs text-muted">
+        Check &quot;PTO&quot; on any weekday tile below to mark the day as PTO. This just helps us
+        track PTO across the company for coverage purposes.{" "}
+        <strong className="font-bold text-warning">
+          You still need to enter your PTO in Mavenlink separately, this does not submit it for you.
+        </strong>
+      </p>
+
       <div className="space-y-2">
         <div className="grid grid-cols-7 gap-2">
           {WEEKDAY_HEADER_MON_FIRST.map((label) => (
@@ -155,42 +180,36 @@ export default function StayDatesPicker({
             </div>
           ))}
         </div>
-        {calendarRows.map((row, i) => {
-          const rowNeedsApprovalNote = row.some(
-            (day) => day && isInBlock(day) && isTueOrWedIso(day) && companyPaidSet.has(day),
-          );
-          return (
-            <div key={i}>
-              <div className="grid grid-cols-7 gap-2">
-                {row.map((day, j) =>
-                  day ? (
-                    <DayTile
-                      key={day}
-                      day={day}
-                      selected={selectedSet.has(day)}
-                      companyPaid={companyPaidSet.has(day)}
-                      toggleable={isCompanyToggleable(day)}
-                      isTueWed={isTueOrWedIso(day)}
-                      showPto={isMonTueWedIso(day)}
-                      ptoChecked={ptoSet.has(day)}
-                      onClick={() => toggleNight(day)}
-                      onToggleClick={(e) => toggleCompanyPaid(day, e)}
-                      onPtoToggle={() => togglePto(day)}
-                    />
-                  ) : (
-                    <div key={j} />
-                  ),
-                )}
-              </div>
-              {rowNeedsApprovalNote && (
-                <p className="mt-2 rounded-xl bg-accent-soft p-3 text-xs font-medium text-accent-dark">
-                  {CUESTA_APPROVAL_NOTE}
-                </p>
-              )}
-            </div>
-          );
-        })}
+        {calendarRows.map((row, i) => (
+          <div key={i} className="grid grid-cols-7 gap-2">
+            {row.map((day, j) =>
+              day ? (
+                <DayTile
+                  key={day}
+                  day={day}
+                  selected={selectedSet.has(day)}
+                  companyPaid={companyPaidSet.has(day)}
+                  toggleable={isCompanyToggleable(day)}
+                  isTueWed={isTueOrWedIso(day)}
+                  showPto={showsPtoCheckbox(day)}
+                  ptoChecked={ptoSet.has(day)}
+                  onClick={() => toggleNight(day)}
+                  onToggleClick={(e) => toggleCompanyPaid(day, e)}
+                  onPtoToggle={() => togglePto(day)}
+                />
+              ) : (
+                <div key={j} />
+              ),
+            )}
+          </div>
+        ))}
       </div>
+
+      {hasTueWedCompanyPaid && (
+        <p className="rounded-xl bg-warning-soft p-3 text-xs font-bold text-warning">
+          {CUESTA_APPROVAL_NOTE}
+        </p>
+      )}
 
       {selectedNights.length > 0 && (
         <p className="text-sm text-muted">
@@ -203,12 +222,6 @@ export default function StayDatesPicker({
       <p className="rounded-xl bg-background p-3 text-xs text-muted">
         Your checkout date is the morning after your last night. For example, checking in Thursday and
         checking out Saturday means you&apos;re covering 2 nights: Thursday and Friday.
-      </p>
-
-      <p className="rounded-xl bg-background p-3 text-xs text-muted">
-        Check &quot;PTO&quot; on any Mon/Tue/Wed tile above to mark that day as PTO. This just helps
-        us track PTO across the company for coverage purposes. You still need to enter your PTO in
-        Mavenlink separately, this does not submit it for you.
       </p>
 
       {hasNightsOutsideBlock && (
@@ -288,10 +301,18 @@ function DayTile({
             }
           }}
           className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
-            companyPaid ? "bg-accent text-white" : "bg-foreground/15 text-foreground"
+            companyPaid ? "bg-accent text-white" : "bg-warning text-white"
           }`}
         >
-          {companyPaid ? (isTueWed ? "PAID BY CUESTA" : "CO. PAYS") : "I PAY"}
+          {companyPaid ? (isTueWed ? "PAID BY CUESTA*" : "CO. PAYS") : "I PAY"}
+        </span>
+      )}
+      {/* Weekends and nights outside the block are always self-paid, with
+          no toggle to click - just a plain label so it's just as clear as
+          the interactive tiles that the individual is paying. */}
+      {selected && !toggleable && (
+        <span className="mt-1 rounded-full bg-warning px-1.5 py-0.5 text-[9px] font-bold text-white">
+          I PAY
         </span>
       )}
       {selected && showPto && (

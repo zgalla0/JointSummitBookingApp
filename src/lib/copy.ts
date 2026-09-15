@@ -1,13 +1,14 @@
 export const NOTICE = {
   opener: "Here's what you need to know before you get started.",
-  pill: "Make all changes right here on this page",
+  pill: "Make all changes through this app, follow links through your email or search your name to update the booking.",
   playfulEmoji: "✨",
   playful: "Don't email the planning committee!",
   closer: "Run into something the page truly can't handle? That's the only time to reach out directly.",
 };
 
 // Short version (with the sparkle line), reused on the lookup page only.
-export const NOTICE_SHORT = "Make changes right here on this page, not by email.";
+export const NOTICE_SHORT =
+  "Make all changes through this app, follow links through your email or search your name to update the booking.";
 
 // Plain reminder shown just above the submit button. Distinct from the
 // banner above: no sparkles, explains how the magic link actually works.

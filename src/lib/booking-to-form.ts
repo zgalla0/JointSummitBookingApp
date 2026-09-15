@@ -48,9 +48,11 @@ export function bookingToFormInput(
     })),
     dietaryOptions: parseJsonArray(booking.dietaryOptions) as BookingFormInput["dietaryOptions"],
     dietaryOther: booking.dietaryOther ?? "",
-    flightAirline: booking.flightAirline ?? "",
-    flightNumber: booking.flightNumber ?? "",
+    flightArrivalAirline: booking.flightArrivalAirline ?? "",
+    flightArrivalNumber: booking.flightArrivalNumber ?? "",
     flightArrival: toDatetimeLocal(booking.flightArrival),
+    flightDepartureAirline: booking.flightDepartureAirline ?? "",
+    flightDepartureNumber: booking.flightDepartureNumber ?? "",
     flightDeparture: toDatetimeLocal(booking.flightDeparture),
     flightNotes: booking.flightNotes ?? "",
   };

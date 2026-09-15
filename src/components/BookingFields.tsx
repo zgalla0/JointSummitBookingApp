@@ -148,24 +148,39 @@ export default function BookingFields({
       </Card>
 
       <Card eyebrow="Travel" title="Flight details">
-        <div className="space-y-4">
+        <div className="space-y-5">
           <p className="text-sm text-muted">
             This helps us group people with similar arrival times into carpools to and from the
-            hotel.
+            hotel. Arrival and departure may be different flights, so each gets its own airline
+            and flight number.
           </p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Airline">
-              <input className="field" {...mainForm.register("flightAirline")} />
-            </Field>
-            <Field label="Flight #">
-              <input className="field" {...mainForm.register("flightNumber")} />
-            </Field>
-            <Field label="Arrival date/time">
-              <input type="datetime-local" className="field" {...mainForm.register("flightArrival")} />
-            </Field>
-            <Field label="Departure date/time">
-              <input type="datetime-local" className="field" {...mainForm.register("flightDeparture")} />
-            </Field>
+          <div className="space-y-3">
+            <p className="field-label">Arrival</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Airline">
+                <input className="field" {...mainForm.register("flightArrivalAirline")} />
+              </Field>
+              <Field label="Flight #">
+                <input className="field" {...mainForm.register("flightArrivalNumber")} />
+              </Field>
+              <Field label="Arrival date/time">
+                <input type="datetime-local" className="field" {...mainForm.register("flightArrival")} />
+              </Field>
+            </div>
+          </div>
+          <div className="space-y-3 border-t border-hairline pt-5">
+            <p className="field-label">Departure</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Airline">
+                <input className="field" {...mainForm.register("flightDepartureAirline")} />
+              </Field>
+              <Field label="Flight #">
+                <input className="field" {...mainForm.register("flightDepartureNumber")} />
+              </Field>
+              <Field label="Departure date/time">
+                <input type="datetime-local" className="field" {...mainForm.register("flightDeparture")} />
+              </Field>
+            </div>
           </div>
           <Field label="Other flight notes">
             <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />

@@ -70,12 +70,15 @@ model Booking {
   dietaryOptions String? // JSON-encoded string[] of option keys
   dietaryOther   String? // free text, used only when "Other" is selected
 
-  // Flight details
-  flightAirline    String?
-  flightNumber     String?
-  flightArrival    DateTime?
-  flightDeparture  DateTime?
-  flightNotes      String?
+  // Flight details, split into an arrival leg and a departure leg since
+  // they may be different flights (different airline/number)
+  flightArrivalAirline   String?
+  flightArrivalNumber    String?
+  flightArrival          DateTime?
+  flightDepartureAirline String?
+  flightDepartureNumber  String?
+  flightDeparture        DateTime?
+  flightNotes            String?
 
   // Status / admin flags
   status           BookingStatus @default(ACTIVE)

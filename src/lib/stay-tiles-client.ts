@@ -42,10 +42,18 @@ export function isTueOrWedIso(iso: string): boolean {
   return day === 2 || day === 3;
 }
 
-/** Mon/Tue/Wed tiles get a "PTO" checkbox (never Thu-Sun). */
+/** Mon/Tue/Wed tiles always get a "PTO" checkbox. */
 export function isMonTueWedIso(iso: string): boolean {
   const day = isoWeekday(iso);
   return day === 1 || day === 2 || day === 3;
+}
+
+/** Thu/Fri tiles get a "PTO" checkbox too, except the specific Thu/Fri the
+ *  event itself falls on (checked separately against the company-paid
+ *  event dates, since not every Thu/Fri is one of those). */
+export function isThuOrFriIso(iso: string): boolean {
+  const day = isoWeekday(iso);
+  return day === 4 || day === 5;
 }
 
 export function isoMonthDay(iso: string): string {

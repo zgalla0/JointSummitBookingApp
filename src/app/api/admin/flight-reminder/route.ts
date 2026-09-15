@@ -10,8 +10,10 @@ export async function POST() {
     where: {
       status: "ACTIVE",
       AND: [
-        { OR: [{ flightAirline: null }, { flightAirline: "" }] },
-        { OR: [{ flightNumber: null }, { flightNumber: "" }] },
+        { OR: [{ flightArrivalAirline: null }, { flightArrivalAirline: "" }] },
+        { OR: [{ flightArrivalNumber: null }, { flightArrivalNumber: "" }] },
+        { OR: [{ flightDepartureAirline: null }, { flightDepartureAirline: "" }] },
+        { OR: [{ flightDepartureNumber: null }, { flightDepartureNumber: "" }] },
       ],
     },
   });

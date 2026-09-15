@@ -102,9 +102,11 @@ export default async function AdminBookingDetailPage({
         </Card>
 
         <Card eyebrow="Travel" title="Flight details">
-          <Row label="Airline" value={booking.flightAirline} />
-          <Row label="Flight #" value={booking.flightNumber} />
+          <Row label="Arrival airline" value={booking.flightArrivalAirline} />
+          <Row label="Arrival flight #" value={booking.flightArrivalNumber} />
           <Row label="Arrival" value={booking.flightArrival?.toISOString()} />
+          <Row label="Departure airline" value={booking.flightDepartureAirline} />
+          <Row label="Departure flight #" value={booking.flightDepartureNumber} />
           <Row label="Departure" value={booking.flightDeparture?.toISOString()} />
           <Row label="Notes" value={booking.flightNotes} />
         </Card>
