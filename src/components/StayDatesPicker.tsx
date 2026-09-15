@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import {
   addIsoDays,
   buildCalendarGrid,
+  isMonTueWedIso,
   isoDateRange,
   isoMonthDay,
   isoWeekdayLabel,
@@ -21,13 +22,14 @@ export type StayDatesValue = {
   companyPaidNights: string[];
   needsExtraNights: boolean;
   extraNights: string[];
+  ptoDates: string[];
 };
 
 export default function StayDatesPicker({
   bookableStart,
   bookableEnd,
-  extendedStart,
-  extendedEnd,
+  blockStart,
+  blockEnd,
   discountStart,
   discountEnd,
   discountRateUsd,
@@ -37,8 +39,8 @@ export default function StayDatesPicker({
 }: {
   bookableStart: string;
   bookableEnd: string;
-  extendedStart: string;
-  extendedEnd: string;
+  blockStart: string;
+  blockEnd: string;
   discountStart: string;
   discountEnd: string;
   discountRateUsd: number;
@@ -57,21 +59,27 @@ export default function StayDatesPicker({
   const selectedSet = useMemo(() => new Set(selectedNights), [selectedNights]);
   const companyPaidSet = useMemo(() => new Set(value.companyPaidNights), [value.companyPaidNights]);
   const extraSet = useMemo(() => new Set(value.extraNights), [value.extraNights]);
+  const ptoSet = useMemo(() => new Set(value.ptoDates), [value.ptoDates]);
 
-  const calendarRows = useMemo(
-    () => buildCalendarGrid(bookableStart, bookableEnd),
-    [bookableStart, bookableEnd],
-  );
+  const calendarRows = useMemo(() => buildCalendarGrid(blockStart, blockEnd), [blockStart, blockEnd]);
   const preBufferDays = useMemo(
-    () => isoDateRange(extendedStart, addIsoDays(bookableStart, -1)),
-    [extendedStart, bookableStart],
+    () => isoDateRange(bookableStart, addIsoDays(blockStart, -1)),
+    [bookableStart, blockStart],
   );
   const postBufferDays = useMemo(
-    () => isoDateRange(addIsoDays(bookableEnd, 1), extendedEnd),
-    [bookableEnd, extendedEnd],
+    () => isoDateRange(addIsoDays(blockEnd, 1), bookableEnd),
+    [blockEnd, bookableEnd],
   );
 
   const [showExtraNights, setShowExtraNights] = useState(value.extraNights.length > 0);
+
+  function togglePto(day: string) {
+    const next = new Set(value.ptoDates);
+    if (next.has(day)) next.delete(day);
+    else next.add(day);
+    const nextArr = [...next];
+    onChange({ ptoDates: nextArr });
+  }
 
   function toggleNight(day: string) {
     if (!selectedSet.has(day)) {
@@ -99,15 +107,33 @@ export default function StayDatesPicker({
     const min = selectedNights[0];
     const max = selectedNights[selectedNights.length - 1];
     if (day === min && day === max) {
-      onChange({ stayStart: "", stayEnd: "", companyPaidNights: [] });
+      onChange({
+        stayStart: "",
+        stayEnd: "",
+        companyPaidNights: [],
+        ptoDates: value.ptoDates.filter((d) => d !== day),
+      });
     } else if (day === min) {
       const newMin = addIsoDays(day, 1);
-      onChange({ stayStart: newMin, companyPaidNights: value.companyPaidNights.filter((d) => d !== day) });
+      onChange({
+        stayStart: newMin,
+        companyPaidNights: value.companyPaidNights.filter((d) => d !== day),
+        ptoDates: value.ptoDates.filter((d) => d !== day),
+      });
     } else if (day === max) {
       const newMax = addIsoDays(day, -1);
-      onChange({ stayEnd: addIsoDays(newMax, 1), companyPaidNights: value.companyPaidNights.filter((d) => d !== day) });
+      onChange({
+        stayEnd: addIsoDays(newMax, 1),
+        companyPaidNights: value.companyPaidNights.filter((d) => d !== day),
+        ptoDates: value.ptoDates.filter((d) => d !== day),
+      });
     } else {
-      onChange({ stayStart: day, stayEnd: addIsoDays(day, 1), companyPaidNights: isToggleableIso(day) ? [day] : [] });
+      onChange({
+        stayStart: day,
+        stayEnd: addIsoDays(day, 1),
+        companyPaidNights: isToggleableIso(day) ? [day] : [],
+        ptoDates: value.ptoDates.filter((d) => d === day),
+      });
     }
   }
 
@@ -121,9 +147,13 @@ export default function StayDatesPicker({
 
   function toggleExtraNight(day: string) {
     const next = new Set(value.extraNights);
-    if (next.has(day)) next.delete(day);
-    else next.add(day);
-    onChange({ extraNights: [...next] });
+    if (next.has(day)) {
+      next.delete(day);
+      onChange({ extraNights: [...next], ptoDates: value.ptoDates.filter((d) => d !== day) });
+    } else {
+      next.add(day);
+      onChange({ extraNights: [...next] });
+    }
   }
 
   return (
@@ -157,8 +187,11 @@ export default function StayDatesPicker({
                       companyPaid={companyPaidSet.has(day)}
                       toggleable={isToggleableIso(day)}
                       isTueWed={isTueOrWedIso(day)}
+                      showPto={isMonTueWedIso(day)}
+                      ptoChecked={ptoSet.has(day)}
                       onClick={() => toggleNight(day)}
                       onToggleClick={(e) => toggleCompanyPaid(day, e)}
+                      onPtoToggle={() => togglePto(day)}
                     />
                   ) : (
                     <div key={j} />
@@ -203,7 +236,9 @@ export default function StayDatesPicker({
               <FlowGrid
                 days={preBufferDays}
                 selectedSet={extraSet}
+                ptoSet={ptoSet}
                 onTileClick={toggleExtraNight}
+                onPtoToggle={togglePto}
                 showMonth
               />
             )}
@@ -211,7 +246,9 @@ export default function StayDatesPicker({
               <FlowGrid
                 days={postBufferDays}
                 selectedSet={extraSet}
+                ptoSet={ptoSet}
                 onTileClick={toggleExtraNight}
+                onPtoToggle={togglePto}
                 showMonth
               />
             )}
@@ -226,12 +263,16 @@ export default function StayDatesPicker({
 function FlowGrid({
   days,
   selectedSet,
+  ptoSet,
   onTileClick,
+  onPtoToggle,
   showMonth = false,
 }: {
   days: string[];
   selectedSet: Set<string>;
+  ptoSet: Set<string>;
   onTileClick: (day: string) => void;
+  onPtoToggle: (day: string) => void;
   showMonth?: boolean;
 }) {
   return (
@@ -243,8 +284,11 @@ function FlowGrid({
           selected={selectedSet.has(day)}
           companyPaid={false}
           toggleable={false}
+          showPto={selectedSet.has(day) && isMonTueWedIso(day)}
+          ptoChecked={ptoSet.has(day)}
           onClick={() => onTileClick(day)}
           onToggleClick={() => {}}
+          onPtoToggle={() => onPtoToggle(day)}
           showMonth={showMonth}
         />
       ))}
@@ -258,8 +302,11 @@ function DayTile({
   companyPaid,
   toggleable,
   isTueWed = false,
+  showPto,
+  ptoChecked,
   onClick,
   onToggleClick,
+  onPtoToggle,
   showMonth = false,
 }: {
   day: string;
@@ -267,8 +314,11 @@ function DayTile({
   companyPaid: boolean;
   toggleable: boolean;
   isTueWed?: boolean;
+  showPto: boolean;
+  ptoChecked: boolean;
   onClick: () => void;
   onToggleClick: (e: React.MouseEvent) => void;
+  onPtoToggle: () => void;
   showMonth?: boolean;
 }) {
   return (
@@ -304,6 +354,20 @@ function DayTile({
         >
           {companyPaid ? (isTueWed ? "PAID BY CUESTA" : "CO. PAYS") : "I PAY"}
         </span>
+      )}
+      {selected && showPto && (
+        <label
+          className="mt-1 flex items-center gap-1 text-[9px] font-semibold text-muted"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="checkbox"
+            checked={ptoChecked}
+            onChange={onPtoToggle}
+            className="accent-accent-dark h-3 w-3"
+          />
+          PTO
+        </label>
       )}
     </button>
   );

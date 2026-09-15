@@ -32,7 +32,12 @@ All event dates, the discount rate, and the lock-in date are environment
 variables, not hardcoded, so this can be reused for future events. See `.env`
 for the full list and current defaults:
 
-- `EVENT_BOOKABLE_START` / `EVENT_BOOKABLE_END` - range shown in the date picker.
+- `EVENT_BOOKABLE_START` / `EVENT_BOOKABLE_END` - outer limit of dates
+  selectable at all (the hotel's group-rate extension may reach further than
+  the standard block below).
+- `EVENT_BLOCK_START` / `EVENT_BLOCK_END` - the standard block, shown
+  directly in the calendar. "+ Add extra nights outside the block" reveals
+  tiles between this and the bookable range above (self-paid only).
 - `EVENT_DISCOUNT_START` / `EVENT_DISCOUNT_END` / `EVENT_DISCOUNT_RATE_USD` -
   the $105/night group rate window.
 - `EVENT_HAPPY_HOUR_DATE` / `EVENT_ALL_HANDS_DATE` / `EVENT_DINNER_DATE` -
@@ -41,9 +46,6 @@ for the full list and current defaults:
   any Tue-Fri night between company-pays and self-pays themselves (that
   toggle *is* the "select" self-attestation, stored per booking rather than
   a single yes/no field).
-- `EVENT_EXTRA_NIGHTS_BUFFER_DAYS` - how many extra self-pay-only days the
-  "+ Add extra nights outside the block" control reveals on either side of
-  the bookable range.
 - `EVENT_LOCK_IN_DATE` - after this date, edits/cancellations stop being
   automatic (Stage 2).
 - `EVENT_CANCEL_HOTEL_NOTICE_DAYS` - days-out cutoff for the automatic hotel

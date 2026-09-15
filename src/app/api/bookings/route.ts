@@ -42,6 +42,8 @@ export async function POST(req: Request) {
       companyPaidNights: JSON.stringify(data.companyPaidNights),
       needsExtraNights: data.needsExtraNights,
       extraNights: data.needsExtraNights ? JSON.stringify(data.extraNights) : null,
+      ptoAroundSummit: data.ptoAroundSummit,
+      ptoDates: data.ptoDates.length > 0 ? JSON.stringify(data.ptoDates) : null,
       dietaryOptions: JSON.stringify(data.dietaryOptions),
       dietaryOther: data.dietaryOptions.includes("OTHER") ? data.dietaryOther || null : null,
       flightAirline: data.flightAirline || null,

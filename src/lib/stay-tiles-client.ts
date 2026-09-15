@@ -42,6 +42,12 @@ export function isTueOrWedIso(iso: string): boolean {
   return day === 2 || day === 3;
 }
 
+/** Mon/Tue/Wed tiles get a "PTO" checkbox (never Thu-Sun). */
+export function isMonTueWedIso(iso: string): boolean {
+  const day = isoWeekday(iso);
+  return day === 1 || day === 2 || day === 3;
+}
+
 export function isoMonthDay(iso: string): string {
   const d = new Date(`${iso}T00:00:00.000Z`);
   const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

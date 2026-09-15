@@ -14,15 +14,17 @@ function addDays(date: Date, days: number): Date {
 }
 
 export const config = {
-  // Dates selectable in the date picker. Hotel may extend this range (up to
-  // 5 days post-event) once confirmed, so this is deliberately separate from
-  // the discount window.
+  // Outer limit of dates selectable at all (the standard block plus however
+  // far the hotel's group-rate extension reaches). "+ Add extra nights"
+  // reveals tiles between the standard block and these outer edges.
   bookableStart: envDate("EVENT_BOOKABLE_START", "2026-01-14"),
-  bookableEnd: envDate("EVENT_BOOKABLE_END", "2026-01-29"),
+  bookableEnd: envDate("EVENT_BOOKABLE_END", "2026-02-05"),
 
-  // "+ Add extra nights" reveals this many extra days of tiles on either
-  // side of the bookable range (self-paid only, no company-pay toggle).
-  extraNightsBufferDays: Number(process.env.EVENT_EXTRA_NIGHTS_BUFFER_DAYS ?? "5"),
+  // The standard block, shown directly in the calendar (no need to expand
+  // "+ Add extra nights" to see it). Deliberately separate from the bookable
+  // range above, since the hotel's extension can grow independently.
+  blockStart: envDate("EVENT_BLOCK_START", "2026-01-14"),
+  blockEnd: envDate("EVENT_BLOCK_END", "2026-01-29"),
 
   // $105/night group rate is only guaranteed inside this window.
   discountStart: envDate("EVENT_DISCOUNT_START", "2026-01-16"),
@@ -41,11 +43,6 @@ export const config = {
   // Cancelling this many days or fewer before stay start skips the automatic
   // hotel notification email (admin is still notified either way).
   cancelHotelNoticeDays: Number(process.env.EVENT_CANCEL_HOTEL_NOTICE_DAYS ?? "10"),
-};
-
-export const extendedRange = {
-  start: addDays(config.bookableStart, -config.extraNightsBufferDays),
-  end: addDays(config.bookableEnd, config.extraNightsBufferDays),
 };
 
 /** Tue/Wed/Thu/Fri nights are the only ones with a company-pays/self-pays

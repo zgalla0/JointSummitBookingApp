@@ -37,7 +37,10 @@ export const bookingFormSchema = z
     needsExtraNights: z.boolean(),
     extraNights: z.array(isoDate).max(10),
 
-    guests: z.array(guestSchema).max(3, "Up to 3 additional guests"),
+    ptoAroundSummit: z.boolean(),
+    ptoDates: z.array(isoDate).max(31),
+
+    guests: z.array(guestSchema).max(2, "Up to 2 additional guests (max room occupancy is 3)"),
 
     dietaryOptions: z.array(z.enum(DIETARY_OPTION_KEYS)).max(DIETARY_OPTION_KEYS.length),
     dietaryOther: z.string().trim().max(500),

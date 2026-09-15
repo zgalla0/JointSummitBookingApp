@@ -16,8 +16,8 @@ export default function GuestFields({
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted">
-        Room rate covers up to 2 adults at no extra charge (just a $3 bellman tip for the 2nd). A
-        3rd adult adds a $25/night fee plus tax, paid directly to the hotel.
+        Room rate covers 1 adult at no extra charge. The 2nd person adds $3 USD + tax per night.
+        The 3rd person adds $28 USD + tax per night. Max room occupancy is 3 people.
       </p>
 
       {fields.map((field, index) => (
@@ -43,7 +43,7 @@ export default function GuestFields({
         </div>
       ))}
 
-      {fields.length < 3 && (
+      {fields.length < 2 && (
         <Button type="button" variant="secondary" onClick={() => append({ firstName: "", lastName: "", type: "ADULT" })}>
           + Add guest
         </Button>

@@ -1,4 +1,4 @@
-import { config, extendedRange, defaultCompanyPaidNights } from "@/lib/config";
+import { config, defaultCompanyPaidNights } from "@/lib/config";
 import { toISODate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import BookingForm from "@/components/BookingForm";
@@ -13,8 +13,8 @@ export default async function Home() {
   const formConfig = {
     bookableStart: toISODate(config.bookableStart),
     bookableEnd: toISODate(config.bookableEnd),
-    extendedStart: toISODate(extendedRange.start),
-    extendedEnd: toISODate(extendedRange.end),
+    blockStart: toISODate(config.blockStart),
+    blockEnd: toISODate(config.blockEnd),
     discountStart: toISODate(config.discountStart),
     discountEnd: toISODate(config.discountEnd),
     discountRateUsd: config.discountRateUsd,
