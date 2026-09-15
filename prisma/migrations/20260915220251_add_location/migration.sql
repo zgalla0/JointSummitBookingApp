@@ -1,11 +1,9 @@
-/*
-  Warnings:
-
-  - Added the required column `location` to the `Booking` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- CreateEnum
 CREATE TYPE "LocationRegion" AS ENUM ('US_CAN_IRE', 'LATAM');
 
 -- AlterTable
-ALTER TABLE "Booking" ADD COLUMN     "location" "LocationRegion" NOT NULL;
+-- Backfill existing rows (test bookings from earlier rounds) with a
+-- placeholder default, then drop the default so schema.prisma (which
+-- declares no @default) and the DB stay in sync for future migrations.
+ALTER TABLE "Booking" ADD COLUMN     "location" "LocationRegion" NOT NULL DEFAULT 'US_CAN_IRE';
+ALTER TABLE "Booking" ALTER COLUMN "location" DROP DEFAULT;
