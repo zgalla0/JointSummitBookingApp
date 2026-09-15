@@ -221,6 +221,12 @@ export default function StayDatesPicker({
         checking out Saturday means you&apos;re covering 2 nights: Thursday and Friday.
       </p>
 
+      <p className="rounded-xl bg-background p-3 text-xs text-muted">
+        Check &quot;PTO&quot; on any Mon/Tue/Wed tile above to mark that day as PTO. This just helps
+        us track PTO across the company for coverage purposes. You still need to enter your PTO in
+        Mavenlink separately, this does not submit it for you.
+      </p>
+
       <div>
         <button
           type="button"

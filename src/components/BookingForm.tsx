@@ -53,7 +53,6 @@ const emptyDefaults: BookingFormInput = {
   companyPaidNights: [],
   needsExtraNights: false,
   extraNights: [],
-  ptoAroundSummit: false,
   ptoDates: [],
   guests: [],
   dietaryOptions: [],
@@ -95,7 +94,6 @@ export default function BookingForm({
   const needsExtraNights = mainForm.watch("needsExtraNights");
   const extraNights = mainForm.watch("extraNights");
   const ptoDates = mainForm.watch("ptoDates");
-  const ptoAroundSummit = mainForm.watch("ptoAroundSummit");
   const hotelEmail = mainForm.watch("hotelEmail");
   const attendingHappyHour = mainForm.watch("attendingHappyHour");
   const attendingDinner = mainForm.watch("attendingDinner");
@@ -264,11 +262,6 @@ export default function BookingForm({
                 for (const [key, val] of Object.entries(patch)) {
                   mainForm.setValue(key as keyof BookingFormInput, val as never, { shouldValidate: false });
                 }
-                // Auto-check "taking PTO" once any tile is marked, but never
-                // auto-uncheck it (the attendee may still be editable manually).
-                if (patch.ptoDates && patch.ptoDates.length > 0 && !ptoAroundSummit) {
-                  mainForm.setValue("ptoAroundSummit", true);
-                }
               }}
             />
             {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
@@ -312,32 +305,6 @@ export default function BookingForm({
               <Field label="Other flight notes">
                 <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
               </Field>
-            </div>
-          </Card>
-
-          <Card eyebrow="Time off" title="PTO around the Summit">
-            <div className="space-y-3">
-              <Checkbox
-                label="Are you taking PTO before or after the Summit?"
-                {...mainForm.register("ptoAroundSummit")}
-              />
-              <p className="text-sm text-muted">
-                This is just to help us track PTO across the company for coverage purposes. You
-                still need to enter your PTO in Mavenlink separately, this does not submit it for
-                you.
-              </p>
-              <div>
-                <span className="field-label">PTO dates</span>
-                <p className="text-sm">
-                  {ptoDates.length > 0
-                    ? ptoDates
-                        .slice()
-                        .sort()
-                        .map((d) => formatShortDate(d))
-                        .join(", ")
-                    : "None marked yet, check a day above to add it here."}
-                </p>
-              </div>
             </div>
           </Card>
 

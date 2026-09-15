@@ -58,14 +58,13 @@ model Booking {
   needsExtraNights Boolean @default(false)
   extraNights      String? // JSON-encoded string[] of ISO dates, null/empty if none
 
-  // PTO around the Summit: dates come from the Mon/Tue/Wed tile checkboxes in
-  // the stay-dates picker (JSON-encoded string[] of ISO dates); the yes/no
-  // question auto-checks once any date is marked but stays independently
-  // editable. Tracked separately from extra self-paid nights since someone
-  // may take PTO without an extra hotel night, or vice versa. This mirrors a
-  // column in an internal tracker spreadsheet, not a real PTO submission.
-  ptoAroundSummit Boolean @default(false)
-  ptoDates        String? // JSON-encoded string[] of ISO dates
+  // PTO days, marked via the "PTO" checkbox on Mon/Tue/Wed tiles in the
+  // stay-dates picker (JSON-encoded string[] of ISO dates). This is the only
+  // place PTO is captured, there is no separate PTO section on the form.
+  // Tracked separately from extra self-paid nights since someone may take
+  // PTO without an extra hotel night, or vice versa. Mirrors a column in an
+  // internal tracker spreadsheet, not a real Mavenlink PTO submission.
+  ptoDates String? // JSON-encoded string[] of ISO dates
 
   // Dietary / allergies: multi-select checklist plus a free-text "Other"
   dietaryOptions String? // JSON-encoded string[] of option keys
