@@ -4,6 +4,10 @@ import { findDuplicateBooking } from "@/lib/duplicate-check";
 import { prisma } from "@/lib/prisma";
 import { generateMagicLinkToken, magicLinkExpiry, magicLinkUrl } from "@/lib/magic-link";
 import { sendConfirmationEmail } from "@/lib/email";
+import { config } from "@/lib/config";
+import { toISODate } from "@/lib/format";
+import { isoDateRange, addIsoDays } from "@/lib/stay-tiles-client";
+import { ROOM_TYPE_KEYS } from "@/lib/room-types";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -20,6 +24,26 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: { formErrors: ["A booking already exists for this name and email."] } },
       { status: 409 },
+    );
+  }
+
+  // Nights outside the standard block are always self-paid and need a room
+  // type choice; the block config only lives server-side, so this can't be
+  // a zod refine.
+  const blockStart = toISODate(config.blockStart);
+  const blockEnd = toISODate(config.blockEnd);
+  const lastNight = addIsoDays(data.stayEnd, -1);
+  const hasNightsOutsideBlock = isoDateRange(data.stayStart, lastNight).some(
+    (night) => night < blockStart || night > blockEnd,
+  );
+  if (hasNightsOutsideBlock && !ROOM_TYPE_KEYS.includes(data.extraNightsRoomType as never)) {
+    return NextResponse.json(
+      {
+        error: {
+          formErrors: ["Please choose a room type for the night(s) outside the standard block."],
+        },
+      },
+      { status: 400 },
     );
   }
 
@@ -41,8 +65,7 @@ export async function POST(req: Request) {
       stayStart: new Date(`${data.stayStart}T00:00:00.000Z`),
       stayEnd: new Date(`${data.stayEnd}T00:00:00.000Z`),
       companyPaidNights: JSON.stringify(data.companyPaidNights),
-      needsExtraNights: data.extraNights.length > 0,
-      extraNights: data.extraNights.length > 0 ? JSON.stringify(data.extraNights) : null,
+      extraNightsRoomType: hasNightsOutsideBlock ? data.extraNightsRoomType : null,
       ptoDates: data.ptoDates.length > 0 ? JSON.stringify(data.ptoDates) : null,
       dietaryOptions: JSON.stringify(data.dietaryOptions),
       dietaryOther: data.dietaryOptions.includes("OTHER") ? data.dietaryOther || null : null,

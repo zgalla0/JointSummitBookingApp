@@ -54,10 +54,9 @@ model Booking {
   // Only Tue-Fri nights are ever toggleable; all others are always self-paid.
   companyPaidNights String? // JSON-encoded string[] of ISO dates
 
-  // Extra self-paid nights outside the standard block, stored as an array of
-  // ISO date strings (e.g. ["2026-01-13", "2026-01-30"])
-  needsExtraNights Boolean @default(false)
-  extraNights      String? // JSON-encoded string[] of ISO dates, null/empty if none
+  // Room type for any selected night outside the standard block (always
+  // self-paid). Null when the whole stay is within the standard block.
+  extraNightsRoomType String? // "DELUXE" ($105/night) or "BRISAS" ($145/night)
 
   // PTO days, marked via the "PTO" checkbox on Mon/Tue/Wed tiles in the
   // stay-dates picker (JSON-encoded string[] of ISO dates). This is the only

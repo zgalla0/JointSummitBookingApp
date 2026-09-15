@@ -12,6 +12,7 @@ import {
 } from "@/lib/booking-schema";
 import { formatShortDate } from "@/lib/format";
 import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
+import { SUBMIT_REMINDER } from "@/lib/copy";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import Checkbox from "./ui/Checkbox";
@@ -24,9 +25,6 @@ export type FormConfig = {
   bookableEnd: string;
   blockStart: string;
   blockEnd: string;
-  discountStart: string;
-  discountEnd: string;
-  discountRateUsd: number;
   happyHourDate: string;
   allHandsDate: string;
   dinnerDate: string;
@@ -52,7 +50,7 @@ const emptyDefaults: BookingFormInput = {
   stayStart: "",
   stayEnd: "",
   companyPaidNights: [],
-  extraNights: [],
+  extraNightsRoomType: "",
   ptoDates: [],
   guests: [],
   dietaryOptions: [],
@@ -91,8 +89,8 @@ export default function BookingForm({
   const stayStart = mainForm.watch("stayStart");
   const stayEnd = mainForm.watch("stayEnd");
   const companyPaidNights = mainForm.watch("companyPaidNights");
-  const extraNights = mainForm.watch("extraNights");
   const ptoDates = mainForm.watch("ptoDates");
+  const extraNightsRoomType = mainForm.watch("extraNightsRoomType");
   const hotelEmail = mainForm.watch("hotelEmail");
   const attendingHappyHour = mainForm.watch("attendingHappyHour");
   const attendingDinner = mainForm.watch("attendingDinner");
@@ -263,11 +261,8 @@ export default function BookingForm({
               bookableEnd={formConfig.bookableEnd}
               blockStart={formConfig.blockStart}
               blockEnd={formConfig.blockEnd}
-              discountStart={formConfig.discountStart}
-              discountEnd={formConfig.discountEnd}
-              discountRateUsd={formConfig.discountRateUsd}
               defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
-              value={{ stayStart, stayEnd, companyPaidNights, extraNights, ptoDates }}
+              value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
               onChange={(patch) => {
                 for (const [key, val] of Object.entries(patch)) {
                   mainForm.setValue(key as keyof BookingFormInput, val as never, { shouldValidate: false });
@@ -331,7 +326,7 @@ export default function BookingForm({
             </Card>
           )}
 
-          <NoticeBannerShort />
+          <p className="text-sm text-muted">{SUBMIT_REMINDER}</p>
 
           <Button type="submit" disabled={submitting}>
             {submitting ? "Submitting..." : "Submit booking"}

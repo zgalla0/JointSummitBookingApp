@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   addIsoDays,
   buildCalendarGrid,
@@ -12,6 +12,7 @@ import {
   isToggleableIso,
   WEEKDAY_HEADER_MON_FIRST,
 } from "@/lib/stay-tiles-client";
+import { ROOM_TYPES, type RoomTypeKey } from "@/lib/room-types";
 
 const CUESTA_APPROVAL_NOTE =
   "Only check this if arriving early has been approved by a partner or principal, this stay will be paid for by Cuesta.";
@@ -20,8 +21,8 @@ export type StayDatesValue = {
   stayStart: string;
   stayEnd: string; // checkout date, i.e. the day after the last selected night
   companyPaidNights: string[];
-  extraNights: string[];
   ptoDates: string[];
+  extraNightsRoomType: string; // "" | RoomTypeKey
 };
 
 export default function StayDatesPicker({
@@ -29,9 +30,6 @@ export default function StayDatesPicker({
   bookableEnd,
   blockStart,
   blockEnd,
-  discountStart,
-  discountEnd,
-  discountRateUsd,
   defaultCompanyPaidNights,
   value,
   onChange,
@@ -40,14 +38,12 @@ export default function StayDatesPicker({
   bookableEnd: string;
   blockStart: string;
   blockEnd: string;
-  discountStart: string;
-  discountEnd: string;
-  discountRateUsd: number;
   defaultCompanyPaidNights: string[];
   value: StayDatesValue;
   onChange: (patch: Partial<StayDatesValue>) => void;
 }) {
-  // Selected "nights" within the standard block, e.g. ["2026-01-20", "2026-01-21"].
+  // Selected nights, e.g. ["2026-01-20", "2026-01-21"]. May extend before or
+  // after the standard block, anywhere within the bookable range.
   const selectedNights = useMemo(() => {
     if (!value.stayStart || !value.stayEnd) return [] as string[];
     const lastNight = addIsoDays(value.stayEnd, -1);
@@ -57,20 +53,24 @@ export default function StayDatesPicker({
 
   const selectedSet = useMemo(() => new Set(selectedNights), [selectedNights]);
   const companyPaidSet = useMemo(() => new Set(value.companyPaidNights), [value.companyPaidNights]);
-  const extraSet = useMemo(() => new Set(value.extraNights), [value.extraNights]);
   const ptoSet = useMemo(() => new Set(value.ptoDates), [value.ptoDates]);
 
-  // One continuous grid spanning the whole bookable range (not just the
-  // standard block) so every selectable day is always visible.
   const calendarRows = useMemo(
     () => buildCalendarGrid(bookableStart, bookableEnd),
     [bookableStart, bookableEnd],
   );
 
-  const [showExtraNights, setShowExtraNights] = useState(value.extraNights.length > 0);
+  const hasNightsOutsideBlock = useMemo(
+    () => selectedNights.some((d) => d < blockStart || d > blockEnd),
+    [selectedNights, blockStart, blockEnd],
+  );
 
   function isInBlock(day: string): boolean {
     return day >= blockStart && day <= blockEnd;
+  }
+
+  function isCompanyToggleable(day: string): boolean {
+    return isToggleableIso(day) && isInBlock(day);
   }
 
   function togglePto(day: string) {
@@ -89,7 +89,7 @@ export default function StayDatesPicker({
       const filled = isoDateRange(newMin, newMax);
       const seededCompanyPaid = new Set(value.companyPaidNights);
       for (const d of filled) {
-        if (isToggleableIso(d) && !companyPaidSet.has(d) && defaultCompanyPaidNights.includes(d)) {
+        if (isCompanyToggleable(d) && !companyPaidSet.has(d) && defaultCompanyPaidNights.includes(d)) {
           seededCompanyPaid.add(d);
         }
       }
@@ -111,6 +111,7 @@ export default function StayDatesPicker({
         stayEnd: "",
         companyPaidNights: [],
         ptoDates: value.ptoDates.filter((d) => d !== day),
+        extraNightsRoomType: "",
       });
     } else if (day === min) {
       const newMin = addIsoDays(day, 1);
@@ -130,7 +131,7 @@ export default function StayDatesPicker({
       onChange({
         stayStart: day,
         stayEnd: addIsoDays(day, 1),
-        companyPaidNights: isToggleableIso(day) ? [day] : [],
+        companyPaidNights: isCompanyToggleable(day) ? [day] : [],
         ptoDates: value.ptoDates.filter((d) => d === day),
       });
     }
@@ -144,24 +145,8 @@ export default function StayDatesPicker({
     onChange({ companyPaidNights: [...next] });
   }
 
-  function toggleExtraNight(day: string) {
-    const next = new Set(value.extraNights);
-    if (next.has(day)) {
-      next.delete(day);
-      onChange({ extraNights: [...next], ptoDates: value.ptoDates.filter((d) => d !== day) });
-    } else {
-      next.add(day);
-      onChange({ extraNights: [...next] });
-    }
-  }
-
   return (
     <div className="space-y-4">
-      <p className="text-xs text-muted">
-        Group rate of ${discountRateUsd}/night applies {isoMonthDay(discountStart)} to{" "}
-        {isoMonthDay(discountEnd)} only.
-      </p>
-
       <div className="space-y-2">
         <div className="grid grid-cols-7 gap-2">
           {WEEKDAY_HEADER_MON_FIRST.map((label) => (
@@ -177,42 +162,25 @@ export default function StayDatesPicker({
           return (
             <div key={i}>
               <div className="grid grid-cols-7 gap-2">
-                {row.map((day, j) => {
-                  if (!day) return <div key={j} />;
-                  if (isInBlock(day)) {
-                    return (
-                      <DayTile
-                        key={day}
-                        day={day}
-                        selected={selectedSet.has(day)}
-                        companyPaid={companyPaidSet.has(day)}
-                        toggleable={isToggleableIso(day)}
-                        isTueWed={isTueOrWedIso(day)}
-                        showPto={isMonTueWedIso(day)}
-                        ptoChecked={ptoSet.has(day)}
-                        onClick={() => toggleNight(day)}
-                        onToggleClick={(e) => toggleCompanyPaid(day, e)}
-                        onPtoToggle={() => togglePto(day)}
-                      />
-                    );
-                  }
-                  const active = showExtraNights;
-                  return (
+                {row.map((day, j) =>
+                  day ? (
                     <DayTile
                       key={day}
                       day={day}
-                      selected={extraSet.has(day)}
-                      companyPaid={false}
-                      toggleable={false}
-                      showPto={active && extraSet.has(day) && isMonTueWedIso(day)}
+                      selected={selectedSet.has(day)}
+                      companyPaid={companyPaidSet.has(day)}
+                      toggleable={isCompanyToggleable(day)}
+                      isTueWed={isTueOrWedIso(day)}
+                      showPto={isMonTueWedIso(day)}
                       ptoChecked={ptoSet.has(day)}
-                      onClick={() => toggleExtraNight(day)}
-                      onToggleClick={() => {}}
+                      onClick={() => toggleNight(day)}
+                      onToggleClick={(e) => toggleCompanyPaid(day, e)}
                       onPtoToggle={() => togglePto(day)}
-                      disabled={!active}
                     />
-                  );
-                })}
+                  ) : (
+                    <div key={j} />
+                  ),
+                )}
               </div>
               {rowNeedsApprovalNote && (
                 <p className="mt-2 rounded-xl bg-accent-soft p-3 text-xs font-medium text-accent-dark">
@@ -243,21 +211,27 @@ export default function StayDatesPicker({
         Mavenlink separately, this does not submit it for you.
       </p>
 
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowExtraNights((v) => !v)}
-          className="text-sm font-semibold text-accent-dark hover:underline"
-        >
-          {showExtraNights ? "− Hide extra nights outside the block" : "+ Add extra nights outside the block"}
-        </button>
-        {!showExtraNights && (
-          <p className="mt-1 text-xs text-muted">
-            The grayed-out tiles above (before/after the standard block) become selectable here,
-            always paid by you.
+      {hasNightsOutsideBlock && (
+        <div className="space-y-2 rounded-xl border border-hairline p-3">
+          <p className="field-label">Room type for the night(s) outside the standard block</p>
+          {ROOM_TYPES.map((rt) => (
+            <label key={rt.key} className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="extraNightsRoomType"
+                checked={value.extraNightsRoomType === rt.key}
+                onChange={() => onChange({ extraNightsRoomType: rt.key as RoomTypeKey })}
+                className="accent-accent-dark h-4 w-4"
+              />
+              {rt.label}, ${rt.priceUsd} per night
+            </label>
+          ))}
+          <p className="text-xs text-muted">
+            Room types are limited in availability. We&apos;ll do our best to match you with your
+            selected room type, but it isn&apos;t guaranteed.
           </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -273,7 +247,6 @@ function DayTile({
   onClick,
   onToggleClick,
   onPtoToggle,
-  disabled = false,
 }: {
   day: string;
   selected: boolean;
@@ -285,25 +258,17 @@ function DayTile({
   onClick: () => void;
   onToggleClick: (e: React.MouseEvent) => void;
   onPtoToggle: () => void;
-  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out ${
-        disabled
-          ? "cursor-not-allowed border-hairline bg-background opacity-40"
-          : "hover:scale-[1.04]"
-      } ${
-        !disabled && selected
+      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${
+        selected
           ? companyPaid
             ? "border-accent bg-accent-soft"
             : "border-foreground/20 bg-foreground/10"
-          : !disabled
-            ? "border-hairline bg-surface hover:border-accent/40"
-            : ""
+          : "border-hairline bg-surface hover:border-accent/40"
       }`}
     >
       <span className="text-[10px] font-semibold tracking-wide text-muted uppercase">
@@ -337,7 +302,6 @@ function DayTile({
             type="checkbox"
             checked={ptoChecked}
             onChange={onPtoToggle}
-            disabled={disabled}
             className="accent-accent-dark h-3 w-3"
           />
           PTO

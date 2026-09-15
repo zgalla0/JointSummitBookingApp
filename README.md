@@ -35,12 +35,14 @@ for the full list and current defaults:
 - `EVENT_BOOKABLE_START` / `EVENT_BOOKABLE_END` - the full calendar always
   renders this whole range as tiles (the hotel's group-rate extension may
   reach further than the standard block below).
-- `EVENT_BLOCK_START` / `EVENT_BLOCK_END` - the standard block. Tiles inside
-  it are always selectable; tiles in the bookable range but outside it are
-  shown grayed-out/disabled until "+ Add extra nights outside the block" is
-  clicked, then become selectable too (always self-paid).
+- `EVENT_BLOCK_START` / `EVENT_BLOCK_END` - the standard block. Every tile in
+  the bookable range is directly selectable as part of one contiguous stay;
+  nights outside this block are always self-paid (no company toggle) and
+  trigger the room-type picker (Deluxe $105 / Brisas Business Club $145, see
+  `src/lib/room-types.ts`) since they're outside the negotiated block.
 - `EVENT_DISCOUNT_START` / `EVENT_DISCOUNT_END` / `EVENT_DISCOUNT_RATE_USD` -
-  the $105/night group rate window.
+  the $105/night group rate window. Not currently surfaced on the form
+  (superseded there by the room-type picker), kept for the admin export.
 - `EVENT_HAPPY_HOUR_DATE` / `EVENT_ALL_HANDS_DATE` / `EVENT_DINNER_DATE` -
   program dates. The All Hands date and the night after are the default
   company-paid nights seeded on the stay-dates picker; attendees can toggle

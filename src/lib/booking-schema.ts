@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DIETARY_OPTION_KEYS } from "./dietary-options";
+import { ROOM_TYPE_KEYS } from "./room-types";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
 
@@ -35,7 +36,9 @@ export const bookingFormSchema = z
     stayEnd: isoDate,
     companyPaidNights: z.array(isoDate).max(31),
 
-    extraNights: z.array(isoDate).max(10),
+    // "" when the stay never leaves the standard block; required (checked
+    // server-side, where the block config lives) whenever it does.
+    extraNightsRoomType: z.enum([...ROOM_TYPE_KEYS, ""]),
 
     ptoDates: z.array(isoDate).max(31),
 
