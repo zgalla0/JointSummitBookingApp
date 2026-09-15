@@ -50,15 +50,9 @@ export default function GuestFields({
         </Button>
       )}
 
-      {fields.length === 1 && (
+      {fields.length >= 1 && (
         <p className="text-sm text-muted">
-          Any additional costs for this guest are your responsibility to pay the hotel directly.
-        </p>
-      )}
-      {fields.length > 1 && (
-        <p className="rounded-xl bg-accent-soft p-2.5 text-sm font-medium text-accent-dark">
-          Please confirm this is correct, bookings with more than 1 additional guest are flagged
-          for admin review.
+          Any additional costs for these guests are your responsibility to pay the hotel directly.
         </p>
       )}
     </div>

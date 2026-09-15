@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getBookingByToken } from "@/lib/get-booking-by-token";
 import { isLockedIn } from "@/lib/config";
 import { magicLinkUrl } from "@/lib/magic-link";
-import { sendEditConfirmationEmail } from "@/lib/email";
+import { sendEditConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
 import { bookingWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -92,6 +92,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
     stayStart: updated.stayStart,
     stayEnd: updated.stayEnd,
   });
+
+  // Only when the note is new or changed, not on every re-save of an edit
+  // that carries the same note forward unchanged.
+  if (updated.additionalNotes && updated.additionalNotes !== booking.additionalNotes) {
+    await sendPlanningTeamNotesEmail({
+      fromName: `${updated.firstName} ${updated.lastName}`,
+      notes: updated.additionalNotes,
+      magicLink: magicLinkUrl(token),
+    });
+  }
 
   return NextResponse.json({ id: updated.id });
 }

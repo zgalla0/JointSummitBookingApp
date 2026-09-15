@@ -66,6 +66,8 @@ export const bookingFormSchema = z
     flightDepartureNumber: z.string().trim().max(50),
     flightDeparture: z.string().trim(),
     flightNotes: z.string().trim().max(2000),
+
+    additionalNotes: z.string().trim().max(2000),
   })
   .refine((data) => data.stayEnd > data.stayStart, {
     message: "Stay end date must be after the start date",

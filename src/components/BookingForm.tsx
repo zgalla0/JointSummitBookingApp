@@ -48,6 +48,7 @@ const emptyDefaults: BookingFormInput = {
   flightDepartureNumber: "",
   flightDeparture: "",
   flightNotes: "",
+  additionalNotes: "",
 };
 
 export default function BookingForm({

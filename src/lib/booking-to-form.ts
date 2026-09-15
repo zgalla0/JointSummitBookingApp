@@ -55,5 +55,6 @@ export function bookingToFormInput(
     flightDepartureNumber: booking.flightDepartureNumber ?? "",
     flightDeparture: toDatetimeLocal(booking.flightDeparture),
     flightNotes: booking.flightNotes ?? "",
+    additionalNotes: booking.additionalNotes ?? "",
   };
 }

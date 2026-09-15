@@ -42,14 +42,14 @@ export default async function AdminDashboardPage() {
         <Card eyebrow="Attendance" title="Events">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Stat label="Happy Hour" value={stats.happyHour} />
-            <Stat label="Happy Hour +1" value={stats.happyHourPlusOne} />
+            <Stat label="Happy Hour companion" value={stats.happyHourPlusOne} />
             <Stat label="All Hands" value={stats.allHands} />
             <Stat label="Dinner" value={stats.dinner} />
-            <Stat label="Dinner +1" value={stats.dinnerPlusOne} />
+            <Stat label="Dinner companion" value={stats.dinnerPlusOne} />
           </div>
         </Card>
 
-        <Card eyebrow="Lodging" title="Room nights">
+        <Card eyebrow="Hotel booking" title="Room nights">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Stat label="Company-paid nights" value={stats.companyPaidNights} />
             <Stat label="Self-paid nights" value={stats.selfPaidNights} />

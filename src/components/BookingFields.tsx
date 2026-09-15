@@ -15,6 +15,8 @@ export type FormConfig = {
   bookableEnd: string;
   blockStart: string;
   blockEnd: string;
+  discountStart: string;
+  discountEnd: string;
   happyHourDate: string;
   allHandsDate: string;
   dinnerDate: string;
@@ -96,7 +98,10 @@ export default function BookingFields({
           />
           {attendingHappyHour && (
             <div className="ml-7">
-              <Checkbox label="Will your +1 join Happy Hour too?" {...mainForm.register("happyHourPlusOne")} />
+              <Checkbox
+                label="Will your companion join Happy Hour too?"
+                {...mainForm.register("happyHourPlusOne")}
+              />
             </div>
           )}
           <Checkbox
@@ -109,18 +114,23 @@ export default function BookingFields({
           />
           {attendingDinner && (
             <div className="ml-7">
-              <Checkbox label="Will your +1 join Dinner too?" {...mainForm.register("dinnerPlusOne")} />
+              <Checkbox
+                label="Will your companion join Dinner too?"
+                {...mainForm.register("dinnerPlusOne")}
+              />
             </div>
           )}
         </div>
       </Card>
 
-      <Card eyebrow="Lodging" title="Stay dates">
+      <Card eyebrow="Hotel booking" title="Stay dates">
         <StayDatesPicker
           bookableStart={formConfig.bookableStart}
           bookableEnd={formConfig.bookableEnd}
           blockStart={formConfig.blockStart}
           blockEnd={formConfig.blockEnd}
+          discountStart={formConfig.discountStart}
+          discountEnd={formConfig.discountEnd}
           defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
           value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
           onChange={(patch) => {
@@ -134,7 +144,7 @@ export default function BookingFields({
         )}
       </Card>
 
-      <Card eyebrow="Plus ones" title="Additional guests">
+      <Card eyebrow="Companion" title="Additional guests">
         <GuestFields control={mainForm.control} register={mainForm.register} />
       </Card>
 
@@ -154,7 +164,7 @@ export default function BookingFields({
             hotel. Arrival and departure may be different flights, so each gets its own airline
             and flight number.
           </p>
-          <div className="space-y-3">
+          <div className="space-y-3 rounded-xl border border-hairline p-3">
             <p className="field-label">Arrival</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Airline">
@@ -168,7 +178,7 @@ export default function BookingFields({
               </Field>
             </div>
           </div>
-          <div className="space-y-3 border-t border-hairline pt-5">
+          <div className="space-y-3 rounded-xl border border-hairline p-3">
             <p className="field-label">Departure</p>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Airline">
@@ -186,6 +196,15 @@ export default function BookingFields({
             <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
           </Field>
         </div>
+      </Card>
+
+      <Card eyebrow="Anything else" title="Anything else you'd like the planning team to know?">
+        <textarea
+          className="field"
+          rows={3}
+          placeholder="Optional"
+          {...mainForm.register("additionalNotes")}
+        />
       </Card>
 
       {staticContent.length > 0 && (

@@ -15,6 +15,8 @@ export default async function Home() {
     bookableEnd: toISODate(config.bookableEnd),
     blockStart: toISODate(config.blockStart),
     blockEnd: toISODate(config.blockEnd),
+    discountStart: toISODate(config.discountStart),
+    discountEnd: toISODate(config.discountEnd),
     happyHourDate: toISODate(config.happyHourDate),
     allHandsDate: toISODate(config.allHandsDate),
     dinnerDate: toISODate(config.dinnerDate),

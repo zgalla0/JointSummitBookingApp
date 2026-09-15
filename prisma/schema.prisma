@@ -80,6 +80,10 @@ model Booking {
   flightDeparture        DateTime?
   flightNotes            String?
 
+  // Free-text note for the planning team; auto-emailed to them at submit
+  // time when non-empty (src/lib/email.ts sendPlanningTeamNotesEmail).
+  additionalNotes String?
+
   // Status / admin flags
   status           BookingStatus @default(ACTIVE)
   cancelledAt      DateTime?

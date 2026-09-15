@@ -3,7 +3,7 @@ import { bookingFormSchema } from "@/lib/booking-schema";
 import { findDuplicateBooking } from "@/lib/duplicate-check";
 import { prisma } from "@/lib/prisma";
 import { generateMagicLinkToken, magicLinkExpiry, magicLinkUrl } from "@/lib/magic-link";
-import { sendConfirmationEmail } from "@/lib/email";
+import { sendConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
 import { bookingWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
 
 export async function POST(req: Request) {
@@ -65,6 +65,14 @@ export async function POST(req: Request) {
     stayStart: booking.stayStart,
     stayEnd: booking.stayEnd,
   });
+
+  if (booking.additionalNotes) {
+    await sendPlanningTeamNotesEmail({
+      fromName: `${booking.firstName} ${booking.lastName}`,
+      notes: booking.additionalNotes,
+      magicLink,
+    });
+  }
 
   return NextResponse.json({ id: booking.id, magicLink });
 }

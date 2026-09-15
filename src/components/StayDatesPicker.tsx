@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   addIsoDays,
   buildCalendarGrid,
@@ -11,12 +11,16 @@ import {
   isThuOrFriIso,
   isTueOrWedIso,
   isToggleableIso,
-  WEEKDAY_HEADER_MON_FIRST,
+  WEEKDAY_HEADER_SUN_FIRST,
 } from "@/lib/stay-tiles-client";
 import { ROOM_TYPES, type RoomTypeKey } from "@/lib/room-types";
 
 const CUESTA_APPROVAL_NOTE =
   "* Tuesday and Wednesday nights can only be paid by the company if arriving early has been approved by a partner or principal.";
+
+const HOTEL_NAME = "Galeria Plaza Reforma";
+const HOTEL_URL = "http://www.galeriaplazareformahotel-mexico.com/index_es.htm";
+const HOTEL_ADDRESS = "Hamburgo 195, Juárez, Cuauhtémoc, 06600 Cuauhtémoc, CDMX, Mexico";
 
 export type StayDatesValue = {
   stayStart: string;
@@ -31,6 +35,8 @@ export default function StayDatesPicker({
   bookableEnd,
   blockStart,
   blockEnd,
+  discountStart,
+  discountEnd,
   defaultCompanyPaidNights,
   value,
   onChange,
@@ -39,10 +45,29 @@ export default function StayDatesPicker({
   bookableEnd: string;
   blockStart: string;
   blockEnd: string;
+  discountStart: string;
+  discountEnd: string;
   defaultCompanyPaidNights: string[];
   value: StayDatesValue;
   onChange: (patch: Partial<StayDatesValue>) => void;
 }) {
+  // Pre-select the official summit dates on first load (a blank form only -
+  // an existing booking already has its own stayStart/stayEnd, so this
+  // never overrides that). Attendees can still change or deselect them.
+  useEffect(() => {
+    if (!value.stayStart && defaultCompanyPaidNights.length > 0) {
+      const sorted = [...defaultCompanyPaidNights].sort();
+      onChange({
+        stayStart: sorted[0],
+        stayEnd: addIsoDays(sorted[sorted.length - 1], 1),
+        companyPaidNights: [...defaultCompanyPaidNights],
+      });
+    }
+    // Mount-only: this seeds the blank-form default once and must not re-run
+    // as stayStart/onChange change afterward.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Selected nights, e.g. ["2026-01-20", "2026-01-21"]. May extend before or
   // after the standard block, anywhere within the bookable range.
   const selectedNights = useMemo(() => {
@@ -55,6 +80,7 @@ export default function StayDatesPicker({
   const selectedSet = useMemo(() => new Set(selectedNights), [selectedNights]);
   const companyPaidSet = useMemo(() => new Set(value.companyPaidNights), [value.companyPaidNights]);
   const ptoSet = useMemo(() => new Set(value.ptoDates), [value.ptoDates]);
+  const lockedPaidSet = useMemo(() => new Set(defaultCompanyPaidNights), [defaultCompanyPaidNights]);
 
   const calendarRows = useMemo(
     () => buildCalendarGrid(bookableStart, bookableEnd),
@@ -72,6 +98,10 @@ export default function StayDatesPicker({
 
   function isCompanyToggleable(day: string): boolean {
     return isToggleableIso(day) && isInBlock(day);
+  }
+
+  function isOutsideDiscountWindow(day: string): boolean {
+    return day < discountStart || day > discountEnd;
   }
 
   // PTO applies to any Mon/Tue/Wed, plus any Thu/Fri except the specific
@@ -154,27 +184,50 @@ export default function StayDatesPicker({
     }
   }
 
-  function toggleCompanyPaid(day: string, e: React.MouseEvent) {
-    e.stopPropagation();
+  function setCompanyPaid(day: string, paid: boolean) {
+    // The two official summit nights are always company-paid; there's no
+    // control that reaches this for them, but guard it anyway.
+    if (lockedPaidSet.has(day)) return;
     const next = new Set(value.companyPaidNights);
-    if (next.has(day)) next.delete(day);
-    else next.add(day);
+    if (paid) next.add(day);
+    else next.delete(day);
     onChange({ companyPaidNights: [...next] });
   }
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted">
+        <a
+          href={HOTEL_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-semibold text-accent-dark hover:underline"
+        >
+          {HOTEL_NAME}
+        </a>
+        , {HOTEL_ADDRESS}
+      </p>
+
       <p className="rounded-xl bg-background p-3 text-xs text-muted">
         Check &quot;PTO&quot; on any weekday tile below to mark the day as PTO. This just helps us
         track PTO across the company for coverage purposes.{" "}
         <strong className="font-bold text-warning">
-          You still need to enter your PTO in Mavenlink separately, this does not submit it for you.
+          You still need to enter your PTO in Mavenlink separately,{" "}
+          <u>this does not submit it for you</u>.
         </strong>
       </p>
 
+      {selectedNights.length > 0 && (
+        <p className="rounded-xl border border-hairline bg-surface p-3 text-center text-sm text-muted">
+          Checking in <strong className="text-foreground">{isoMonthDay(value.stayStart)}</strong>,
+          checking out <strong className="text-foreground">{isoMonthDay(value.stayEnd)}</strong> (
+          {selectedNights.length} night{selectedNights.length === 1 ? "" : "s"})
+        </p>
+      )}
+
       <div className="space-y-2">
         <div className="grid grid-cols-7 gap-2">
-          {WEEKDAY_HEADER_MON_FIRST.map((label) => (
+          {WEEKDAY_HEADER_SUN_FIRST.map((label) => (
             <div key={label} className="text-center text-[10px] font-semibold tracking-wide text-muted uppercase">
               {label}
             </div>
@@ -190,11 +243,13 @@ export default function StayDatesPicker({
                   selected={selectedSet.has(day)}
                   companyPaid={companyPaidSet.has(day)}
                   toggleable={isCompanyToggleable(day)}
+                  locked={lockedPaidSet.has(day)}
                   isTueWed={isTueOrWedIso(day)}
                   showPto={showsPtoCheckbox(day)}
                   ptoChecked={ptoSet.has(day)}
+                  outsideDiscountWindow={isOutsideDiscountWindow(day)}
                   onClick={() => toggleNight(day)}
-                  onToggleClick={(e) => toggleCompanyPaid(day, e)}
+                  onSetCompanyPaid={(paid) => setCompanyPaid(day, paid)}
                   onPtoToggle={() => togglePto(day)}
                 />
               ) : (
@@ -211,17 +266,17 @@ export default function StayDatesPicker({
         </p>
       )}
 
-      {selectedNights.length > 0 && (
-        <p className="text-sm text-muted">
-          Checking in <strong className="text-foreground">{isoMonthDay(value.stayStart)}</strong>, checking
-          out <strong className="text-foreground">{isoMonthDay(value.stayEnd)}</strong> ({selectedNights.length}{" "}
-          night{selectedNights.length === 1 ? "" : "s"})
-        </p>
-      )}
-
       <p className="rounded-xl bg-background p-3 text-xs text-muted">
         Your checkout date is the morning after your last night. For example, checking in Thursday and
         checking out Saturday means you&apos;re covering 2 nights: Thursday and Friday.
+      </p>
+
+      <p className="rounded-xl bg-background p-3 text-xs text-muted">
+        <span aria-hidden className="mr-1">
+          ⚠️
+        </span>
+        Tiles with a dashed amber border are outside the discounted rate window. Hotel price may
+        differ outside this window, check Google for the current rate.
       </p>
 
       {hasNightsOutsideBlock && (
@@ -254,22 +309,26 @@ function DayTile({
   selected,
   companyPaid,
   toggleable,
+  locked,
   isTueWed = false,
   showPto,
   ptoChecked,
+  outsideDiscountWindow,
   onClick,
-  onToggleClick,
+  onSetCompanyPaid,
   onPtoToggle,
 }: {
   day: string;
   selected: boolean;
   companyPaid: boolean;
   toggleable: boolean;
+  locked: boolean;
   isTueWed?: boolean;
   showPto: boolean;
   ptoChecked: boolean;
+  outsideDiscountWindow: boolean;
   onClick: () => void;
-  onToggleClick: (e: React.MouseEvent) => void;
+  onSetCompanyPaid: (paid: boolean) => void;
   onPtoToggle: () => void;
 }) {
   return (
@@ -278,6 +337,8 @@ function DayTile({
       data-date={day}
       onClick={onClick}
       className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${
+        outsideDiscountWindow ? "border-dashed border-warning/50" : ""
+      } ${
         selected
           ? companyPaid
             ? "border-accent bg-accent-soft"
@@ -289,24 +350,52 @@ function DayTile({
         {isoWeekdayLabel(day)}
       </span>
       <span className="font-mono text-base font-semibold">{day.slice(-2)}</span>
-      {selected && toggleable && (
-        <span
-          role="button"
-          tabIndex={0}
-          onClick={onToggleClick}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              onToggleClick(e as unknown as React.MouseEvent);
-            }
-          }}
-          className={`mt-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
-            companyPaid ? "bg-accent text-white" : "bg-warning text-white"
-          }`}
-        >
-          {companyPaid ? (isTueWed ? "PAID BY CUESTA*" : "CO. PAYS") : "I PAY"}
+
+      {selected && toggleable && locked && (
+        <span className="mt-1 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-white">
+          🔒 Paid by Cuesta
         </span>
       )}
+
+      {selected && toggleable && !locked && (
+        // Spans with role="button", not real <button>s: the whole tile is
+        // already a <button>, and nested <button> elements are invalid HTML
+        // (breaks hydration and click handling in the browser).
+        <span
+          className="mt-1 flex overflow-hidden rounded-full border border-hairline text-[8px] font-bold normal-case"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={() => onSetCompanyPaid(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSetCompanyPaid(false);
+              }
+            }}
+            className={`px-1 py-0.5 ${!companyPaid ? "bg-warning text-white" : "bg-surface text-muted"}`}
+          >
+            I Pay
+          </span>
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={() => onSetCompanyPaid(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSetCompanyPaid(true);
+              }
+            }}
+            className={`px-1 py-0.5 ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
+          >
+            Paid by Cuesta{isTueWed ? "*" : ""}
+          </span>
+        </span>
+      )}
+
       {/* Weekends and nights outside the block are always self-paid, with
           no toggle to click - just a plain label so it's just as clear as
           the interactive tiles that the individual is paying. */}

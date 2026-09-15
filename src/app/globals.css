@@ -13,6 +13,7 @@
   --hairline: rgba(31, 41, 55, 0.08);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-display: var(--font-fraunces), Georgia, serif;
 }
 
 @theme inline {
@@ -28,6 +29,7 @@
   --color-hairline: var(--hairline);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
 }
 
 body {
@@ -52,9 +54,11 @@ body {
 }
 
 .eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--accent-dark);
 }

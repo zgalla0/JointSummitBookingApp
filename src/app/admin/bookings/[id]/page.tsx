@@ -72,12 +72,12 @@ export default async function AdminBookingDetailPage({
         </Card>
 
         <Card eyebrow="Events" title="Attendance">
-          <Row label="Happy Hour" value={booking.attendingHappyHour ? (booking.happyHourPlusOne ? "Yes, +1" : "Yes") : "No"} />
+          <Row label="Happy Hour" value={booking.attendingHappyHour ? (booking.happyHourPlusOne ? "Yes, with companion" : "Yes") : "No"} />
           <Row label="All Hands" value={booking.attendingAllHands ? "Yes" : "No"} />
-          <Row label="Dinner" value={booking.attendingDinner ? (booking.dinnerPlusOne ? "Yes, +1" : "Yes") : "No"} />
+          <Row label="Dinner" value={booking.attendingDinner ? (booking.dinnerPlusOne ? "Yes, with companion" : "Yes") : "No"} />
         </Card>
 
-        <Card eyebrow="Lodging" title="Stay">
+        <Card eyebrow="Hotel booking" title="Stay">
           <Row label="Check in" value={formatShortDate(booking.stayStart)} />
           <Row label="Check out" value={formatShortDate(booking.stayEnd)} />
           <Row label="Nights" value={nights.length} />
@@ -86,7 +86,7 @@ export default async function AdminBookingDetailPage({
           <Row label="PTO dates" value={parseJsonArray(booking.ptoDates).join(", ")} />
         </Card>
 
-        <Card eyebrow="Plus ones" title="Additional guests">
+        <Card eyebrow="Companion" title="Additional guests">
           {booking.guests.length === 0 ? (
             <p className="text-sm text-muted">None</p>
           ) : (
@@ -109,6 +109,10 @@ export default async function AdminBookingDetailPage({
           <Row label="Departure flight #" value={booking.flightDepartureNumber} />
           <Row label="Departure" value={booking.flightDeparture?.toISOString()} />
           <Row label="Notes" value={booking.flightNotes} />
+        </Card>
+
+        <Card eyebrow="Anything else" title="Note for the planning team">
+          <p className="whitespace-pre-wrap text-sm">{booking.additionalNotes || "None"}</p>
         </Card>
       </div>
     </main>

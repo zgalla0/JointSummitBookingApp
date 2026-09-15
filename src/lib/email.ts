@@ -46,3 +46,14 @@ export async function sendAdminCancellationNotice(data: Record<string, unknown>)
 export async function sendFlightDetailsReminderEmail(data: BookingEmailData) {
   logStubEmail("flight-details-reminder", data);
 }
+
+// Auto-sent to the planning team (ADMIN_NOTIFICATION_EMAIL, once Stage 4
+// wires up real delivery) whenever an attendee fills in the "anything else"
+// note on submit or edit - not sent when that field is left blank.
+export async function sendPlanningTeamNotesEmail(data: {
+  fromName: string;
+  notes: string;
+  magicLink: string;
+}) {
+  logStubEmail("planning-team-notes", data);
+}

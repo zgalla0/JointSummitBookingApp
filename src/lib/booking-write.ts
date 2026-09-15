@@ -52,6 +52,7 @@ export function bookingWriteData(
     flightDepartureNumber: data.flightDepartureNumber || null,
     flightDeparture: data.flightDeparture ? new Date(data.flightDeparture) : null,
     flightNotes: data.flightNotes || null,
+    additionalNotes: data.additionalNotes || null,
     flaggedForReview: data.guests.length > 1,
     flagReason: data.guests.length > 1 ? "More than 1 additional guest" : null,
   };
