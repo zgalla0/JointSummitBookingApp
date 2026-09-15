@@ -4,6 +4,7 @@ import { isoDateRange, addIsoDays } from "./stay-tiles-client";
 import { toISODate } from "./format";
 import { DIETARY_OPTION_KEYS, type DietaryOptionKey } from "./dietary-options";
 import { ROOM_TYPE_KEYS, type RoomTypeKey } from "./room-types";
+import { LOCATION_KEYS, type LocationKey } from "./location-options";
 
 type BookingWithGuests = Booking & { guests: BookingGuest[] };
 
@@ -119,4 +120,50 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
     missingFlightDetails,
     ptoDatesCount,
   };
+}
+
+export type CalendarDayStats = {
+  date: string;
+  people: number;
+  ptoTotal: number;
+  ptoByLocation: Record<LocationKey, number>;
+};
+
+/** Per-day headcount (attendee + their guests, for every night of their
+ *  stay) and PTO counts (attendee only, broken down by location) across
+ *  every date in [startIso, endIso], for the admin calendar view. */
+export function computeCalendarStats(
+  allBookings: BookingWithGuests[],
+  startIso: string,
+  endIso: string,
+): Record<string, CalendarDayStats> {
+  const days: Record<string, CalendarDayStats> = {};
+  for (const date of isoDateRange(startIso, endIso)) {
+    days[date] = {
+      date,
+      people: 0,
+      ptoTotal: 0,
+      ptoByLocation: Object.fromEntries(LOCATION_KEYS.map((key) => [key, 0])) as Record<
+        LocationKey,
+        number
+      >,
+    };
+  }
+
+  const active = allBookings.filter((b) => b.status === "ACTIVE");
+  for (const b of active) {
+    const headcount = 1 + b.guests.length;
+    for (const night of bookingNights(b)) {
+      if (days[night]) days[night].people += headcount;
+    }
+    for (const ptoDate of parseJsonArray(b.ptoDates)) {
+      if (!days[ptoDate]) continue;
+      days[ptoDate].ptoTotal += 1;
+      if ((LOCATION_KEYS as readonly string[]).includes(b.location)) {
+        days[ptoDate].ptoByLocation[b.location as LocationKey] += 1;
+      }
+    }
+  }
+
+  return days;
 }

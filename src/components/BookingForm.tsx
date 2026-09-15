@@ -24,6 +24,7 @@ type Step = "identity" | "duplicate" | "form" | "success";
 const emptyDefaults: BookingFormInput = {
   firstName: "",
   lastName: "",
+  location: "",
   reservationFirstName: "",
   reservationLastName: "",
   hotelEmail: "",

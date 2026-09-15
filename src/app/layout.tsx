@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
 const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["600"],
-  style: ["italic"],
+  weight: ["700"],
+  style: ["normal"],
   variable: "--font-fraunces",
 });
 

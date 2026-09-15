@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DIETARY_OPTION_KEYS } from "./dietary-options";
 import { ROOM_TYPE_KEYS } from "./room-types";
+import { LOCATION_KEYS } from "./location-options";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
 
@@ -29,6 +30,16 @@ export const bookingFormSchema = z
     reservationLastName: z.string().trim().min(1, "Last name for the reservation is required"),
     hotelEmail: z.string().trim().email("Enter a valid email"),
     detailsEmail: z.string().trim().email("Enter a valid email"),
+
+    // "" is only a valid form-default (nothing chosen yet); the refine
+    // below rejects it at submit time so this is effectively mandatory.
+    // The explicit `: boolean` return type matters: without it, TS 5.5+
+    // infers this as a type predicate and zod narrows "" out of the
+    // schema's output type, which then breaks the form's own type (it
+    // legitimately holds "" before the user picks one).
+    location: z
+      .enum([...LOCATION_KEYS, ""])
+      .refine((v): boolean => v !== "", { message: "Please select your location" }),
 
     attendingHappyHour: z.boolean(),
     happyHourPlusOne: z.boolean(),

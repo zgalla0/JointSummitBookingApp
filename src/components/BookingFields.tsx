@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { BookingFormInput } from "@/lib/booking-schema";
 import { formatShortDate } from "@/lib/format";
+import { LOCATION_OPTIONS } from "@/lib/location-options";
 import Card from "./ui/Card";
 import Checkbox from "./ui/Checkbox";
 import GuestFields from "./GuestFields";
@@ -87,6 +88,21 @@ export default function BookingFields({
               if (e.target.checked) mainForm.setValue("detailsEmail", hotelEmail);
             }}
           />
+          <Field label="Location" error={mainForm.formState.errors.location?.message}>
+            <div className="space-y-2 pt-1">
+              {LOCATION_OPTIONS.map((option) => (
+                <label key={option.key} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    value={option.key}
+                    className="accent-accent-dark h-4 w-4"
+                    {...mainForm.register("location")}
+                  />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+          </Field>
         </div>
       </Card>
 

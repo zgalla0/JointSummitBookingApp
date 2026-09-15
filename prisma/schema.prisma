@@ -22,12 +22,20 @@ enum BookingStatus {
   CANCELLED
 }
 
+// Which region the attendee is based in, for PTO-coverage reporting
+// (the admin calendar breaks PTO counts down by this).
+enum LocationRegion {
+  US_CAN_IRE
+  LATAM
+}
+
 model Booking {
   id String @id @default(cuid())
 
   // Identity (used for the name + email duplicate check)
   firstName String
   lastName  String
+  location  LocationRegion
 
   // Hotel reservation details (separate from work name, may differ)
   reservationFirstName String

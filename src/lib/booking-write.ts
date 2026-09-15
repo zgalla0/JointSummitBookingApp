@@ -29,6 +29,9 @@ export function bookingWriteData(
   return {
     firstName: data.firstName,
     lastName: data.lastName,
+    // Guaranteed non-empty by the schema's refine; the type still carries
+    // "" for the form's unselected default.
+    location: data.location as Exclude<BookingFormInput["location"], "">,
     reservationFirstName: data.reservationFirstName,
     reservationLastName: data.reservationLastName,
     hotelEmail: data.hotelEmail,

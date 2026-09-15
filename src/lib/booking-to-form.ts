@@ -27,6 +27,7 @@ export function bookingToFormInput(
   return {
     firstName: booking.firstName,
     lastName: booking.lastName,
+    location: booking.location,
     reservationFirstName: booking.reservationFirstName,
     reservationLastName: booking.reservationLastName,
     hotelEmail: booking.hotelEmail,

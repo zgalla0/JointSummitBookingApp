@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatShortDate } from "@/lib/format";
 import { parseJsonArray, bookingNights } from "@/lib/admin-stats";
 import { magicLinkUrl } from "@/lib/magic-link";
+import { LOCATION_OPTIONS } from "@/lib/location-options";
 import AdminNav from "@/components/AdminNav";
 import AdminBookingActions from "@/components/AdminBookingActions";
 import Card from "@/components/ui/Card";
@@ -57,6 +58,10 @@ export default async function AdminBookingDetailPage({
 
         <Card eyebrow="Status" title="Overview">
           <Row label="Status" value={booking.status} />
+          <Row
+            label="Location"
+            value={LOCATION_OPTIONS.find((o) => o.key === booking.location)?.label ?? booking.location}
+          />
           <Row label="Hotel reservation name" value={`${booking.reservationFirstName} ${booking.reservationLastName}`} />
           <Row label="Hotel booking email" value={booking.hotelEmail} />
           <Row label="Details email" value={booking.detailsEmail} />

@@ -17,6 +17,7 @@ export async function GET() {
       status: b.status,
       firstName: b.firstName,
       lastName: b.lastName,
+      location: b.location,
       reservationFirstName: b.reservationFirstName,
       reservationLastName: b.reservationLastName,
       hotelEmail: b.hotelEmail,

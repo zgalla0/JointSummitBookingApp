@@ -376,7 +376,7 @@ function DayTile({
                 onSetCompanyPaid(false);
               }
             }}
-            className={`flex-1 px-1 py-1 text-center leading-tight ${!companyPaid ? "bg-warning text-white" : "bg-surface text-muted"}`}
+            className={`flex flex-1 items-center justify-center px-1 py-1 text-center leading-tight ${!companyPaid ? "bg-warning text-white" : "bg-surface text-muted"}`}
           >
             I Pay
           </span>
@@ -390,7 +390,7 @@ function DayTile({
                 onSetCompanyPaid(true);
               }
             }}
-            className={`flex-1 px-1 py-1 text-center leading-tight ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
+            className={`flex flex-1 items-center justify-center px-1 py-1 text-center leading-tight ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
           >
             Paid by Cuesta{isTueWed ? "*" : ""}
           </span>
