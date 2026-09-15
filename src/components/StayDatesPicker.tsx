@@ -20,7 +20,6 @@ export type StayDatesValue = {
   stayStart: string;
   stayEnd: string; // checkout date, i.e. the day after the last selected night
   companyPaidNights: string[];
-  needsExtraNights: boolean;
   extraNights: string[];
   ptoDates: string[];
 };
@@ -61,24 +60,24 @@ export default function StayDatesPicker({
   const extraSet = useMemo(() => new Set(value.extraNights), [value.extraNights]);
   const ptoSet = useMemo(() => new Set(value.ptoDates), [value.ptoDates]);
 
-  const calendarRows = useMemo(() => buildCalendarGrid(blockStart, blockEnd), [blockStart, blockEnd]);
-  const preBufferDays = useMemo(
-    () => isoDateRange(bookableStart, addIsoDays(blockStart, -1)),
-    [bookableStart, blockStart],
-  );
-  const postBufferDays = useMemo(
-    () => isoDateRange(addIsoDays(blockEnd, 1), bookableEnd),
-    [blockEnd, bookableEnd],
+  // One continuous grid spanning the whole bookable range (not just the
+  // standard block) so every selectable day is always visible.
+  const calendarRows = useMemo(
+    () => buildCalendarGrid(bookableStart, bookableEnd),
+    [bookableStart, bookableEnd],
   );
 
   const [showExtraNights, setShowExtraNights] = useState(value.extraNights.length > 0);
+
+  function isInBlock(day: string): boolean {
+    return day >= blockStart && day <= blockEnd;
+  }
 
   function togglePto(day: string) {
     const next = new Set(value.ptoDates);
     if (next.has(day)) next.delete(day);
     else next.add(day);
-    const nextArr = [...next];
-    onChange({ ptoDates: nextArr });
+    onChange({ ptoDates: [...next] });
   }
 
   function toggleNight(day: string) {
@@ -173,30 +172,47 @@ export default function StayDatesPicker({
         </div>
         {calendarRows.map((row, i) => {
           const rowNeedsApprovalNote = row.some(
-            (day) => day && isTueOrWedIso(day) && companyPaidSet.has(day),
+            (day) => day && isInBlock(day) && isTueOrWedIso(day) && companyPaidSet.has(day),
           );
           return (
             <div key={i}>
               <div className="grid grid-cols-7 gap-2">
-                {row.map((day, j) =>
-                  day ? (
+                {row.map((day, j) => {
+                  if (!day) return <div key={j} />;
+                  if (isInBlock(day)) {
+                    return (
+                      <DayTile
+                        key={day}
+                        day={day}
+                        selected={selectedSet.has(day)}
+                        companyPaid={companyPaidSet.has(day)}
+                        toggleable={isToggleableIso(day)}
+                        isTueWed={isTueOrWedIso(day)}
+                        showPto={isMonTueWedIso(day)}
+                        ptoChecked={ptoSet.has(day)}
+                        onClick={() => toggleNight(day)}
+                        onToggleClick={(e) => toggleCompanyPaid(day, e)}
+                        onPtoToggle={() => togglePto(day)}
+                      />
+                    );
+                  }
+                  const active = showExtraNights;
+                  return (
                     <DayTile
                       key={day}
                       day={day}
-                      selected={selectedSet.has(day)}
-                      companyPaid={companyPaidSet.has(day)}
-                      toggleable={isToggleableIso(day)}
-                      isTueWed={isTueOrWedIso(day)}
-                      showPto={isMonTueWedIso(day)}
+                      selected={extraSet.has(day)}
+                      companyPaid={false}
+                      toggleable={false}
+                      showPto={active && extraSet.has(day) && isMonTueWedIso(day)}
                       ptoChecked={ptoSet.has(day)}
-                      onClick={() => toggleNight(day)}
-                      onToggleClick={(e) => toggleCompanyPaid(day, e)}
+                      onClick={() => toggleExtraNight(day)}
+                      onToggleClick={() => {}}
                       onPtoToggle={() => togglePto(day)}
+                      disabled={!active}
                     />
-                  ) : (
-                    <div key={j} />
-                  ),
-                )}
+                  );
+                })}
               </div>
               {rowNeedsApprovalNote && (
                 <p className="mt-2 rounded-xl bg-accent-soft p-3 text-xs font-medium text-accent-dark">
@@ -235,69 +251,13 @@ export default function StayDatesPicker({
         >
           {showExtraNights ? "− Hide extra nights outside the block" : "+ Add extra nights outside the block"}
         </button>
-
-        {showExtraNights && (
-          <div className="mt-3 space-y-3">
-            {preBufferDays.length > 0 && (
-              <FlowGrid
-                days={preBufferDays}
-                selectedSet={extraSet}
-                ptoSet={ptoSet}
-                onTileClick={toggleExtraNight}
-                onPtoToggle={togglePto}
-                showMonth
-              />
-            )}
-            {postBufferDays.length > 0 && (
-              <FlowGrid
-                days={postBufferDays}
-                selectedSet={extraSet}
-                ptoSet={ptoSet}
-                onTileClick={toggleExtraNight}
-                onPtoToggle={togglePto}
-                showMonth
-              />
-            )}
-            <p className="text-xs text-muted">Extra nights outside the block are always paid by you.</p>
-          </div>
+        {!showExtraNights && (
+          <p className="mt-1 text-xs text-muted">
+            The grayed-out tiles above (before/after the standard block) become selectable here,
+            always paid by you.
+          </p>
         )}
       </div>
-    </div>
-  );
-}
-
-function FlowGrid({
-  days,
-  selectedSet,
-  ptoSet,
-  onTileClick,
-  onPtoToggle,
-  showMonth = false,
-}: {
-  days: string[];
-  selectedSet: Set<string>;
-  ptoSet: Set<string>;
-  onTileClick: (day: string) => void;
-  onPtoToggle: (day: string) => void;
-  showMonth?: boolean;
-}) {
-  return (
-    <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
-      {days.map((day) => (
-        <DayTile
-          key={day}
-          day={day}
-          selected={selectedSet.has(day)}
-          companyPaid={false}
-          toggleable={false}
-          showPto={selectedSet.has(day) && isMonTueWedIso(day)}
-          ptoChecked={ptoSet.has(day)}
-          onClick={() => onTileClick(day)}
-          onToggleClick={() => {}}
-          onPtoToggle={() => onPtoToggle(day)}
-          showMonth={showMonth}
-        />
-      ))}
     </div>
   );
 }
@@ -313,7 +273,7 @@ function DayTile({
   onClick,
   onToggleClick,
   onPtoToggle,
-  showMonth = false,
+  disabled = false,
 }: {
   day: string;
   selected: boolean;
@@ -325,24 +285,31 @@ function DayTile({
   onClick: () => void;
   onToggleClick: (e: React.MouseEvent) => void;
   onPtoToggle: () => void;
-  showMonth?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${
-        selected
+      disabled={disabled}
+      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out ${
+        disabled
+          ? "cursor-not-allowed border-hairline bg-background opacity-40"
+          : "hover:scale-[1.04]"
+      } ${
+        !disabled && selected
           ? companyPaid
             ? "border-accent bg-accent-soft"
             : "border-foreground/20 bg-foreground/10"
-          : "border-hairline bg-surface hover:border-accent/40"
+          : !disabled
+            ? "border-hairline bg-surface hover:border-accent/40"
+            : ""
       }`}
     >
       <span className="text-[10px] font-semibold tracking-wide text-muted uppercase">
         {isoWeekdayLabel(day)}
       </span>
-      <span className="font-mono text-base font-semibold">{showMonth ? isoMonthDay(day) : day.slice(-2)}</span>
+      <span className="font-mono text-base font-semibold">{day.slice(-2)}</span>
       {selected && toggleable && (
         <span
           role="button"
@@ -370,6 +337,7 @@ function DayTile({
             type="checkbox"
             checked={ptoChecked}
             onChange={onPtoToggle}
+            disabled={disabled}
             className="accent-accent-dark h-3 w-3"
           />
           PTO

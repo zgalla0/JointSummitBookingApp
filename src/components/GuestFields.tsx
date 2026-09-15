@@ -16,8 +16,9 @@ export default function GuestFields({
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted">
-        Room rate covers 1 adult at no extra charge. The 2nd person adds $3 USD + tax per night.
-        The 3rd person adds $28 USD + tax per night. Max room occupancy is 3 people.
+        Room rate covers 1 adult at no extra charge. The 2nd person adds $3 USD + tax per night,
+        and the 3rd adds $28 USD + tax per night. Max room occupancy is 3 people. By adding a
+        guest here, you&apos;re confirming you&apos;ll be responsible for these charges.
       </p>
 
       {fields.map((field, index) => (

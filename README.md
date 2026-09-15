@@ -32,12 +32,13 @@ All event dates, the discount rate, and the lock-in date are environment
 variables, not hardcoded, so this can be reused for future events. See `.env`
 for the full list and current defaults:
 
-- `EVENT_BOOKABLE_START` / `EVENT_BOOKABLE_END` - outer limit of dates
-  selectable at all (the hotel's group-rate extension may reach further than
-  the standard block below).
-- `EVENT_BLOCK_START` / `EVENT_BLOCK_END` - the standard block, shown
-  directly in the calendar. "+ Add extra nights outside the block" reveals
-  tiles between this and the bookable range above (self-paid only).
+- `EVENT_BOOKABLE_START` / `EVENT_BOOKABLE_END` - the full calendar always
+  renders this whole range as tiles (the hotel's group-rate extension may
+  reach further than the standard block below).
+- `EVENT_BLOCK_START` / `EVENT_BLOCK_END` - the standard block. Tiles inside
+  it are always selectable; tiles in the bookable range but outside it are
+  shown grayed-out/disabled until "+ Add extra nights outside the block" is
+  clicked, then become selectable too (always self-paid).
 - `EVENT_DISCOUNT_START` / `EVENT_DISCOUNT_END` / `EVENT_DISCOUNT_RATE_USD` -
   the $105/night group rate window.
 - `EVENT_HAPPY_HOUR_DATE` / `EVENT_ALL_HANDS_DATE` / `EVENT_DINNER_DATE` -

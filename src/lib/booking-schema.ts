@@ -20,7 +20,8 @@ export const bookingFormSchema = z
   .object({
     firstName: z.string().trim().min(1, "First name is required"),
     lastName: z.string().trim().min(1, "Last name is required"),
-    reservationName: z.string().trim().min(1, "Reservation name is required"),
+    reservationFirstName: z.string().trim().min(1, "First name for the reservation is required"),
+    reservationLastName: z.string().trim().min(1, "Last name for the reservation is required"),
     hotelEmail: z.string().trim().email("Enter a valid email"),
     detailsEmail: z.string().trim().email("Enter a valid email"),
 
@@ -34,7 +35,6 @@ export const bookingFormSchema = z
     stayEnd: isoDate,
     companyPaidNights: z.array(isoDate).max(31),
 
-    needsExtraNights: z.boolean(),
     extraNights: z.array(isoDate).max(10),
 
     ptoDates: z.array(isoDate).max(31),
@@ -53,10 +53,6 @@ export const bookingFormSchema = z
   .refine((data) => data.stayEnd > data.stayStart, {
     message: "Stay end date must be after the start date",
     path: ["stayEnd"],
-  })
-  .refine((data) => !data.needsExtraNights || data.extraNights.length > 0, {
-    message: "Add at least one date for the extra self-paid night(s)",
-    path: ["extraNights"],
   });
 
 export type BookingFormInput = z.infer<typeof bookingFormSchema>;

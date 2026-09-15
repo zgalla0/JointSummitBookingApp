@@ -29,10 +29,11 @@ model Booking {
   firstName String
   lastName  String
 
-  // Hotel reservation details
-  reservationName String // full name for the hotel reservation, may differ from work name
-  hotelEmail      String // email used for the hotel booking
-  detailsEmail    String // email for transportation / schedule / other details
+  // Hotel reservation details (separate from work name, may differ)
+  reservationFirstName String
+  reservationLastName  String
+  hotelEmail           String // email used for the hotel booking
+  detailsEmail         String // email for transportation / schedule / other details
 
   // Event attendance, each with an optional +1 joining that event
   // (All Hands has no +1 option, capacity is fixed)

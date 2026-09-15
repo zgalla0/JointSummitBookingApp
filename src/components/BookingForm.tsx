@@ -40,7 +40,8 @@ type Step = "identity" | "duplicate" | "form" | "success";
 const emptyDefaults: BookingFormInput = {
   firstName: "",
   lastName: "",
-  reservationName: "",
+  reservationFirstName: "",
+  reservationLastName: "",
   hotelEmail: "",
   detailsEmail: "",
   attendingHappyHour: false,
@@ -51,7 +52,6 @@ const emptyDefaults: BookingFormInput = {
   stayStart: "",
   stayEnd: "",
   companyPaidNights: [],
-  needsExtraNights: false,
   extraNights: [],
   ptoDates: [],
   guests: [],
@@ -91,7 +91,6 @@ export default function BookingForm({
   const stayStart = mainForm.watch("stayStart");
   const stayEnd = mainForm.watch("stayEnd");
   const companyPaidNights = mainForm.watch("companyPaidNights");
-  const needsExtraNights = mainForm.watch("needsExtraNights");
   const extraNights = mainForm.watch("extraNights");
   const ptoDates = mainForm.watch("ptoDates");
   const hotelEmail = mainForm.watch("hotelEmail");
@@ -205,9 +204,20 @@ export default function BookingForm({
         <form onSubmit={mainForm.handleSubmit(onMainSubmit)} className="space-y-5">
           <Card eyebrow="About you" title="Your details">
             <div className="space-y-4">
-              <Field label="Full name for hotel reservation" error={mainForm.formState.errors.reservationName?.message}>
-                <input className="field" {...mainForm.register("reservationName")} />
-              </Field>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field
+                  label="First name for hotel reservation"
+                  error={mainForm.formState.errors.reservationFirstName?.message}
+                >
+                  <input className="field" {...mainForm.register("reservationFirstName")} />
+                </Field>
+                <Field
+                  label="Last name for hotel reservation"
+                  error={mainForm.formState.errors.reservationLastName?.message}
+                >
+                  <input className="field" {...mainForm.register("reservationLastName")} />
+                </Field>
+              </div>
               <Field label="Email for hotel booking" error={mainForm.formState.errors.hotelEmail?.message}>
                 <input className="field" {...mainForm.register("hotelEmail")} />
               </Field>
@@ -257,7 +267,7 @@ export default function BookingForm({
               discountEnd={formConfig.discountEnd}
               discountRateUsd={formConfig.discountRateUsd}
               defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
-              value={{ stayStart, stayEnd, companyPaidNights, needsExtraNights, extraNights, ptoDates }}
+              value={{ stayStart, stayEnd, companyPaidNights, extraNights, ptoDates }}
               onChange={(patch) => {
                 for (const [key, val] of Object.entries(patch)) {
                   mainForm.setValue(key as keyof BookingFormInput, val as never, { shouldValidate: false });
