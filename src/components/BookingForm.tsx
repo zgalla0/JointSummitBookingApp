@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -10,28 +11,13 @@ import {
   type BookingFormInput,
   type IdentityInput,
 } from "@/lib/booking-schema";
-import { formatShortDate } from "@/lib/format";
 import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
 import { SUBMIT_REMINDER } from "@/lib/copy";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
-import Checkbox from "./ui/Checkbox";
-import GuestFields from "./GuestFields";
-import DietaryChecklist from "./DietaryChecklist";
-import StayDatesPicker from "./StayDatesPicker";
+import BookingFields, { Field, type FormConfig, type StaticContentItem } from "./BookingFields";
 
-export type FormConfig = {
-  bookableStart: string;
-  bookableEnd: string;
-  blockStart: string;
-  blockEnd: string;
-  happyHourDate: string;
-  allHandsDate: string;
-  dinnerDate: string;
-  defaultCompanyPaidNights: string[];
-};
-
-type StaticContentItem = { key: string; title: string | null; body: string | null };
+export type { FormConfig };
 
 type Step = "identity" | "duplicate" | "form" | "success";
 
@@ -74,7 +60,6 @@ export default function BookingForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successLink, setSuccessLink] = useState<string | null>(null);
-  const [sameEmail, setSameEmail] = useState(true);
 
   const identityForm = useForm<IdentityInput>({
     resolver: zodResolver(identitySchema),
@@ -85,17 +70,6 @@ export default function BookingForm({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: emptyDefaults,
   });
-
-  const stayStart = mainForm.watch("stayStart");
-  const stayEnd = mainForm.watch("stayEnd");
-  const companyPaidNights = mainForm.watch("companyPaidNights");
-  const ptoDates = mainForm.watch("ptoDates");
-  const extraNightsRoomType = mainForm.watch("extraNightsRoomType");
-  const hotelEmail = mainForm.watch("hotelEmail");
-  const attendingHappyHour = mainForm.watch("attendingHappyHour");
-  const attendingDinner = mainForm.watch("attendingDinner");
-  const dietaryOptions = mainForm.watch("dietaryOptions");
-  const dietaryOther = mainForm.watch("dietaryOther");
 
   async function onIdentitySubmit(values: IdentityInput) {
     setChecking(true);
@@ -191,140 +165,16 @@ export default function BookingForm({
               on the lookup page.
             </p>
             <NoticeBannerShort />
-            <a href="/my-booking" className="font-semibold text-accent-dark hover:underline">
+            <Link href="/my-booking" className="font-semibold text-accent-dark hover:underline">
               Go to my booking lookup page →
-            </a>
+            </Link>
           </div>
         </Card>
       )}
 
       {step === "form" && (
         <form onSubmit={mainForm.handleSubmit(onMainSubmit)} className="space-y-5">
-          <Card eyebrow="About you" title="Your details">
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field
-                  label="First name for hotel reservation"
-                  error={mainForm.formState.errors.reservationFirstName?.message}
-                >
-                  <input className="field" {...mainForm.register("reservationFirstName")} />
-                </Field>
-                <Field
-                  label="Last name for hotel reservation"
-                  error={mainForm.formState.errors.reservationLastName?.message}
-                >
-                  <input className="field" {...mainForm.register("reservationLastName")} />
-                </Field>
-              </div>
-              <Field label="Email for hotel booking" error={mainForm.formState.errors.hotelEmail?.message}>
-                <input className="field" {...mainForm.register("hotelEmail")} />
-              </Field>
-              <Field label="Email for summit details" error={mainForm.formState.errors.detailsEmail?.message}>
-                <input
-                  className="field"
-                  disabled={sameEmail}
-                  {...mainForm.register("detailsEmail")}
-                />
-              </Field>
-              <Checkbox
-                label="Use the same email for summit details"
-                checked={sameEmail}
-                onChange={(e) => {
-                  setSameEmail(e.target.checked);
-                  if (e.target.checked) mainForm.setValue("detailsEmail", hotelEmail);
-                }}
-              />
-            </div>
-          </Card>
-
-          <Card eyebrow="Events" title="Which events are you attending?">
-            <div className="space-y-3">
-              <Checkbox label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`} {...mainForm.register("attendingHappyHour")} />
-              {attendingHappyHour && (
-                <div className="ml-7">
-                  <Checkbox label="Will your +1 join Happy Hour too?" {...mainForm.register("happyHourPlusOne")} />
-                </div>
-              )}
-              <Checkbox label={`All Hands (${formatShortDate(formConfig.allHandsDate)})`} {...mainForm.register("attendingAllHands")} />
-              <Checkbox label={`Dinner (${formatShortDate(formConfig.dinnerDate)})`} {...mainForm.register("attendingDinner")} />
-              {attendingDinner && (
-                <div className="ml-7">
-                  <Checkbox label="Will your +1 join Dinner too?" {...mainForm.register("dinnerPlusOne")} />
-                </div>
-              )}
-            </div>
-          </Card>
-
-          <Card eyebrow="Lodging" title="Stay dates">
-            <StayDatesPicker
-              bookableStart={formConfig.bookableStart}
-              bookableEnd={formConfig.bookableEnd}
-              blockStart={formConfig.blockStart}
-              blockEnd={formConfig.blockEnd}
-              defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
-              value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
-              onChange={(patch) => {
-                for (const [key, val] of Object.entries(patch)) {
-                  mainForm.setValue(key as keyof BookingFormInput, val as never, { shouldValidate: false });
-                }
-              }}
-            />
-            {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
-              <p className="mt-2 text-sm text-red-600">Please select your stay nights.</p>
-            )}
-          </Card>
-
-          <Card eyebrow="Plus ones" title="Additional guests">
-            <GuestFields control={mainForm.control} register={mainForm.register} />
-          </Card>
-
-          <Card eyebrow="Food" title="Dietary restrictions">
-            <DietaryChecklist
-              selected={dietaryOptions}
-              other={dietaryOther}
-              onChange={(next) => mainForm.setValue("dietaryOptions", next)}
-              onOtherChange={(val) => mainForm.setValue("dietaryOther", val)}
-            />
-          </Card>
-
-          <Card eyebrow="Travel" title="Flight details">
-            <div className="space-y-4">
-              <p className="text-sm text-muted">
-                This helps us group people with similar arrival times into carpools to and from
-                the hotel.
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Airline">
-                  <input className="field" {...mainForm.register("flightAirline")} />
-                </Field>
-                <Field label="Flight #">
-                  <input className="field" {...mainForm.register("flightNumber")} />
-                </Field>
-                <Field label="Arrival date/time">
-                  <input type="datetime-local" className="field" {...mainForm.register("flightArrival")} />
-                </Field>
-                <Field label="Departure date/time">
-                  <input type="datetime-local" className="field" {...mainForm.register("flightDeparture")} />
-                </Field>
-              </div>
-              <Field label="Other flight notes">
-                <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
-              </Field>
-            </div>
-          </Card>
-
-          {staticContent.length > 0 && (
-            <Card eyebrow="Reference" title="Event info, Q&A, and timing">
-              <div className="space-y-3">
-                {staticContent.map((item) => (
-                  <div key={item.key}>
-                    {item.title && <h3 className="font-semibold">{item.title}</h3>}
-                    {item.body && <p className="whitespace-pre-wrap text-sm text-muted">{item.body}</p>}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
+          <BookingFields mainForm={mainForm} formConfig={formConfig} staticContent={staticContent} />
 
           <p className="text-sm text-muted">{SUBMIT_REMINDER}</p>
 
@@ -354,23 +204,5 @@ export default function BookingForm({
         </Card>
       )}
     </div>
-  );
-}
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="field-label">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-sm text-red-600">{error}</span>}
-    </label>
   );
 }

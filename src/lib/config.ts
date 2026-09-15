@@ -15,14 +15,14 @@ function addDays(date: Date, days: number): Date {
 
 export const config = {
   // Outer limit of dates selectable at all (the standard block plus however
-  // far the hotel's group-rate extension reaches). "+ Add extra nights"
-  // reveals tiles between the standard block and these outer edges.
+  // far the hotel's group-rate extension reaches). The whole range renders
+  // directly in the calendar as one set of tiles.
   bookableStart: envDate("EVENT_BOOKABLE_START", "2026-01-14"),
   bookableEnd: envDate("EVENT_BOOKABLE_END", "2026-02-05"),
 
-  // The standard block, shown directly in the calendar (no need to expand
-  // "+ Add extra nights" to see it). Deliberately separate from the bookable
-  // range above, since the hotel's extension can grow independently.
+  // The standard, negotiated block. Nights outside it (but still within the
+  // bookable range above) are always self-paid and need a room-type choice,
+  // since the hotel hasn't guaranteed a rate for them.
   blockStart: envDate("EVENT_BLOCK_START", "2026-01-14"),
   blockEnd: envDate("EVENT_BLOCK_END", "2026-01-29"),
 

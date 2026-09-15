@@ -262,6 +262,7 @@ function DayTile({
   return (
     <button
       type="button"
+      data-date={day}
       onClick={onClick}
       className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${
         selected

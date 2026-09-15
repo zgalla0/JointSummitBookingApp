@@ -4,10 +4,7 @@ import { findDuplicateBooking } from "@/lib/duplicate-check";
 import { prisma } from "@/lib/prisma";
 import { generateMagicLinkToken, magicLinkExpiry, magicLinkUrl } from "@/lib/magic-link";
 import { sendConfirmationEmail } from "@/lib/email";
-import { config } from "@/lib/config";
-import { toISODate } from "@/lib/format";
-import { isoDateRange, addIsoDays } from "@/lib/stay-tiles-client";
-import { ROOM_TYPE_KEYS } from "@/lib/room-types";
+import { bookingWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -27,16 +24,8 @@ export async function POST(req: Request) {
     );
   }
 
-  // Nights outside the standard block are always self-paid and need a room
-  // type choice; the block config only lives server-side, so this can't be
-  // a zod refine.
-  const blockStart = toISODate(config.blockStart);
-  const blockEnd = toISODate(config.blockEnd);
-  const lastNight = addIsoDays(data.stayEnd, -1);
-  const hasNightsOutsideBlock = isoDateRange(data.stayStart, lastNight).some(
-    (night) => night < blockStart || night > blockEnd,
-  );
-  if (hasNightsOutsideBlock && !ROOM_TYPE_KEYS.includes(data.extraNightsRoomType as never)) {
+  const outsideBlock = hasNightsOutsideBlock(data.stayStart, data.stayEnd);
+  if (outsideBlock && !isValidRoomType(data.extraNightsRoomType)) {
     return NextResponse.json(
       {
         error: {
@@ -51,31 +40,7 @@ export async function POST(req: Request) {
 
   const booking = await prisma.booking.create({
     data: {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      reservationFirstName: data.reservationFirstName,
-      reservationLastName: data.reservationLastName,
-      hotelEmail: data.hotelEmail,
-      detailsEmail: data.detailsEmail,
-      attendingHappyHour: data.attendingHappyHour,
-      happyHourPlusOne: data.attendingHappyHour && data.happyHourPlusOne,
-      attendingAllHands: data.attendingAllHands,
-      attendingDinner: data.attendingDinner,
-      dinnerPlusOne: data.attendingDinner && data.dinnerPlusOne,
-      stayStart: new Date(`${data.stayStart}T00:00:00.000Z`),
-      stayEnd: new Date(`${data.stayEnd}T00:00:00.000Z`),
-      companyPaidNights: JSON.stringify(data.companyPaidNights),
-      extraNightsRoomType: hasNightsOutsideBlock ? data.extraNightsRoomType : null,
-      ptoDates: data.ptoDates.length > 0 ? JSON.stringify(data.ptoDates) : null,
-      dietaryOptions: JSON.stringify(data.dietaryOptions),
-      dietaryOther: data.dietaryOptions.includes("OTHER") ? data.dietaryOther || null : null,
-      flightAirline: data.flightAirline || null,
-      flightNumber: data.flightNumber || null,
-      flightArrival: data.flightArrival ? new Date(data.flightArrival) : null,
-      flightDeparture: data.flightDeparture ? new Date(data.flightDeparture) : null,
-      flightNotes: data.flightNotes || null,
-      flaggedForReview: data.guests.length > 1,
-      flagReason: data.guests.length > 1 ? "More than 1 additional guest" : null,
+      ...bookingWriteData(data, outsideBlock),
       magicLinkToken,
       magicLinkExpiresAt: magicLinkExpiry(),
       guests: {

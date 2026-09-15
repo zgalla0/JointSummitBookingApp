@@ -7,7 +7,12 @@ import { prisma } from "./prisma";
  * narrowed DB query keeps this portable across SQLite/Postgres without
  * relying on DB-specific case-insensitive collation.
  */
-export async function findDuplicateBooking(firstName: string, lastName: string, email: string) {
+export async function findDuplicateBooking(
+  firstName: string,
+  lastName: string,
+  email: string,
+  excludeId?: string,
+) {
   const fn = firstName.trim().toLowerCase();
   const ln = lastName.trim().toLowerCase();
   const em = email.trim().toLowerCase();
@@ -21,6 +26,7 @@ export async function findDuplicateBooking(firstName: string, lastName: string, 
   return (
     candidates.find(
       (b) =>
+        b.id !== excludeId &&
         b.firstName.trim().toLowerCase() === fn &&
         b.lastName.trim().toLowerCase() === ln &&
         (b.hotelEmail.trim().toLowerCase() === em || b.detailsEmail.trim().toLowerCase() === em),
