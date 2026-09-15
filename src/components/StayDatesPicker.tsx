@@ -22,6 +22,21 @@ const HOTEL_NAME = "Galeria Plaza Reforma";
 const HOTEL_URL = "http://www.galeriaplazareformahotel-mexico.com/index_es.htm";
 const HOTEL_ADDRESS = "Hamburgo 195, Juárez, Cuauhtémoc, 06600 Cuauhtémoc, CDMX, Mexico";
 
+/** A single, non-overlapping set of border/background classes per tile
+ *  state, rather than layering conflicting utility classes: outside the
+ *  discount window the border is dashed - grey when unselected (subtle),
+ *  orange once the night is actually selected (a real "heads up"). */
+function tileBorderClasses(selected: boolean, companyPaid: boolean, outsideWindow: boolean): string {
+  if (!selected) {
+    return outsideWindow
+      ? "border-dashed border-black/20 bg-surface hover:border-warning/50"
+      : "border-hairline bg-surface hover:border-accent/40";
+  }
+  const bg = companyPaid ? "bg-accent-soft" : "bg-foreground/10";
+  if (outsideWindow) return `border-dashed border-warning ${bg}`;
+  return companyPaid ? `border-accent ${bg}` : `border-foreground/20 ${bg}`;
+}
+
 export type StayDatesValue = {
   stayStart: string;
   stayEnd: string; // checkout date, i.e. the day after the last selected night
@@ -80,7 +95,6 @@ export default function StayDatesPicker({
   const selectedSet = useMemo(() => new Set(selectedNights), [selectedNights]);
   const companyPaidSet = useMemo(() => new Set(value.companyPaidNights), [value.companyPaidNights]);
   const ptoSet = useMemo(() => new Set(value.ptoDates), [value.ptoDates]);
-  const lockedPaidSet = useMemo(() => new Set(defaultCompanyPaidNights), [defaultCompanyPaidNights]);
 
   const calendarRows = useMemo(
     () => buildCalendarGrid(bookableStart, bookableEnd),
@@ -185,9 +199,6 @@ export default function StayDatesPicker({
   }
 
   function setCompanyPaid(day: string, paid: boolean) {
-    // The two official summit nights are always company-paid; there's no
-    // control that reaches this for them, but guard it anyway.
-    if (lockedPaidSet.has(day)) return;
     const next = new Set(value.companyPaidNights);
     if (paid) next.add(day);
     else next.delete(day);
@@ -206,6 +217,12 @@ export default function StayDatesPicker({
           {HOTEL_NAME}
         </a>
         , {HOTEL_ADDRESS}
+      </p>
+
+      <p className="rounded-xl bg-accent-soft p-3 text-xs font-bold text-accent-dark">
+        All bookings made through this page are for the {HOTEL_NAME} hotel block. Please
+        don&apos;t use this page for bookings at outside hotels. For PTO coverage questions, talk
+        to your manager or Dani V.
       </p>
 
       <p className="rounded-xl bg-background p-3 text-xs text-muted">
@@ -243,7 +260,6 @@ export default function StayDatesPicker({
                   selected={selectedSet.has(day)}
                   companyPaid={companyPaidSet.has(day)}
                   toggleable={isCompanyToggleable(day)}
-                  locked={lockedPaidSet.has(day)}
                   isTueWed={isTueOrWedIso(day)}
                   showPto={showsPtoCheckbox(day)}
                   ptoChecked={ptoSet.has(day)}
@@ -275,8 +291,9 @@ export default function StayDatesPicker({
         <span aria-hidden className="mr-1">
           ⚠️
         </span>
-        Tiles with a dashed amber border are outside the discounted rate window. Hotel price may
-        differ outside this window, check Google for the current rate.
+        Tiles with a dashed border are outside the discounted rate window; the dash turns orange
+        once you select one of those nights. Hotel price may differ outside this window, check
+        Google for the current rate.
       </p>
 
       {hasNightsOutsideBlock && (
@@ -309,7 +326,6 @@ function DayTile({
   selected,
   companyPaid,
   toggleable,
-  locked,
   isTueWed = false,
   showPto,
   ptoChecked,
@@ -322,7 +338,6 @@ function DayTile({
   selected: boolean;
   companyPaid: boolean;
   toggleable: boolean;
-  locked: boolean;
   isTueWed?: boolean;
   showPto: boolean;
   ptoChecked: boolean;
@@ -336,33 +351,19 @@ function DayTile({
       type="button"
       data-date={day}
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${
-        outsideDiscountWindow ? "border-dashed border-warning/50" : ""
-      } ${
-        selected
-          ? companyPaid
-            ? "border-accent bg-accent-soft"
-            : "border-foreground/20 bg-foreground/10"
-          : "border-hairline bg-surface hover:border-accent/40"
-      }`}
+      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${tileBorderClasses(selected, companyPaid, outsideDiscountWindow)}`}
     >
       <span className="text-[10px] font-semibold tracking-wide text-muted uppercase">
         {isoWeekdayLabel(day)}
       </span>
       <span className="font-mono text-base font-semibold">{day.slice(-2)}</span>
 
-      {selected && toggleable && locked && (
-        <span className="mt-1 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-white">
-          🔒 Paid by Cuesta
-        </span>
-      )}
-
-      {selected && toggleable && !locked && (
+      {selected && toggleable && (
         // Spans with role="button", not real <button>s: the whole tile is
         // already a <button>, and nested <button> elements are invalid HTML
         // (breaks hydration and click handling in the browser).
         <span
-          className="mt-1 flex overflow-hidden rounded-full border border-hairline text-[8px] font-bold normal-case"
+          className="mt-1 flex w-full overflow-hidden rounded-full border border-hairline text-[8px] font-bold normal-case"
           onClick={(e) => e.stopPropagation()}
         >
           <span
@@ -375,7 +376,7 @@ function DayTile({
                 onSetCompanyPaid(false);
               }
             }}
-            className={`px-1 py-0.5 ${!companyPaid ? "bg-warning text-white" : "bg-surface text-muted"}`}
+            className={`flex-1 px-1 py-1 text-center leading-tight ${!companyPaid ? "bg-warning text-white" : "bg-surface text-muted"}`}
           >
             I Pay
           </span>
@@ -389,7 +390,7 @@ function DayTile({
                 onSetCompanyPaid(true);
               }
             }}
-            className={`px-1 py-0.5 ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
+            className={`flex-1 px-1 py-1 text-center leading-tight ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
           >
             Paid by Cuesta{isTueWed ? "*" : ""}
           </span>
