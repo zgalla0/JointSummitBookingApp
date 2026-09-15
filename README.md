@@ -3,9 +3,9 @@
 Replaces the manual email/spreadsheet process for the company event hotel block.
 Being built in stages:
 
-1. **Data model + public form** (this stage)
+1. Data model + public form
 2. Self-service edit/cancel via magic link
-3. Admin dashboard
+3. **Admin dashboard** (this stage)
 4. Emails (Resend)
 
 ## Stack
@@ -69,6 +69,36 @@ Postgres:
 2. Point `DATABASE_URL` at your Postgres instance (Vercel Postgres, Neon,
    Render Postgres, etc.) in your deployment's env vars.
 3. Run `npx prisma migrate deploy` against that database.
+
+## Admin dashboard
+
+`/admin` (redirects to `/admin/login` until authenticated) is gated by a
+single shared password, not per-user accounts:
+
+1. Set `ADMIN_PASSWORD` in your env (see `.env.example`).
+2. Log in at `/admin/login`. This sets a signed, httpOnly session cookie
+   (`src/lib/admin-session.ts`, 24-hour TTL) - there's no separate user table.
+3. `src/proxy.ts` (Next 16's `middleware.ts` replacement) gates every
+   `/admin/*` page and `/api/admin/*` route on that cookie, redirecting to
+   the login page (or returning 401 for API calls) when it's missing/expired.
+
+What's there:
+
+- **Dashboard** (`/admin`) - summary stats: booking counts, event attendance,
+  company-paid vs self-paid room nights, discount-window coverage, room-type
+  breakdown, dietary breakdown, PTO days claimed, flagged-for-review count,
+  and attendees still missing flight details (with a button to trigger the
+  flight-details-reminder email stub for all of them).
+- **Bookings** (`/admin/bookings` and `/admin/bookings/[id]`) - full list and
+  per-booking detail, with actions to cancel a booking as admin (not gated by
+  the Stage 2 lock-in date, see `src/lib/cancel-booking.ts`), toggle the
+  review flag, or resend a magic link.
+- **Static content** (`/admin/static-content`) - CRUD for the `StaticContent`
+  table, which powers the "Event info, Q&A, and timing" section shown on the
+  public booking form.
+- **Export** (`/api/admin/export`) - downloads every booking (active and
+  cancelled) as CSV, including the discount-window/room-nights breakdown per
+  booking.
 
 ## Email (Resend)
 
