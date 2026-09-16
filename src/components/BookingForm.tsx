@@ -63,6 +63,7 @@ export default function BookingForm({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successLink, setSuccessLink] = useState<string | null>(null);
+  const [gateDone, setGateDone] = useState(false);
 
   const identityForm = useForm<IdentityInput>({
     resolver: zodResolver(identitySchema),
@@ -125,6 +126,12 @@ export default function BookingForm({
     }
   }
 
+  function onMainInvalid() {
+    setSubmitError(
+      "There are missing items that must be completed before submission - check the fields highlighted in red above.",
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="animate-in space-y-1">
@@ -179,14 +186,24 @@ export default function BookingForm({
       )}
 
       {step === "form" && (
-        <form onSubmit={mainForm.handleSubmit(onMainSubmit)} className="space-y-5">
-          <BookingFields mainForm={mainForm} formConfig={formConfig} staticContent={staticContent} />
+        <form onSubmit={mainForm.handleSubmit(onMainSubmit, onMainInvalid)} className="space-y-5">
+          <BookingFields
+            mainForm={mainForm}
+            formConfig={formConfig}
+            staticContent={staticContent}
+            gateEvents
+            onGateDoneChange={setGateDone}
+          />
 
-          <p className="text-sm text-muted">{SUBMIT_REMINDER}</p>
+          {gateDone && (
+            <>
+              <p className="text-sm text-muted">{SUBMIT_REMINDER}</p>
 
-          <Button type="submit" disabled={submitting}>
-            {submitting ? "Submitting..." : "Submit booking"}
-          </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Submitting..." : "Submit booking"}
+              </Button>
+            </>
+          )}
         </form>
       )}
 

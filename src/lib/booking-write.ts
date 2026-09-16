@@ -15,6 +15,19 @@ export function hasNightsOutsideBlock(stayStart: string, stayEnd: string): boole
   return isoDateRange(stayStart, lastNight).some((night) => night < blockStart || night > blockEnd);
 }
 
+/** True when any selected night falls outside the guaranteed group rate
+ *  window, even if still inside the standard block - the room-type choice
+ *  is also required then, matching the client's "outside discount window"
+ *  dashed-border highlighting. */
+export function hasNightsOutsideDiscountWindow(stayStart: string, stayEnd: string): boolean {
+  const discountStart = toISODate(config.discountStart);
+  const discountEnd = toISODate(config.discountEnd);
+  const lastNight = addIsoDays(stayEnd, -1);
+  return isoDateRange(stayStart, lastNight).some(
+    (night) => night < discountStart || night > discountEnd,
+  );
+}
+
 export function isValidRoomType(value: string): boolean {
   return (ROOM_TYPE_KEYS as readonly string[]).includes(value);
 }
@@ -24,7 +37,7 @@ export function isValidRoomType(value: string): boolean {
  *  magicLinkToken/magicLinkExpiresAt/guests, which differ by call site. */
 export function bookingWriteData(
   data: BookingFormInput,
-  outsideBlock: boolean,
+  needsRoomType: boolean,
 ): Omit<Prisma.BookingUncheckedCreateInput, "magicLinkToken" | "magicLinkExpiresAt" | "guests"> {
   // A non-attendee never picks stay dates - store a zero-night placeholder
   // (checkout same day as check-in) so every downstream night/room/PTO
@@ -50,7 +63,7 @@ export function bookingWriteData(
     stayStart: new Date(`${stayStartIso}T00:00:00.000Z`),
     stayEnd: new Date(`${stayEndIso}T00:00:00.000Z`),
     companyPaidNights: JSON.stringify(data.isAttending ? data.companyPaidNights : []),
-    extraNightsRoomType: data.isAttending && outsideBlock ? data.extraNightsRoomType : null,
+    extraNightsRoomType: data.isAttending && needsRoomType ? data.extraNightsRoomType : null,
     ptoDates: data.isAttending && data.ptoDates.length > 0 ? JSON.stringify(data.ptoDates) : null,
     dietaryOptions: JSON.stringify(data.dietaryOptions),
     dietaryOther: data.dietaryOptions.includes("OTHER") ? data.dietaryOther || null : null,

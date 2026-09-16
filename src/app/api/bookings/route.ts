@@ -4,7 +4,13 @@ import { findDuplicateBooking } from "@/lib/duplicate-check";
 import { prisma } from "@/lib/prisma";
 import { generateMagicLinkToken, magicLinkExpiry, magicLinkUrl } from "@/lib/magic-link";
 import { sendConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
-import { bookingWriteData, guestWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
+import {
+  bookingWriteData,
+  guestWriteData,
+  hasNightsOutsideBlock,
+  hasNightsOutsideDiscountWindow,
+  isValidRoomType,
+} from "@/lib/booking-write";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -24,12 +30,15 @@ export async function POST(req: Request) {
     );
   }
 
-  const outsideBlock = data.isAttending ? hasNightsOutsideBlock(data.stayStart, data.stayEnd) : false;
-  if (outsideBlock && !isValidRoomType(data.extraNightsRoomType)) {
+  const needsRoomType = data.isAttending
+    ? hasNightsOutsideBlock(data.stayStart, data.stayEnd) ||
+      hasNightsOutsideDiscountWindow(data.stayStart, data.stayEnd)
+    : false;
+  if (needsRoomType && !isValidRoomType(data.extraNightsRoomType)) {
     return NextResponse.json(
       {
         error: {
-          formErrors: ["Please choose a room type for the night(s) outside the standard block."],
+          formErrors: ["Please choose a room type for the night(s) outside the standard rate."],
         },
       },
       { status: 400 },
@@ -40,7 +49,7 @@ export async function POST(req: Request) {
 
   const booking = await prisma.booking.create({
     data: {
-      ...bookingWriteData(data, outsideBlock),
+      ...bookingWriteData(data, needsRoomType),
       magicLinkToken,
       magicLinkExpiresAt: magicLinkExpiry(),
       guests: {

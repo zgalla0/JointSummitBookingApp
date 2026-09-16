@@ -59,6 +59,12 @@ export default function EditBookingForm({
     }
   }
 
+  function onSaveInvalid() {
+    setError(
+      "There are missing items that must be completed before submission - check the fields highlighted in red above.",
+    );
+  }
+
   async function onCancelConfirmed() {
     setCancelling(true);
     setError(null);
@@ -160,7 +166,7 @@ export default function EditBookingForm({
           </div>
         </Card>
       ) : (
-        <form onSubmit={form.handleSubmit(onSave)} className="space-y-5">
+        <form onSubmit={form.handleSubmit(onSave, onSaveInvalid)} className="space-y-5">
           <BookingFields mainForm={form} formConfig={formConfig} staticContent={staticContent} />
 
           <NoticeBannerShort />

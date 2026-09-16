@@ -93,6 +93,17 @@ body {
   background: var(--background);
 }
 
+/* A Field with an error highlights its own input/select/textarea in red,
+   without every call site needing to pass a conditional className. */
+[data-error="true"] .field {
+  border-color: #dc2626;
+}
+
+[data-error="true"] .field:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
 .field-label {
   display: block;
   margin-bottom: 0.375rem;

@@ -6,7 +6,13 @@ import { getBookingByToken } from "@/lib/get-booking-by-token";
 import { isLockedIn } from "@/lib/config";
 import { magicLinkUrl } from "@/lib/magic-link";
 import { sendEditConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
-import { bookingWriteData, guestWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
+import {
+  bookingWriteData,
+  guestWriteData,
+  hasNightsOutsideBlock,
+  hasNightsOutsideDiscountWindow,
+  isValidRoomType,
+} from "@/lib/booking-write";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -55,12 +61,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
     );
   }
 
-  const outsideBlock = data.isAttending ? hasNightsOutsideBlock(data.stayStart, data.stayEnd) : false;
-  if (outsideBlock && !isValidRoomType(data.extraNightsRoomType)) {
+  const needsRoomType = data.isAttending
+    ? hasNightsOutsideBlock(data.stayStart, data.stayEnd) ||
+      hasNightsOutsideDiscountWindow(data.stayStart, data.stayEnd)
+    : false;
+  if (needsRoomType && !isValidRoomType(data.extraNightsRoomType)) {
     return NextResponse.json(
       {
         error: {
-          formErrors: ["Please choose a room type for the night(s) outside the standard block."],
+          formErrors: ["Please choose a room type for the night(s) outside the standard rate."],
         },
       },
       { status: 400 },
@@ -72,7 +81,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
     return tx.booking.update({
       where: { id: booking.id },
       data: {
-        ...bookingWriteData(data, outsideBlock),
+        ...bookingWriteData(data, needsRoomType),
         guests: {
           create: guestWriteData(data.guests),
         },

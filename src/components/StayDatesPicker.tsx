@@ -307,9 +307,9 @@ export default function StayDatesPicker({
         Google for the current rate.
       </p>
 
-      {hasNightsOutsideBlock && (
-        <div className="space-y-2 rounded-xl border border-hairline p-3">
-          <p className="field-label">Room type for the night(s) outside the standard block</p>
+      {(hasNightsOutsideBlock || hasNightsOutsideDiscountWindow) && (
+        <div className="space-y-2 rounded-xl border-2 border-warning bg-warning-soft p-3">
+          <p className="field-label text-warning">Room type for the night(s) outside the standard rate</p>
           {ROOM_TYPES.map((rt) => (
             <label key={rt.key} className="flex items-center gap-2 text-sm">
               <input
