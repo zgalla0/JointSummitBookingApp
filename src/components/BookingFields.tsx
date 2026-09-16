@@ -5,6 +5,7 @@ import type { UseFormReturn } from "react-hook-form";
 import type { BookingFormInput } from "@/lib/booking-schema";
 import { formatShortDate } from "@/lib/format";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
+import { AIRLINE_OPTIONS } from "@/lib/airline-options";
 import Card from "./ui/Card";
 import Checkbox from "./ui/Checkbox";
 import GuestFields from "./GuestFields";
@@ -55,6 +56,8 @@ export default function BookingFields({
   const attendingDinner = mainForm.watch("attendingDinner");
   const dietaryOptions = mainForm.watch("dietaryOptions");
   const dietaryOther = mainForm.watch("dietaryOther");
+  const flightArrivalAirline = mainForm.watch("flightArrivalAirline");
+  const flightDepartureAirline = mainForm.watch("flightDepartureAirline");
 
   return (
     <>
@@ -183,9 +186,11 @@ export default function BookingFields({
           <div className="space-y-3 rounded-xl border border-hairline p-3">
             <p className="field-label">Arrival</p>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Airline">
-                <input className="field" {...mainForm.register("flightArrivalAirline")} />
-              </Field>
+              <AirlineField
+                label="Airline"
+                value={flightArrivalAirline}
+                onChange={(v) => mainForm.setValue("flightArrivalAirline", v)}
+              />
               <Field label="Flight #">
                 <input className="field" {...mainForm.register("flightArrivalNumber")} />
               </Field>
@@ -197,9 +202,11 @@ export default function BookingFields({
           <div className="space-y-3 rounded-xl border border-hairline p-3">
             <p className="field-label">Departure</p>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Airline">
-                <input className="field" {...mainForm.register("flightDepartureAirline")} />
-              </Field>
+              <AirlineField
+                label="Airline"
+                value={flightDepartureAirline}
+                onChange={(v) => mainForm.setValue("flightDepartureAirline", v)}
+              />
               <Field label="Flight #">
                 <input className="field" {...mainForm.register("flightDepartureNumber")} />
               </Field>
@@ -236,6 +243,55 @@ export default function BookingFields({
         </Card>
       )}
     </>
+  );
+}
+
+/** A select of common airlines with a free-text "Other" fallback, both
+ *  writing to the same underlying string field. */
+function AirlineField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const isListed = (AIRLINE_OPTIONS as readonly string[]).includes(value);
+  const [showOther, setShowOther] = useState(value !== "" && !isListed);
+
+  return (
+    <Field label={label}>
+      <select
+        className="field"
+        value={showOther ? "Other" : value}
+        onChange={(e) => {
+          if (e.target.value === "Other") {
+            setShowOther(true);
+            onChange("");
+          } else {
+            setShowOther(false);
+            onChange(e.target.value);
+          }
+        }}
+      >
+        <option value="">Select airline</option>
+        {AIRLINE_OPTIONS.map((airline) => (
+          <option key={airline} value={airline}>
+            {airline}
+          </option>
+        ))}
+        <option value="Other">Other</option>
+      </select>
+      {showOther && (
+        <input
+          className="field mt-2"
+          placeholder="Enter airline name"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )}
+    </Field>
   );
 }
 

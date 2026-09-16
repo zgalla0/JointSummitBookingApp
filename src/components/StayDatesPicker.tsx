@@ -110,8 +110,15 @@ export default function StayDatesPicker({
     return day >= blockStart && day <= blockEnd;
   }
 
+  // The event's own dates (Happy Hour / All Hands / the night after) are
+  // always company-paid - no toggle, just a fixed label - since attendees
+  // don't get a choice about who covers those nights.
+  function isForcedCompanyPaid(day: string): boolean {
+    return defaultCompanyPaidNights.includes(day);
+  }
+
   function isCompanyToggleable(day: string): boolean {
-    return isToggleableIso(day) && isInBlock(day);
+    return isToggleableIso(day) && isInBlock(day) && !isForcedCompanyPaid(day);
   }
 
   function isOutsideDiscountWindow(day: string): boolean {
@@ -150,9 +157,7 @@ export default function StayDatesPicker({
       const filled = isoDateRange(newMin, newMax);
       const seededCompanyPaid = new Set(value.companyPaidNights);
       for (const d of filled) {
-        if (isCompanyToggleable(d) && !companyPaidSet.has(d) && defaultCompanyPaidNights.includes(d)) {
-          seededCompanyPaid.add(d);
-        }
+        if (isForcedCompanyPaid(d)) seededCompanyPaid.add(d);
       }
       onChange({
         stayStart: newMin,
@@ -192,7 +197,7 @@ export default function StayDatesPicker({
       onChange({
         stayStart: day,
         stayEnd: addIsoDays(day, 1),
-        companyPaidNights: isCompanyToggleable(day) ? [day] : [],
+        companyPaidNights: isForcedCompanyPaid(day) || isCompanyToggleable(day) ? [day] : [],
         ptoDates: value.ptoDates.filter((d) => d === day),
       });
     }
@@ -260,6 +265,7 @@ export default function StayDatesPicker({
                   selected={selectedSet.has(day)}
                   companyPaid={companyPaidSet.has(day)}
                   toggleable={isCompanyToggleable(day)}
+                  forcedCompanyPaid={isForcedCompanyPaid(day)}
                   isTueWed={isTueOrWedIso(day)}
                   showPto={showsPtoCheckbox(day)}
                   ptoChecked={ptoSet.has(day)}
@@ -326,6 +332,7 @@ function DayTile({
   selected,
   companyPaid,
   toggleable,
+  forcedCompanyPaid,
   isTueWed = false,
   showPto,
   ptoChecked,
@@ -338,6 +345,7 @@ function DayTile({
   selected: boolean;
   companyPaid: boolean;
   toggleable: boolean;
+  forcedCompanyPaid: boolean;
   isTueWed?: boolean;
   showPto: boolean;
   ptoChecked: boolean;
@@ -363,7 +371,7 @@ function DayTile({
         // already a <button>, and nested <button> elements are invalid HTML
         // (breaks hydration and click handling in the browser).
         <span
-          className="mt-1 flex w-full overflow-hidden rounded-full border border-hairline text-[8px] font-bold normal-case"
+          className="mt-1 flex h-6 w-full overflow-hidden rounded-full border border-hairline text-[8px] font-bold normal-case"
           onClick={(e) => e.stopPropagation()}
         >
           <span
@@ -376,7 +384,7 @@ function DayTile({
                 onSetCompanyPaid(false);
               }
             }}
-            className={`flex flex-1 items-center justify-center px-1 py-1 text-center leading-tight ${!companyPaid ? "bg-warning text-white" : "bg-surface text-muted"}`}
+            className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${!companyPaid ? "bg-warning text-white" : "bg-surface text-muted"}`}
           >
             I Pay
           </span>
@@ -390,17 +398,26 @@ function DayTile({
                 onSetCompanyPaid(true);
               }
             }}
-            className={`flex flex-1 items-center justify-center px-1 py-1 text-center leading-tight ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
+            className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
           >
             Paid by Cuesta{isTueWed ? "*" : ""}
           </span>
         </span>
       )}
 
+      {/* Happy Hour / Summit nights are always company-paid - no toggle,
+          just a fixed label (no lock icon, matching the plain "I PAY" badge
+          below for the days that go the other way: always self-paid). */}
+      {selected && !toggleable && forcedCompanyPaid && (
+        <span className="mt-1 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-white">
+          Paid by Cuesta
+        </span>
+      )}
+
       {/* Weekends and nights outside the block are always self-paid, with
           no toggle to click - just a plain label so it's just as clear as
           the interactive tiles that the individual is paying. */}
-      {selected && !toggleable && (
+      {selected && !toggleable && !forcedCompanyPaid && (
         <span className="mt-1 rounded-full bg-warning px-1.5 py-0.5 text-[9px] font-bold text-white">
           I PAY
         </span>

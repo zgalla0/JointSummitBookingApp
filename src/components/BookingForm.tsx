@@ -91,6 +91,8 @@ export default function BookingForm({
       } else {
         mainForm.setValue("firstName", values.firstName);
         mainForm.setValue("lastName", values.lastName);
+        mainForm.setValue("reservationFirstName", values.firstName);
+        mainForm.setValue("reservationLastName", values.lastName);
         mainForm.setValue("hotelEmail", values.email);
         mainForm.setValue("detailsEmail", values.email);
         setStep("form");
