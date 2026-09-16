@@ -13,7 +13,7 @@ import {
 import { ROOM_TYPES, type RoomTypeKey } from "@/lib/room-types";
 
 const CUESTA_APPROVAL_NOTE =
-  "* These nights can only be paid by the company if arriving early has been approved by a partner or principal.";
+  "* These nights can only be paid by the company if arriving early and having the room paid for by Cuesta has been approved by a partner or principal.";
 
 const HOTEL_NAME = "Galeria Plaza Reforma";
 const HOTEL_URL = "http://www.galeriaplazareformahotel-mexico.com/index_es.htm";
@@ -48,8 +48,6 @@ const ROOM_PRICE_MAX = Math.max(...ROOM_TYPES.map((rt) => rt.priceUsd));
 export default function StayDatesPicker({
   bookableStart,
   bookableEnd,
-  blockStart,
-  blockEnd,
   discountStart,
   discountEnd,
   discountRateUsd,
@@ -60,8 +58,6 @@ export default function StayDatesPicker({
 }: {
   bookableStart: string;
   bookableEnd: string;
-  blockStart: string;
-  blockEnd: string;
   discountStart: string;
   discountEnd: string;
   discountRateUsd: number;
@@ -103,11 +99,6 @@ export default function StayDatesPicker({
   const calendarRows = useMemo(
     () => buildCalendarGrid(bookableStart, bookableEnd),
     [bookableStart, bookableEnd],
-  );
-
-  const hasNightsOutsideBlock = useMemo(
-    () => selectedNights.some((d) => d < blockStart || d > blockEnd),
-    [selectedNights, blockStart, blockEnd],
   );
 
   const hasNightsOutsideDiscountWindow = useMemo(
@@ -156,6 +147,14 @@ export default function StayDatesPicker({
   const hasOptionalCompanyPaid = useMemo(
     () => selectedNights.some((d) => optionalCompanyPaidNights.includes(d) && companyPaidSet.has(d)),
     [selectedNights, companyPaidSet, optionalCompanyPaidNights],
+  );
+
+  // Shown as a standing price reference for any self-paid stay, not just
+  // nights that actually require a room-type choice - hidden only when
+  // nothing but the two locked, forced-company-paid nights is selected.
+  const hasAnySelfPaidStay = useMemo(
+    () => selectedNights.some((d) => !defaultCompanyPaidNights.includes(d)),
+    [selectedNights, defaultCompanyPaidNights],
   );
 
   function togglePto(day: string) {
@@ -323,7 +322,7 @@ export default function StayDatesPicker({
         Google for the current rate.
       </p>
 
-      {(hasNightsOutsideBlock || hasNightsOutsideDiscountWindow) && (
+      {hasAnySelfPaidStay && (
         <div className="space-y-2 rounded-xl border-2 border-warning bg-warning-soft p-3">
           <p className="field-label text-warning">Room type for the night(s) outside the standard rate</p>
           {ROOM_TYPES.map((rt) => (
@@ -335,12 +334,13 @@ export default function StayDatesPicker({
                 onChange={() => onChange({ extraNightsRoomType: rt.key as RoomTypeKey })}
                 className="accent-accent-dark h-4 w-4"
               />
-              {rt.label}, ${rt.priceUsd} per night
+              {rt.label}, ${rt.priceUsd} USD per night
             </label>
           ))}
           <p className="text-xs text-muted">
             Room types are limited in availability. We&apos;ll do our best to match you with your
-            selected room type, but it isn&apos;t guaranteed.
+            selected room type, but it isn&apos;t guaranteed. Ask questions on the above if you have
+            any.
           </p>
         </div>
       )}
