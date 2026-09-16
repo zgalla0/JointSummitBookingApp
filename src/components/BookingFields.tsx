@@ -20,6 +20,7 @@ export type FormConfig = {
   blockEnd: string;
   discountStart: string;
   discountEnd: string;
+  discountRateUsd: number;
   happyHourDate: string;
   allHandsDate: string;
   dinnerDate: string;
@@ -70,6 +71,8 @@ export default function BookingFields({
     onGateDoneChange?.(next === "done");
   }
 
+  const isAttending = mainForm.watch("isAttending");
+
   async function advanceFromAbout() {
     const valid = await mainForm.trigger([
       "reservationFirstName",
@@ -78,10 +81,12 @@ export default function BookingFields({
       "detailsEmail",
       "location",
     ]);
-    if (valid) setMiniStep("events");
+    if (!valid) return;
+    // Not attending: nothing else on the form applies to them, so skip
+    // Events and everything after it entirely and go straight to submit.
+    setMiniStep(isAttending ? "events" : "done");
   }
 
-  const isAttending = mainForm.watch("isAttending");
   const stayStart = mainForm.watch("stayStart");
   const stayEnd = mainForm.watch("stayEnd");
   const companyPaidNights = mainForm.watch("companyPaidNights");
@@ -196,11 +201,9 @@ export default function BookingFields({
             Next
           </Button>
         </div>
-      ) : (
+      ) : isAttending ? (
         <>
-          <div
-                className={!isAttending ? "pointer-events-none space-y-5 opacity-40 select-none" : "space-y-5"}
-              >
+          <div className="space-y-5">
                 <Card eyebrow="Events" title="Which events are you attending?">
                   <div className="space-y-3">
                     <Checkbox
@@ -245,6 +248,7 @@ export default function BookingFields({
                         blockEnd={formConfig.blockEnd}
                         discountStart={formConfig.discountStart}
                         discountEnd={formConfig.discountEnd}
+                        discountRateUsd={formConfig.discountRateUsd}
                         defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
                         optionalCompanyPaidNights={formConfig.optionalCompanyPaidNights}
                         value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
@@ -361,7 +365,7 @@ export default function BookingFields({
             </div>
           )}
         </>
-      )}
+      ) : null}
 
       {staticContent.length > 0 && (
         <Card eyebrow="Reference" title="Event info, Q&A, and timing">

@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       magicLinkToken,
       magicLinkExpiresAt: magicLinkExpiry(),
       guests: {
-        create: guestWriteData(data.guests),
+        create: guestWriteData(data.isAttending ? data.guests : []),
       },
     },
     include: { guests: true },

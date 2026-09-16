@@ -28,6 +28,7 @@ export default async function EditBookingPage({
     blockEnd: toISODate(config.blockEnd),
     discountStart: toISODate(config.discountStart),
     discountEnd: toISODate(config.discountEnd),
+    discountRateUsd: config.discountRateUsd,
     happyHourDate: toISODate(config.happyHourDate),
     allHandsDate: toISODate(config.allHandsDate),
     dinnerDate: toISODate(config.dinnerDate),

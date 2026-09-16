@@ -42,6 +42,9 @@ export type StayDatesValue = {
   extraNightsRoomType: string; // "" | RoomTypeKey
 };
 
+const ROOM_PRICE_MIN = Math.min(...ROOM_TYPES.map((rt) => rt.priceUsd));
+const ROOM_PRICE_MAX = Math.max(...ROOM_TYPES.map((rt) => rt.priceUsd));
+
 export default function StayDatesPicker({
   bookableStart,
   bookableEnd,
@@ -49,6 +52,7 @@ export default function StayDatesPicker({
   blockEnd,
   discountStart,
   discountEnd,
+  discountRateUsd,
   defaultCompanyPaidNights,
   optionalCompanyPaidNights,
   value,
@@ -60,6 +64,7 @@ export default function StayDatesPicker({
   blockEnd: string;
   discountStart: string;
   discountEnd: string;
+  discountRateUsd: number;
   defaultCompanyPaidNights: string[];
   optionalCompanyPaidNights: string[];
   value: StayDatesValue;
@@ -130,6 +135,16 @@ export default function StayDatesPicker({
 
   function isOutsideDiscountWindow(day: string): boolean {
     return day < discountStart || day > discountEnd;
+  }
+
+  // Self-paid nights always show what the attendee will actually owe: the
+  // known discount rate inside the window, or the room-type range outside
+  // it (exact price then depends on which room type they pick below).
+  function priceLabel(day: string): string {
+    if (!isOutsideDiscountWindow(day)) return `$${discountRateUsd}/night`;
+    return ROOM_PRICE_MIN === ROOM_PRICE_MAX
+      ? `$${ROOM_PRICE_MIN}/night`
+      : `$${ROOM_PRICE_MIN}-${ROOM_PRICE_MAX}/night`;
   }
 
   // PTO applies to any weekday except the specific dates that are forced
@@ -268,6 +283,7 @@ export default function StayDatesPicker({
                   companyPaid={companyPaidSet.has(day)}
                   toggleable={isCompanyToggleable(day)}
                   forcedCompanyPaid={isForcedCompanyPaid(day)}
+                  priceLabel={priceLabel(day)}
                   showPto={showsPtoCheckbox(day)}
                   ptoChecked={ptoSet.has(day)}
                   outsideDiscountWindow={isOutsideDiscountWindow(day)}
@@ -338,6 +354,7 @@ function DayTile({
   companyPaid,
   toggleable,
   forcedCompanyPaid,
+  priceLabel,
   showPto,
   ptoChecked,
   outsideDiscountWindow,
@@ -350,6 +367,7 @@ function DayTile({
   companyPaid: boolean;
   toggleable: boolean;
   forcedCompanyPaid: boolean;
+  priceLabel: string;
   showPto: boolean;
   ptoChecked: boolean;
   outsideDiscountWindow: boolean;
@@ -407,6 +425,9 @@ function DayTile({
           </span>
         </span>
       )}
+      {selected && toggleable && !companyPaid && (
+        <span className="text-[8px] font-semibold text-pay-self-text">{priceLabel}</span>
+      )}
 
       {/* Happy Hour / Summit nights are always company-paid - no toggle,
           just a fixed label (no lock icon, matching the plain "I PAY" badge
@@ -421,9 +442,12 @@ function DayTile({
           no toggle to click - just a plain label so it's just as clear as
           the interactive tiles that the individual is paying. */}
       {selected && !toggleable && !forcedCompanyPaid && (
-        <span className="mt-1 rounded-full bg-pay-self px-1.5 py-0.5 text-[9px] font-bold text-pay-self-text">
-          I PAY
-        </span>
+        <>
+          <span className="mt-1 rounded-full bg-pay-self px-1.5 py-0.5 text-[9px] font-bold text-pay-self-text">
+            I PAY
+          </span>
+          <span className="text-[8px] font-semibold text-pay-self-text">{priceLabel}</span>
+        </>
       )}
       {selected && showPto && (
         <label

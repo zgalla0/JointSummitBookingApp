@@ -6,6 +6,7 @@ import { getBookingByToken } from "@/lib/get-booking-by-token";
 import { isLockedIn } from "@/lib/config";
 import { magicLinkUrl } from "@/lib/magic-link";
 import { sendEditConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
+import { cancelBooking } from "@/lib/cancel-booking";
 import {
   bookingWriteData,
   guestWriteData,
@@ -83,12 +84,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
       data: {
         ...bookingWriteData(data, needsRoomType),
         guests: {
-          create: guestWriteData(data.guests),
+          create: guestWriteData(data.isAttending ? data.guests : []),
         },
       },
       include: { guests: true },
     });
   });
+
+  // Switching an existing (previously-submitted) booking to "not attending"
+  // acts exactly like cancelling it - same status/emails as the dedicated
+  // cancel button - rather than leaving it ACTIVE with an isAttending flag.
+  // Uses the pre-edit `booking` (not `updated`) so the cancellation emails
+  // reference the real reservation dates, not the zero-night placeholder.
+  if (!data.isAttending) {
+    await cancelBooking(booking, { byAdmin: false });
+    return NextResponse.json({ id: updated.id });
+  }
 
   await sendEditConfirmationEmail({
     to: updated.detailsEmail,

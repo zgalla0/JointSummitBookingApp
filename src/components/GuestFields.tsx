@@ -27,7 +27,8 @@ export default function GuestFields({
       </p>
 
       {fields.map((field, index) => {
-        const showEventQuestions = attendingHappyHour || attendingDinner;
+        const guestType = watch(`guests.${index}.type`);
+        const showEventQuestions = (attendingHappyHour || attendingDinner) && guestType !== "CHILD";
         const guestHappyHour = watch(`guests.${index}.attendingHappyHour`);
         const guestDinner = watch(`guests.${index}.attendingDinner`);
         const guestDietary = watch(`guests.${index}.dietaryOptions`);
@@ -47,7 +48,20 @@ export default function GuestFields({
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 <span className="field-label">Type</span>
-                <select className="field" {...register(`guests.${index}.type` as const)}>
+                <select
+                  className="field"
+                  {...register(`guests.${index}.type` as const, {
+                    onChange: (e) => {
+                      // Children don't attend Happy Hour/Dinner - clear any
+                      // stale flags so the (now hidden) box's old answer
+                      // doesn't get submitted along with it.
+                      if (e.target.value === "CHILD") {
+                        setValue(`guests.${index}.attendingHappyHour`, false);
+                        setValue(`guests.${index}.attendingDinner`, false);
+                      }
+                    },
+                  })}
+                >
                   <option value="ADULT">Adult</option>
                   <option value="CHILD">Child</option>
                 </select>

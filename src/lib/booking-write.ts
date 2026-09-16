@@ -65,22 +65,24 @@ export function bookingWriteData(
     companyPaidNights: JSON.stringify(data.isAttending ? data.companyPaidNights : []),
     extraNightsRoomType: data.isAttending && needsRoomType ? data.extraNightsRoomType : null,
     ptoDates: data.isAttending && data.ptoDates.length > 0 ? JSON.stringify(data.ptoDates) : null,
-    dietaryOptions: JSON.stringify(data.dietaryOptions),
-    dietaryOther: data.dietaryOptions.includes("OTHER") ? data.dietaryOther || null : null,
-    flightArrivalAirline: data.flightArrivalAirline || null,
-    flightArrivalNumber: data.flightArrivalNumber || null,
-    flightArrival: data.flightArrival ? new Date(data.flightArrival) : null,
-    flightDepartureAirline: data.flightDepartureAirline || null,
-    flightDepartureNumber: data.flightDepartureNumber || null,
-    flightDeparture: data.flightDeparture ? new Date(data.flightDeparture) : null,
-    flightNotes: data.flightNotes || null,
+    dietaryOptions: JSON.stringify(data.isAttending ? data.dietaryOptions : []),
+    dietaryOther: data.isAttending && data.dietaryOptions.includes("OTHER") ? data.dietaryOther || null : null,
+    flightArrivalAirline: data.isAttending ? data.flightArrivalAirline || null : null,
+    flightArrivalNumber: data.isAttending ? data.flightArrivalNumber || null : null,
+    flightArrival: data.isAttending && data.flightArrival ? new Date(data.flightArrival) : null,
+    flightDepartureAirline: data.isAttending ? data.flightDepartureAirline || null : null,
+    flightDepartureNumber: data.isAttending ? data.flightDepartureNumber || null : null,
+    flightDeparture: data.isAttending && data.flightDeparture ? new Date(data.flightDeparture) : null,
+    flightNotes: data.isAttending ? data.flightNotes || null : null,
     additionalNotes: data.additionalNotes || null,
-    flaggedForReview: data.guests.length > 1,
-    flagReason: data.guests.length > 1 ? "More than 1 additional guest" : null,
+    flaggedForReview: data.isAttending && data.guests.length > 1,
+    flagReason: data.isAttending && data.guests.length > 1 ? "More than 1 additional guest" : null,
   };
 }
 
-/** Shared guest field mapping, used by both create and edit. */
+/** Shared guest field mapping, used by both create and edit. Pass an empty
+ *  array (rather than data.guests) when the booking isn't attending - a
+ *  non-attendee never has real companion data to carry forward. */
 export function guestWriteData(guests: GuestInput[]) {
   return guests.map((g) => ({
     firstName: g.firstName,

@@ -1,73 +1,40 @@
 import { prisma } from "@/lib/prisma";
 import { toISODate } from "@/lib/format";
-import { toCsv } from "@/lib/csv";
-import { parseJsonArray, bookingNights } from "@/lib/admin-stats";
+import { buildExportWorkbook } from "@/lib/export-workbook";
+
+const LAST_EXPORT_KEY = "lastExportPulledAt";
 
 export async function GET() {
-  const bookings = await prisma.booking.findMany({
-    include: { guests: true },
-    orderBy: { createdAt: "asc" },
+  const [bookings, lastExport] = await Promise.all([
+    prisma.booking.findMany({
+      include: { guests: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.staticContent.findUnique({ where: { key: LAST_EXPORT_KEY } }),
+  ]);
+
+  // Stored as the `body` text rather than relying on `updatedAt`: an update
+  // with no changed fields is a no-op that Prisma skips entirely, so
+  // `@updatedAt` would never advance past the very first pull.
+  const since = lastExport?.body ? new Date(lastExport.body) : null;
+  const workbook = buildExportWorkbook(bookings, since);
+
+  // Recorded immediately so this pull becomes the new baseline for the next
+  // one, regardless of whether the caller actually does anything with the
+  // file it gets back.
+  const now = new Date().toISOString();
+  await prisma.staticContent.upsert({
+    where: { key: LAST_EXPORT_KEY },
+    create: { key: LAST_EXPORT_KEY, body: now },
+    update: { body: now },
   });
 
-  const rows = bookings.map((b) => {
-    const companyPaid = new Set(parseJsonArray(b.companyPaidNights));
-    const nights = bookingNights(b);
-    return {
-      id: b.id,
-      status: b.status,
-      isAttending: b.isAttending,
-      firstName: b.firstName,
-      lastName: b.lastName,
-      location: b.location,
-      reservationFirstName: b.reservationFirstName,
-      reservationLastName: b.reservationLastName,
-      hotelEmail: b.hotelEmail,
-      detailsEmail: b.detailsEmail,
-      attendingHappyHour: b.attendingHappyHour,
-      attendingAllHands: b.attendingAllHands,
-      attendingDinner: b.attendingDinner,
-      stayStart: toISODate(b.stayStart),
-      stayEnd: toISODate(b.stayEnd),
-      nightsTotal: nights.length,
-      nightsCompanyPaid: nights.filter((n) => companyPaid.has(n)).length,
-      nightsSelfPaid: nights.filter((n) => !companyPaid.has(n)).length,
-      nightsCompanyPaidDates: nights.filter((n) => companyPaid.has(n)).join("; "),
-      nightsSelfPaidDates: nights.filter((n) => !companyPaid.has(n)).join("; "),
-      extraNightsRoomType: b.extraNightsRoomType ?? "",
-      ptoDates: parseJsonArray(b.ptoDates).join("; "),
-      additionalGuests: b.guests
-        .map((g) => {
-          const events = [g.attendingHappyHour && "HH", g.attendingDinner && "Dinner"]
-            .filter(Boolean)
-            .join("+");
-          const diet = parseJsonArray(g.dietaryOptions).join("/");
-          return `${g.firstName} ${g.lastName} (${g.type}${events ? `, ${events}` : ""}${diet ? `, diet: ${diet}` : ""})`;
-        })
-        .join("; "),
-      dietaryOptions: parseJsonArray(b.dietaryOptions).join("; "),
-      dietaryOther: b.dietaryOther ?? "",
-      flightArrivalAirline: b.flightArrivalAirline ?? "",
-      flightArrivalNumber: b.flightArrivalNumber ?? "",
-      flightArrival: b.flightArrival ? b.flightArrival.toISOString() : "",
-      flightDepartureAirline: b.flightDepartureAirline ?? "",
-      flightDepartureNumber: b.flightDepartureNumber ?? "",
-      flightDeparture: b.flightDeparture ? b.flightDeparture.toISOString() : "",
-      flightNotes: b.flightNotes ?? "",
-      additionalNotes: b.additionalNotes ?? "",
-      flaggedForReview: b.flaggedForReview,
-      flagReason: b.flagReason ?? "",
-      cancelledAt: b.cancelledAt ? b.cancelledAt.toISOString() : "",
-      cancelledByAdmin: b.cancelledByAdmin,
-      magicLinkToken: b.magicLinkToken,
-      createdAt: b.createdAt.toISOString(),
-    };
-  });
+  const buffer = await workbook.xlsx.writeBuffer();
 
-  const csv = toCsv(rows);
-  return new Response(csv, {
+  return new Response(buffer, {
     headers: {
-      "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="bookings-export-${toISODate(new Date())}.csv"`,
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": `attachment; filename="bookings-export-${toISODate(new Date())}.xlsx"`,
     },
   });
 }
