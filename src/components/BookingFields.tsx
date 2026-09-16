@@ -100,6 +100,12 @@ export default function BookingFields({
   const flightArrivalAirline = mainForm.watch("flightArrivalAirline");
   const flightDepartureAirline = mainForm.watch("flightDepartureAirline");
 
+  // react-hook-form nests an array-level zod issue under `.root` once any
+  // per-item field (e.g. "guests.0.firstName") is also registered, rather
+  // than leaving it at `errors.guests.message` directly.
+  const guestsListError =
+    mainForm.formState.errors.guests?.root?.message ?? mainForm.formState.errors.guests?.message;
+
   return (
     <>
       <Card eyebrow="About you" title="Your details">
@@ -204,7 +210,11 @@ export default function BookingFields({
       ) : isAttending ? (
         <>
           <div className="space-y-5">
-                <Card eyebrow="Events" title="Which events are you attending?">
+                <Card
+                  eyebrow="Events"
+                  title="Which events are you attending?"
+                  className={mainForm.formState.errors.attendingHappyHour ? "border-2 border-red-500" : ""}
+                >
                   <div className="space-y-3">
                     <Checkbox
                       label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`}
@@ -219,24 +229,40 @@ export default function BookingFields({
                       {...mainForm.register("attendingDinner")}
                     />
                   </div>
+                  {mainForm.formState.errors.attendingHappyHour?.message && (
+                    <p className="mt-2 text-sm font-semibold text-red-600">
+                      {mainForm.formState.errors.attendingHappyHour.message}
+                    </p>
+                  )}
                 </Card>
 
                 {miniStep !== "events" && (
                   <>
-                    <Card eyebrow="Food" title="Dietary restrictions">
+                    <Card
+                      eyebrow="Food"
+                      title="Dietary restrictions"
+                      className={mainForm.formState.errors.dietaryOptions ? "border-2 border-red-500" : ""}
+                    >
                       <DietaryChecklist
                         selected={dietaryOptions}
                         other={dietaryOther}
                         onChange={(next) => mainForm.setValue("dietaryOptions", next)}
                         onOtherChange={(val) => mainForm.setValue("dietaryOther", val)}
                       />
+                      {mainForm.formState.errors.dietaryOptions?.message && (
+                        <p className="mt-2 text-sm font-semibold text-red-600">
+                          {mainForm.formState.errors.dietaryOptions.message}
+                        </p>
+                      )}
                     </Card>
 
                     <Card
                       eyebrow="Hotel booking"
                       title="Stay dates"
                       className={
-                        mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd
+                        mainForm.formState.errors.stayStart ||
+                        mainForm.formState.errors.stayEnd ||
+                        mainForm.formState.errors.extraNightsRoomType
                           ? "border-2 border-red-500"
                           : ""
                       }
@@ -255,11 +281,19 @@ export default function BookingFields({
                               shouldValidate: false,
                             });
                           }
+                          if (patch.extraNightsRoomType) {
+                            mainForm.clearErrors("extraNightsRoomType");
+                          }
                         }}
                       />
                       {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
                         <p className="mt-2 text-sm font-semibold text-red-600">
                           Please select your stay nights.
+                        </p>
+                      )}
+                      {mainForm.formState.errors.extraNightsRoomType?.message && (
+                        <p className="mt-2 text-sm font-semibold text-red-600">
+                          {mainForm.formState.errors.extraNightsRoomType.message}
                         </p>
                       )}
                     </Card>
@@ -274,10 +308,8 @@ export default function BookingFields({
                         attendingHappyHour={attendingHappyHour}
                         attendingDinner={attendingDinner}
                       />
-                      {mainForm.formState.errors.guests?.message && (
-                        <p className="mt-2 text-sm font-semibold text-red-600">
-                          {mainForm.formState.errors.guests.message}
-                        </p>
+                      {guestsListError && (
+                        <p className="mt-2 text-sm font-semibold text-red-600">{guestsListError}</p>
                       )}
                     </Card>
 

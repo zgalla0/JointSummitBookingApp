@@ -11,6 +11,7 @@ import {
   type BookingFormInput,
   type IdentityInput,
 } from "@/lib/booking-schema";
+import { hasNightOutsideRange } from "@/lib/stay-tiles-client";
 import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
 import { SUBMIT_REMINDER } from "@/lib/copy";
 import Card from "./ui/Card";
@@ -104,7 +105,32 @@ export default function BookingForm({
     }
   }
 
+  // The block/discount boundaries only matter once the attendee has picked
+  // stay dates, so this can't be a plain zod refine on the schema (which has
+  // no access to formConfig) - checked here, after the rest of the form has
+  // already validated, right before the request goes out.
+  function needsRoomType(values: BookingFormInput): boolean {
+    return (
+      values.isAttending &&
+      (hasNightOutsideRange(values.stayStart, values.stayEnd, formConfig.blockStart, formConfig.blockEnd) ||
+        hasNightOutsideRange(
+          values.stayStart,
+          values.stayEnd,
+          formConfig.discountStart,
+          formConfig.discountEnd,
+        ))
+    );
+  }
+
   async function onMainSubmit(values: BookingFormInput) {
+    if (values.extraNightsRoomType === "" && needsRoomType(values)) {
+      mainForm.setError("extraNightsRoomType", {
+        type: "manual",
+        message: "Please choose a room type for the night(s) outside the standard rate",
+      });
+      onMainInvalid();
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
     try {

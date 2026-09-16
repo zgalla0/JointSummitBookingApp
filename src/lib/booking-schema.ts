@@ -5,19 +5,28 @@ import { LOCATION_KEYS } from "./location-options";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
 
-// No min-length here: a fully blank row (added via "+ Add guest" then left
-// untouched) is filtered out by the guests array transform below rather than
-// blocking submission. A partially filled row still needs both names, which
-// the array-level refine enforces after filtering.
-export const guestSchema = z.object({
-  firstName: z.string().trim(),
-  lastName: z.string().trim(),
-  type: z.enum(["ADULT", "CHILD"]),
-  attendingHappyHour: z.boolean(),
-  attendingDinner: z.boolean(),
-  dietaryOptions: z.array(z.enum(DIETARY_OPTION_KEYS)).max(DIETARY_OPTION_KEYS.length),
-  dietaryOther: z.string().trim().max(500),
-});
+// A row added via "+ Add guest" (blank or partially filled) is required to
+// be completed, not silently dropped - the array-level refine below rejects
+// it, telling the attendee to fill it in or remove that guest.
+export const guestSchema = z
+  .object({
+    firstName: z.string().trim(),
+    lastName: z.string().trim(),
+    type: z.enum(["ADULT", "CHILD"]),
+    attendingHappyHour: z.boolean(),
+    attendingDinner: z.boolean(),
+    dietaryOptions: z.array(z.enum(DIETARY_OPTION_KEYS)).max(DIETARY_OPTION_KEYS.length),
+    dietaryOther: z.string().trim().max(500),
+  })
+  .superRefine((guest, ctx) => {
+    if ((guest.attendingHappyHour || guest.attendingDinner) && guest.dietaryOptions.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Please select at least one option (choose "None" if there are no restrictions)',
+        path: ["dietaryOptions"],
+      });
+    }
+  });
 
 // Step 0: duplicate check, collected before the rest of the form.
 export const identitySchema = z.object({
@@ -69,12 +78,11 @@ export const bookingFormSchema = z
 
     guests: z
       .array(guestSchema)
-      .transform((guests) => guests.filter((g) => g.firstName !== "" || g.lastName !== ""))
       .refine((guests) => guests.length <= 2, {
         message: "Up to 2 additional guests (max room occupancy is 3)",
       })
       .refine((guests) => guests.every((g) => g.firstName !== "" && g.lastName !== ""), {
-        message: "Please fill in both first and last name for each additional guest",
+        message: "Please fill in both first and last name for each additional guest, or remove them",
       }),
 
     dietaryOptions: z.array(z.enum(DIETARY_OPTION_KEYS)).max(DIETARY_OPTION_KEYS.length),
@@ -91,8 +99,24 @@ export const bookingFormSchema = z
     additionalNotes: z.string().trim().max(2000),
   })
   .superRefine((data, ctx) => {
-    // Not attending: none of the stay-date requirements below apply.
+    // Not attending: none of the requirements below apply.
     if (!data.isAttending) return;
+
+    if (!data.attendingHappyHour && !data.attendingAllHands && !data.attendingDinner) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please select at least one event you're attending",
+        path: ["attendingHappyHour"],
+      });
+    }
+
+    if (data.dietaryOptions.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Please select at least one option (choose "None" if there are no restrictions)',
+        path: ["dietaryOptions"],
+      });
+    }
 
     if (!isoDate.safeParse(data.stayStart).success || !isoDate.safeParse(data.stayEnd).success) {
       ctx.addIssue({

@@ -19,6 +19,22 @@ export function isoDateRange(startIso: string, endIso: string): string[] {
   return dates;
 }
 
+/** True when any night of [stayStart, checkout) falls outside [rangeStart,
+ *  rangeEnd] - used client-side (form validation) against boundaries the
+ *  server has already resolved into plain ISO strings and sent down as
+ *  form config, so this needs no server-only config of its own. */
+export function hasNightOutsideRange(
+  stayStart: string,
+  stayEnd: string,
+  rangeStart: string,
+  rangeEnd: string,
+): boolean {
+  if (!stayStart || !stayEnd) return false;
+  const lastNight = addIsoDays(stayEnd, -1);
+  if (lastNight < stayStart) return false;
+  return isoDateRange(stayStart, lastNight).some((night) => night < rangeStart || night > rangeEnd);
+}
+
 const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function isoWeekday(iso: string): number {

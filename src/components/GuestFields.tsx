@@ -34,6 +34,7 @@ export default function GuestFields({
         const guestDietary = watch(`guests.${index}.dietaryOptions`);
         const guestDietaryOther = watch(`guests.${index}.dietaryOther`);
         const showDietary = guestHappyHour || guestDinner;
+        const dietaryError = mainForm.formState.errors.guests?.[index]?.dietaryOptions?.message;
 
         return (
           <div key={field.id} className="space-y-3 rounded-xl border border-hairline p-3">
@@ -87,7 +88,7 @@ export default function GuestFields({
                   />
                 )}
                 {showDietary && (
-                  <div className="pt-1">
+                  <div className={`pt-1 ${dietaryError ? "rounded-xl border-2 border-red-500 p-2" : ""}`}>
                     <p className="field-label mb-2">Dietary restrictions for this guest</p>
                     <DietaryChecklist
                       selected={guestDietary}
@@ -95,6 +96,9 @@ export default function GuestFields({
                       onChange={(next) => setValue(`guests.${index}.dietaryOptions`, next)}
                       onOtherChange={(val) => setValue(`guests.${index}.dietaryOther`, val)}
                     />
+                    {dietaryError && (
+                      <p className="mt-2 text-sm font-semibold text-red-600">{dietaryError}</p>
+                    )}
                   </div>
                 )}
               </div>
