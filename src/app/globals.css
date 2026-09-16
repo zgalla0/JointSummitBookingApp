@@ -11,6 +11,7 @@
   --warning: #d97706;
   --warning-soft: #fef3c7;
   --pay-self: #ffb37a;
+  --pay-self-soft: #ffead2;
   --pay-self-text: #7c3a12;
   --hairline: rgba(31, 41, 55, 0.08);
   /* Avenir isn't a Google/web font (Apple/Linotype-licensed), so it only
@@ -32,6 +33,7 @@
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-pay-self: var(--pay-self);
+  --color-pay-self-soft: var(--pay-self-soft);
   --color-pay-self-text: var(--pay-self-text);
   --color-hairline: var(--hairline);
   --font-sans: var(--font-sans);

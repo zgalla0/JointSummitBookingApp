@@ -32,9 +32,9 @@ function tileBorderClasses(selected: boolean, companyPaid: boolean, outsideWindo
       ? "border-dashed border-black/20 bg-surface hover:border-warning/50"
       : "border-hairline bg-surface hover:border-accent/40";
   }
-  const bg = companyPaid ? "bg-accent-soft" : "bg-foreground/10";
+  const bg = companyPaid ? "bg-accent-soft" : "bg-pay-self-soft";
   if (outsideWindow) return `border-dashed border-warning ${bg}`;
-  return companyPaid ? `border-accent ${bg}` : `border-foreground/20 ${bg}`;
+  return companyPaid ? `border-accent ${bg}` : `border-pay-self ${bg}`;
 }
 
 export type StayDatesValue = {
