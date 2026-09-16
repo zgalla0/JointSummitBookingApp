@@ -35,7 +35,7 @@ export type StaticContentItem = { key: string; title: string | null; body: strin
  * around it (identity/duplicate gating, submit button, success screen,
  * cancel flow) differs between those two and stays in the caller.
  */
-type MiniStep = "about" | "attending" | "events" | "done";
+type MiniStep = "about" | "events" | "done";
 
 export default function BookingFields({
   mainForm,
@@ -47,12 +47,12 @@ export default function BookingFields({
   mainForm: UseFormReturn<BookingFormInput>;
   formConfig: FormConfig;
   staticContent: StaticContentItem[];
-  /** When true, About You / Attending? / Events must be completed one at a
-   *  time, in order, before the rest of the form (which the Companion
-   *  section depends on, via attendingHappyHour/attendingDinner) appears.
-   *  Only used for the brand-new booking form - editing an existing
-   *  booking always shows everything at once, since its data is already
-   *  complete. */
+  /** When true, About You + Attending? (shown together) then Events must
+   *  be completed one page at a time, in order, before the rest of the
+   *  form (which the Companion section depends on, via
+   *  attendingHappyHour/attendingDinner) appears. Only used for the
+   *  brand-new booking form - editing an existing booking always shows
+   *  everything at once, since its data is already complete. */
   gateEvents?: boolean;
   /** Fires whenever the gate above opens/closes, so the caller can hide its
    *  own submit button until the gated sections are actually done - a
@@ -78,7 +78,7 @@ export default function BookingFields({
       "detailsEmail",
       "location",
     ]);
-    if (valid) setMiniStep("attending");
+    if (valid) setMiniStep("events");
   }
 
   const isAttending = mainForm.watch("isAttending");
@@ -149,6 +149,47 @@ export default function BookingFields({
         </div>
       </Card>
 
+      <Card eyebrow="Attending?" title="Are you attending the summit?">
+        <div className="flex flex-wrap gap-3">
+          <label
+            className={`flex-1 cursor-pointer rounded-xl border-2 p-3 text-center text-sm font-semibold transition-colors ${
+              isAttending
+                ? "border-accent bg-accent-soft text-accent-dark"
+                : "border-hairline text-muted hover:border-accent/40"
+            }`}
+          >
+            <input
+              type="radio"
+              className="sr-only"
+              checked={isAttending}
+              onChange={() => mainForm.setValue("isAttending", true)}
+            />
+            Yes, I&apos;m attending
+          </label>
+          <label
+            className={`flex-1 cursor-pointer rounded-xl border-2 p-3 text-center text-sm font-semibold transition-colors ${
+              !isAttending
+                ? "border-pay-self bg-pay-self-soft text-pay-self-text"
+                : "border-hairline text-muted hover:border-pay-self/40"
+            }`}
+          >
+            <input
+              type="radio"
+              className="sr-only"
+              checked={!isAttending}
+              onChange={() => mainForm.setValue("isAttending", false)}
+            />
+            No, I&apos;m not attending
+          </label>
+        </div>
+        {!isAttending && (
+          <p className="mt-3 text-sm text-muted">
+            No problem - everything below is optional. Just submit the form to let the planning
+            team know you won&apos;t be there.
+          </p>
+        )}
+      </Card>
+
       {miniStep === "about" ? (
         <div className="flex justify-end">
           <Button type="button" onClick={advanceFromAbout}>
@@ -157,56 +198,7 @@ export default function BookingFields({
         </div>
       ) : (
         <>
-          <Card eyebrow="Attending?" title="Are you attending the summit?">
-            <div className="flex flex-wrap gap-3">
-              <label
-                className={`flex-1 cursor-pointer rounded-xl border-2 p-3 text-center text-sm font-semibold transition-colors ${
-                  isAttending
-                    ? "border-accent bg-accent-soft text-accent-dark"
-                    : "border-hairline text-muted hover:border-accent/40"
-                }`}
-              >
-                <input
-                  type="radio"
-                  className="sr-only"
-                  checked={isAttending}
-                  onChange={() => mainForm.setValue("isAttending", true)}
-                />
-                Yes, I&apos;m attending
-              </label>
-              <label
-                className={`flex-1 cursor-pointer rounded-xl border-2 p-3 text-center text-sm font-semibold transition-colors ${
-                  !isAttending
-                    ? "border-pay-self bg-pay-self-soft text-pay-self-text"
-                    : "border-hairline text-muted hover:border-pay-self/40"
-                }`}
-              >
-                <input
-                  type="radio"
-                  className="sr-only"
-                  checked={!isAttending}
-                  onChange={() => mainForm.setValue("isAttending", false)}
-                />
-                No, I&apos;m not attending
-              </label>
-            </div>
-            {!isAttending && (
-              <p className="mt-3 text-sm text-muted">
-                No problem - everything below is optional. Just submit the form to let the planning
-                team know you won&apos;t be there.
-              </p>
-            )}
-          </Card>
-
-          {miniStep === "attending" ? (
-            <div className="flex justify-end">
-              <Button type="button" onClick={() => setMiniStep("events")}>
-                Next
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div
+          <div
                 className={!isAttending ? "pointer-events-none space-y-5 opacity-40 select-none" : "space-y-5"}
               >
                 <Card eyebrow="Events" title="Which events are you attending?">
@@ -361,14 +353,12 @@ export default function BookingFields({
                 )}
               </div>
 
-              {miniStep === "events" && (
-                <div className="flex justify-end">
-                  <Button type="button" onClick={() => setMiniStep("done")}>
-                    Next
-                  </Button>
-                </div>
-              )}
-            </>
+          {miniStep === "events" && (
+            <div className="flex justify-end">
+              <Button type="button" onClick={() => setMiniStep("done")}>
+                Next
+              </Button>
+            </div>
           )}
         </>
       )}
