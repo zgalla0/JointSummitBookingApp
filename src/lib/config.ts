@@ -32,9 +32,9 @@ export const config = {
   discountRateUsd: Number(process.env.EVENT_DISCOUNT_RATE_USD ?? "105"),
 
   // Event program dates.
-  happyHourDate: envDate("EVENT_HAPPY_HOUR_DATE", "2026-01-21"), // Wed
-  allHandsDate: envDate("EVENT_ALL_HANDS_DATE", "2026-01-22"), // Thurs
-  dinnerDate: envDate("EVENT_DINNER_DATE", "2026-01-22"), // Thurs
+  happyHourDate: envDate("EVENT_HAPPY_HOUR_DATE", "2026-01-22"), // Thurs
+  allHandsDate: envDate("EVENT_ALL_HANDS_DATE", "2026-01-23"), // Fri
+  dinnerDate: envDate("EVENT_DINNER_DATE", "2026-01-23"), // Fri
 
   // After this date, the form stops accepting automatic edits/cancellations;
   // changes must be routed to admin for manual handling.

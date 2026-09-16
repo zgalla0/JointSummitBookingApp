@@ -11,13 +11,10 @@ import {
   WEEKDAY_HEADER_SUN_FIRST,
 } from "@/lib/stay-tiles-client";
 import { ROOM_TYPES, type RoomTypeKey } from "@/lib/room-types";
+import { HOTEL_NAME, HOTEL_URL, HOTEL_ROOMS_URL, HOTEL_ADDRESS } from "@/lib/hotel-info";
 
 const CUESTA_APPROVAL_NOTE =
   "* These nights can only be paid by the company if arriving early and having the room paid for by Cuesta has been approved by a partner or principal.";
-
-const HOTEL_NAME = "Galeria Plaza Reforma";
-const HOTEL_URL = "http://www.galeriaplazareformahotel-mexico.com/index_es.htm";
-const HOTEL_ADDRESS = "Hamburgo 195, Juárez, Cuauhtémoc, 06600 Cuauhtémoc, CDMX, Mexico";
 
 /** A single, non-overlapping set of border/background classes per tile
  *  state, rather than layering conflicting utility classes: outside the
@@ -324,7 +321,16 @@ export default function StayDatesPicker({
           <p className="text-xs text-muted">
             Room types are limited in availability. We&apos;ll do our best to match you with your
             selected room type, but it isn&apos;t guaranteed. Ask questions on the above if you have
-            any.
+            any. You can check out the differences between the two rooms{" "}
+            <a
+              href={HOTEL_ROOMS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-accent-dark hover:underline"
+            >
+              here
+            </a>
+            .
           </p>
         </div>
       )}

@@ -12,6 +12,8 @@ import {
   type IdentityInput,
 } from "@/lib/booking-schema";
 import { hasNightOutsideRange } from "@/lib/stay-tiles-client";
+import { formatShortDate, formatMonthDay } from "@/lib/format";
+import { HOTEL_NAME, HOTEL_URL, HOTEL_ADDRESS } from "@/lib/hotel-info";
 import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
 import { SUBMIT_REMINDER } from "@/lib/copy";
 import Card from "./ui/Card";
@@ -174,24 +176,62 @@ export default function BookingForm({
       )}
 
       {step === "identity" && (
-        <Card eyebrow="Get started" title="Let's find your name and email">
-          <form onSubmit={identityForm.handleSubmit(onIdentitySubmit)} className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="First name" error={identityForm.formState.errors.firstName?.message}>
-                <input className="field" {...identityForm.register("firstName")} />
+        <>
+          <Card eyebrow="Before you book" title="Summit info at a glance">
+            <ul className="space-y-2 text-sm text-muted">
+              <li>
+                <strong className="text-foreground">Dates:</strong>{" "}
+                {formatMonthDay(formConfig.happyHourDate)}–{formatMonthDay(formConfig.allHandsDate)},
+                2026
+              </li>
+              <li>
+                <strong className="text-foreground">Fly into:</strong> Mexico City International
+                Airport (MEX)
+              </li>
+              <li>
+                <strong className="text-foreground">Airport to hotel:</strong> About 30-60 minutes by
+                car, depending on traffic
+              </li>
+              <li>
+                <strong className="text-foreground">Hotel:</strong>{" "}
+                <a
+                  href={HOTEL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-accent-dark hover:underline"
+                >
+                  {HOTEL_NAME}
+                </a>
+                , {HOTEL_ADDRESS}
+              </li>
+              <li>
+                <strong className="text-foreground">Schedule:</strong> Happy Hour (
+                {formatShortDate(formConfig.happyHourDate)}), All Hands (
+                {formatShortDate(formConfig.allHandsDate)}), Dinner (
+                {formatShortDate(formConfig.dinnerDate)})
+              </li>
+            </ul>
+          </Card>
+
+          <Card eyebrow="Get started" title="Let's find your name and email">
+            <form onSubmit={identityForm.handleSubmit(onIdentitySubmit)} className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="First name" error={identityForm.formState.errors.firstName?.message}>
+                  <input className="field" {...identityForm.register("firstName")} />
+                </Field>
+                <Field label="Last name" error={identityForm.formState.errors.lastName?.message}>
+                  <input className="field" {...identityForm.register("lastName")} />
+                </Field>
+              </div>
+              <Field label="Email" error={identityForm.formState.errors.email?.message}>
+                <input className="field" {...identityForm.register("email")} />
               </Field>
-              <Field label="Last name" error={identityForm.formState.errors.lastName?.message}>
-                <input className="field" {...identityForm.register("lastName")} />
-              </Field>
-            </div>
-            <Field label="Email" error={identityForm.formState.errors.email?.message}>
-              <input className="field" {...identityForm.register("email")} />
-            </Field>
-            <Button type="submit" disabled={checking}>
-              {checking ? "Checking..." : "Continue"}
-            </Button>
-          </form>
-        </Card>
+              <Button type="submit" disabled={checking}>
+                {checking ? "Checking..." : "Continue"}
+              </Button>
+            </form>
+          </Card>
+        </>
       )}
 
       {step === "duplicate" && (
