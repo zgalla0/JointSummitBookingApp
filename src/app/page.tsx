@@ -1,4 +1,4 @@
-import { config, defaultCompanyPaidNights } from "@/lib/config";
+import { config, defaultCompanyPaidNights, optionalCompanyPaidNights } from "@/lib/config";
 import { toISODate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import BookingForm from "@/components/BookingForm";
@@ -21,6 +21,7 @@ export default async function Home() {
     allHandsDate: toISODate(config.allHandsDate),
     dinnerDate: toISODate(config.dinnerDate),
     defaultCompanyPaidNights: defaultCompanyPaidNights().map(toISODate),
+    optionalCompanyPaidNights: optionalCompanyPaidNights().map(toISODate),
   };
 
   return (

@@ -4,19 +4,16 @@ import { useEffect, useMemo } from "react";
 import {
   addIsoDays,
   buildCalendarGrid,
-  isMonTueWedIso,
   isoDateRange,
   isoMonthDay,
   isoWeekdayLabel,
-  isThuOrFriIso,
-  isTueOrWedIso,
-  isToggleableIso,
+  isWeekdayIso,
   WEEKDAY_HEADER_SUN_FIRST,
 } from "@/lib/stay-tiles-client";
 import { ROOM_TYPES, type RoomTypeKey } from "@/lib/room-types";
 
 const CUESTA_APPROVAL_NOTE =
-  "* Tuesday and Wednesday nights can only be paid by the company if arriving early has been approved by a partner or principal.";
+  "* These nights can only be paid by the company if arriving early has been approved by a partner or principal.";
 
 const HOTEL_NAME = "Galeria Plaza Reforma";
 const HOTEL_URL = "http://www.galeriaplazareformahotel-mexico.com/index_es.htm";
@@ -53,6 +50,7 @@ export default function StayDatesPicker({
   discountStart,
   discountEnd,
   defaultCompanyPaidNights,
+  optionalCompanyPaidNights,
   value,
   onChange,
 }: {
@@ -63,6 +61,7 @@ export default function StayDatesPicker({
   discountStart: string;
   discountEnd: string;
   defaultCompanyPaidNights: string[];
+  optionalCompanyPaidNights: string[];
   value: StayDatesValue;
   onChange: (patch: Partial<StayDatesValue>) => void;
 }) {
@@ -111,39 +110,37 @@ export default function StayDatesPicker({
     [selectedNights, discountStart, discountEnd],
   );
 
-  function isInBlock(day: string): boolean {
-    return day >= blockStart && day <= blockEnd;
-  }
-
-  // The event's own dates (Happy Hour / All Hands / the night after) are
-  // always company-paid - no toggle, just a fixed label - since attendees
-  // don't get a choice about who covers those nights.
+  // The day before All Hands + All Hands day itself are always company-paid
+  // - no toggle, just a fixed label - since attendees don't get a choice
+  // about who covers those 2 nights.
   function isForcedCompanyPaid(day: string): boolean {
     return defaultCompanyPaidNights.includes(day);
   }
 
+  // The 2 nights before that (arriving early) can optionally be toggled to
+  // company-paid, with approval - no other night, in the block or out of
+  // it, is ever eligible either way.
+  function isOptionalCompanyPaid(day: string): boolean {
+    return optionalCompanyPaidNights.includes(day);
+  }
+
   function isCompanyToggleable(day: string): boolean {
-    return isToggleableIso(day) && isInBlock(day) && !isForcedCompanyPaid(day);
+    return isOptionalCompanyPaid(day) && !isForcedCompanyPaid(day);
   }
 
   function isOutsideDiscountWindow(day: string): boolean {
     return day < discountStart || day > discountEnd;
   }
 
-  // PTO applies to any Mon/Tue/Wed, plus any Thu/Fri except the specific
-  // Thu/Fri the event itself falls on (those are always paid, not PTO).
+  // PTO applies to any weekday except the specific dates that are forced
+  // company-paid (those are mandatory attendance, not PTO-eligible).
   function showsPtoCheckbox(day: string): boolean {
-    if (isMonTueWedIso(day)) return true;
-    if (isThuOrFriIso(day)) return !defaultCompanyPaidNights.includes(day);
-    return false;
+    return isWeekdayIso(day) && !isForcedCompanyPaid(day);
   }
 
-  const hasTueWedCompanyPaid = useMemo(
-    () =>
-      selectedNights.some(
-        (d) => d >= blockStart && d <= blockEnd && isTueOrWedIso(d) && companyPaidSet.has(d),
-      ),
-    [selectedNights, companyPaidSet, blockStart, blockEnd],
+  const hasOptionalCompanyPaid = useMemo(
+    () => selectedNights.some((d) => optionalCompanyPaidNights.includes(d) && companyPaidSet.has(d)),
+    [selectedNights, companyPaidSet, optionalCompanyPaidNights],
   );
 
   function togglePto(day: string) {
@@ -271,7 +268,6 @@ export default function StayDatesPicker({
                   companyPaid={companyPaidSet.has(day)}
                   toggleable={isCompanyToggleable(day)}
                   forcedCompanyPaid={isForcedCompanyPaid(day)}
-                  isTueWed={isTueOrWedIso(day)}
                   showPto={showsPtoCheckbox(day)}
                   ptoChecked={ptoSet.has(day)}
                   outsideDiscountWindow={isOutsideDiscountWindow(day)}
@@ -287,7 +283,7 @@ export default function StayDatesPicker({
         ))}
       </div>
 
-      {hasTueWedCompanyPaid && (
+      {hasOptionalCompanyPaid && (
         <p className="rounded-xl bg-warning-soft p-3 text-xs font-bold text-warning">
           {CUESTA_APPROVAL_NOTE}
         </p>
@@ -342,7 +338,6 @@ function DayTile({
   companyPaid,
   toggleable,
   forcedCompanyPaid,
-  isTueWed = false,
   showPto,
   ptoChecked,
   outsideDiscountWindow,
@@ -355,7 +350,6 @@ function DayTile({
   companyPaid: boolean;
   toggleable: boolean;
   forcedCompanyPaid: boolean;
-  isTueWed?: boolean;
   showPto: boolean;
   ptoChecked: boolean;
   outsideDiscountWindow: boolean;
@@ -409,7 +403,7 @@ function DayTile({
             }}
             className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
           >
-            Paid by Cuesta{isTueWed ? "*" : ""}
+            Paid by Cuesta*
           </span>
         </span>
       )}

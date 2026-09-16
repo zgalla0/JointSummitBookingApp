@@ -29,31 +29,13 @@ export function isoWeekdayLabel(iso: string): string {
   return WEEKDAY[isoWeekday(iso)];
 }
 
-/** Only Tue/Wed/Thu/Fri nights get a company-pays/self-pays toggle. */
-export function isToggleableIso(iso: string): boolean {
+/** Mon-Fri tiles get a "PTO" checkbox, except whichever specific dates are
+ *  forced company-paid (checked separately - not every weekday tile is
+ *  eligible, since you can't take PTO on a day you're required to be at
+ *  the summit). */
+export function isWeekdayIso(iso: string): boolean {
   const day = isoWeekday(iso);
-  return day >= 2 && day <= 5;
-}
-
-/** Tue/Wed nights use the "Paid by Cuesta" label and its approval warning,
- *  since (unlike Thu/Fri) company-pay there means arriving early. */
-export function isTueOrWedIso(iso: string): boolean {
-  const day = isoWeekday(iso);
-  return day === 2 || day === 3;
-}
-
-/** Mon/Tue/Wed tiles always get a "PTO" checkbox. */
-export function isMonTueWedIso(iso: string): boolean {
-  const day = isoWeekday(iso);
-  return day === 1 || day === 2 || day === 3;
-}
-
-/** Thu/Fri tiles get a "PTO" checkbox too, except the specific Thu/Fri the
- *  event itself falls on (checked separately against the company-paid
- *  event dates, since not every Thu/Fri is one of those). */
-export function isThuOrFriIso(iso: string): boolean {
-  const day = isoWeekday(iso);
-  return day === 4 || day === 5;
+  return day >= 1 && day <= 5;
 }
 
 export function isoMonthDay(iso: string): string {

@@ -23,6 +23,7 @@ export type FormConfig = {
   allHandsDate: string;
   dinnerDate: string;
   defaultCompanyPaidNights: string[];
+  optionalCompanyPaidNights: string[];
 };
 
 export type StaticContentItem = { key: string; title: string | null; body: string | null };
@@ -187,6 +188,7 @@ export default function BookingFields({
             discountStart={formConfig.discountStart}
             discountEnd={formConfig.discountEnd}
             defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
+            optionalCompanyPaidNights={formConfig.optionalCompanyPaidNights}
             value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
             onChange={(patch) => {
               for (const [key, val] of Object.entries(patch)) {

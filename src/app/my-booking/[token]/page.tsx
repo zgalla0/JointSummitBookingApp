@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { config, defaultCompanyPaidNights, isLockedIn } from "@/lib/config";
+import { config, defaultCompanyPaidNights, optionalCompanyPaidNights, isLockedIn } from "@/lib/config";
 import { toISODate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getBookingByToken } from "@/lib/get-booking-by-token";
@@ -32,6 +32,7 @@ export default async function EditBookingPage({
     allHandsDate: toISODate(config.allHandsDate),
     dinnerDate: toISODate(config.dinnerDate),
     defaultCompanyPaidNights: defaultCompanyPaidNights().map(toISODate),
+    optionalCompanyPaidNights: optionalCompanyPaidNights().map(toISODate),
   };
 
   return (

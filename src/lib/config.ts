@@ -45,19 +45,20 @@ export const config = {
   cancelHotelNoticeDays: Number(process.env.EVENT_CANCEL_HOTEL_NOTICE_DAYS ?? "10"),
 };
 
-/** Tue/Wed/Thu/Fri nights are the only ones with a company-pays/self-pays
- *  toggle; everything else (weekend nights, extra nights outside the block)
- *  is always self-paid. */
-export function isToggleableNight(date: Date): boolean {
-  const day = date.getUTCDay(); // Sun=0 ... Sat=6
-  return day >= 2 && day <= 5;
+/** Forced, non-toggleable company-paid nights: the day before All Hands
+ *  plus All Hands day itself, guaranteed to every attendee regardless of
+ *  "select" status. Every other night (including the 2 optional nights
+ *  below) is self-paid unless explicitly toggled. */
+export function defaultCompanyPaidNights(): Date[] {
+  return [addDays(config.allHandsDate, -1), config.allHandsDate];
 }
 
-/** Sensible default toggle state before the attendee touches anything:
- *  the All Hands date and the night after (Thu/Fri) default to company-paid,
- *  since that's guaranteed to every attendee regardless of "select" status. */
-export function defaultCompanyPaidNights(): Date[] {
-  return [config.allHandsDate, addDays(config.allHandsDate, 1)];
+/** The 2 nights immediately before that (arriving early) can optionally be
+ *  toggled to company-paid, but only with manager/partner approval -
+ *  self-attested, not enforced by the app. No other night, in or out of
+ *  the standard block, is ever eligible either way. */
+export function optionalCompanyPaidNights(): Date[] {
+  return [addDays(config.allHandsDate, -3), addDays(config.allHandsDate, -2)];
 }
 
 /** Splits PTO reporting into "before the summit" vs "after": the Monday
