@@ -10,8 +10,13 @@
   --accent-soft: #edf9ff;
   --warning: #d97706;
   --warning-soft: #fef3c7;
+  --pay-self: #ffb37a;
+  --pay-self-text: #7c3a12;
   --hairline: rgba(31, 41, 55, 0.08);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Avenir isn't a Google/web font (Apple/Linotype-licensed), so it only
+     renders for visitors whose OS ships it (e.g. macOS); everyone else
+     falls back to the already-loaded Inter, then a generic sans-serif. */
+  --font-sans: Avenir, "Avenir Next", var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-display: var(--font-bebas-neue), Impact, sans-serif;
 }
@@ -26,6 +31,8 @@
   --color-accent-soft: var(--accent-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  --color-pay-self: var(--pay-self);
+  --color-pay-self-text: var(--pay-self-text);
   --color-hairline: var(--hairline);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);

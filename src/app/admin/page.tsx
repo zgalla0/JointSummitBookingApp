@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { computeAdminStats } from "@/lib/admin-stats";
+import { computeAdminStats, computePtoCoverage, type PtoBucketStats } from "@/lib/admin-stats";
 import { DIETARY_OPTIONS } from "@/lib/dietary-options";
 import { ROOM_TYPES } from "@/lib/room-types";
+import { LOCATION_OPTIONS } from "@/lib/location-options";
+import { formatMonthDay } from "@/lib/format";
 import AdminNav from "@/components/AdminNav";
 import FlightReminderButton from "@/components/FlightReminderButton";
 import Card from "@/components/ui/Card";
@@ -17,9 +19,25 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
+function PtoBucketRow({ heading, bucket }: { heading: string; bucket: PtoBucketStats }) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold tracking-wide text-muted uppercase">{heading}</p>
+      <div className="grid grid-cols-3 gap-4">
+        <Stat label="Total" value={bucket.total} />
+        {LOCATION_OPTIONS.map((loc) => (
+          <Stat key={loc.key} label={loc.label} value={bucket.byLocation[loc.key]} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function AdminDashboardPage() {
   const bookings = await prisma.booking.findMany({ include: { guests: true } });
   const stats = computeAdminStats(bookings);
+  const pto = computePtoCoverage(bookings);
+  const pivotLabel = formatMonthDay(pto.pivotIso);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
@@ -71,15 +89,25 @@ export default async function AdminDashboardPage() {
           </div>
         </Card>
 
-        <Card eyebrow="Coverage" title="PTO & review">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Stat label="PTO days claimed" value={stats.ptoDatesCount} />
-            <Stat label="Flagged for review" value={stats.flaggedForReview} />
-            <Stat label="Missing flight details" value={stats.missingFlightDetails} />
+        <Card eyebrow="Coverage" title="PTO coverage">
+          <div className="space-y-5">
+            <PtoBucketRow heading="Total PTO days" bucket={pto.total} />
+            <PtoBucketRow heading={`Before the summit (through ${pivotLabel})`} bucket={pto.before} />
+            <PtoBucketRow heading={`On/after ${pivotLabel}`} bucket={pto.after} />
+            <div className="border-t border-hairline pt-4">
+              <Stat label="Flagged for review" value={stats.flaggedForReview} />
+            </div>
           </div>
         </Card>
 
-        <Card eyebrow="Actions" title="Export & reminders">
+        <Card eyebrow="Travel" title="Missing flight details">
+          <div className="flex flex-wrap items-center justify-between gap-6">
+            <Stat label="Bookings missing flight details" value={stats.missingFlightDetails} />
+            <FlightReminderButton missingCount={stats.missingFlightDetails} />
+          </div>
+        </Card>
+
+        <Card eyebrow="Actions" title="Export">
           <div className="flex flex-wrap items-start gap-6">
             <a
               href="/api/admin/export"
@@ -87,7 +115,6 @@ export default async function AdminDashboardPage() {
             >
               Export bookings (CSV)
             </a>
-            <FlightReminderButton missingCount={stats.missingFlightDetails} />
           </div>
         </Card>
       </div>

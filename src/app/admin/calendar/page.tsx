@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { config } from "@/lib/config";
 import { toISODate } from "@/lib/format";
-import { computeCalendarStats } from "@/lib/admin-stats";
+import { computeCalendarStats, type CalendarDayStats } from "@/lib/admin-stats";
 import { buildCalendarGrid, WEEKDAY_HEADER_SUN_FIRST } from "@/lib/stay-tiles-client";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
 import AdminNav from "@/components/AdminNav";
@@ -28,12 +28,13 @@ export default async function AdminCalendarPage() {
 
         <Card
           eyebrow="Legend"
-          title="Per-night headcount and PTO coverage"
+          title="Per-night rooms, headcount, and PTO coverage"
           className="text-sm text-muted"
         >
           <p>
-            👥 = people staying that night (attendee + guests). PTO = attendees marked PTO that
-            day, broken down by location ({LOCATION_OPTIONS.map((o) => o.label).join(" / ")}).
+            🛏️ = rooms booked that night (one per booking, regardless of guests). 👥 = total
+            people staying that night (attendee + guests). PTO = attendees marked PTO that day,
+            broken down by location ({LOCATION_OPTIONS.map((o) => o.label).join(" / ")}).
           </p>
         </Card>
 
@@ -67,16 +68,13 @@ export default async function AdminCalendarPage() {
   );
 }
 
-function CalendarDayTile({
-  stats,
-}: {
-  stats: { date: string; people: number; ptoTotal: number; ptoByLocation: Record<string, number> };
-}) {
+function CalendarDayTile({ stats }: { stats: CalendarDayStats }) {
   const day = stats.date.slice(-2);
   return (
     <div className="flex flex-col items-center gap-1 rounded-xl border border-hairline bg-surface px-1 py-2 text-center">
       <span className="font-mono text-sm font-semibold">{day}</span>
-      <span className="text-xs font-semibold text-accent-dark">👥 {stats.people}</span>
+      <span className="text-sm font-bold text-accent-dark">🛏️ {stats.rooms}</span>
+      <span className="text-[10px] text-muted">👥 {stats.people}</span>
       <span className="text-[10px] font-semibold text-warning">PTO {stats.ptoTotal}</span>
       {stats.ptoTotal > 0 && (
         <span className="text-[9px] leading-tight text-muted">

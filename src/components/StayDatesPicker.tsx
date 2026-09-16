@@ -384,7 +384,7 @@ function DayTile({
                 onSetCompanyPaid(false);
               }
             }}
-            className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${!companyPaid ? "bg-warning text-white" : "bg-surface text-muted"}`}
+            className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${!companyPaid ? "bg-pay-self text-pay-self-text" : "bg-surface text-muted"}`}
           >
             I Pay
           </span>
@@ -418,7 +418,7 @@ function DayTile({
           no toggle to click - just a plain label so it's just as clear as
           the interactive tiles that the individual is paying. */}
       {selected && !toggleable && !forcedCompanyPaid && (
-        <span className="mt-1 rounded-full bg-warning px-1.5 py-0.5 text-[9px] font-bold text-white">
+        <span className="mt-1 rounded-full bg-pay-self px-1.5 py-0.5 text-[9px] font-bold text-pay-self-text">
           I PAY
         </span>
       )}

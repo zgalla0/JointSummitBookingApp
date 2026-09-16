@@ -1,5 +1,5 @@
 import type { Booking, BookingGuest } from "@prisma/client";
-import { isWithinDiscountWindow } from "./config";
+import { isWithinDiscountWindow, ptoBeforeAfterPivot } from "./config";
 import { isoDateRange, addIsoDays } from "./stay-tiles-client";
 import { toISODate } from "./format";
 import { DIETARY_OPTION_KEYS, type DietaryOptionKey } from "./dietary-options";
@@ -49,7 +49,6 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
   let outsideDiscountWindowNights = 0;
   let flaggedForReview = 0;
   let missingFlightDetails = 0;
-  let ptoDatesCount = 0;
   const roomTypeCounts: Record<RoomTypeKey, number> = { DELUXE: 0, BRISAS: 0 };
   const dietaryCounts = Object.fromEntries(
     DIETARY_OPTION_KEYS.map((key) => [key, 0]),
@@ -91,8 +90,6 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
       missingFlightDetails++;
     }
 
-    ptoDatesCount += parseJsonArray(b.ptoDates).length;
-
     for (const key of parseJsonArray(b.dietaryOptions)) {
       if ((DIETARY_OPTION_KEYS as readonly string[]).includes(key)) {
         dietaryCounts[key as DietaryOptionKey]++;
@@ -118,20 +115,68 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
     dietaryCounts,
     flaggedForReview,
     missingFlightDetails,
-    ptoDatesCount,
   };
+}
+
+function emptyPtoBucket(): PtoBucketStats {
+  return {
+    total: 0,
+    byLocation: Object.fromEntries(LOCATION_KEYS.map((key) => [key, 0])) as Record<LocationKey, number>,
+  };
+}
+
+export type PtoBucketStats = {
+  total: number;
+  byLocation: Record<LocationKey, number>;
+};
+
+export type PtoCoverageStats = {
+  total: PtoBucketStats;
+  before: PtoBucketStats;
+  after: PtoBucketStats;
+  pivotIso: string;
+};
+
+/** PTO days claimed (attendee only, one count per PTO date on their
+ *  booking), split into "before the summit" / "after" around the pivot
+ *  date, each broken down by location. */
+export function computePtoCoverage(allBookings: BookingWithGuests[]): PtoCoverageStats {
+  const pivotIso = toISODate(ptoBeforeAfterPivot());
+  const total = emptyPtoBucket();
+  const before = emptyPtoBucket();
+  const after = emptyPtoBucket();
+
+  const active = allBookings.filter((b) => b.status === "ACTIVE");
+  for (const b of active) {
+    const loc = (LOCATION_KEYS as readonly string[]).includes(b.location)
+      ? (b.location as LocationKey)
+      : null;
+    for (const ptoDate of parseJsonArray(b.ptoDates)) {
+      const bucket = ptoDate < pivotIso ? before : after;
+      total.total++;
+      bucket.total++;
+      if (loc) {
+        total.byLocation[loc]++;
+        bucket.byLocation[loc]++;
+      }
+    }
+  }
+
+  return { total, before, after, pivotIso };
 }
 
 export type CalendarDayStats = {
   date: string;
+  rooms: number;
   people: number;
   ptoTotal: number;
   ptoByLocation: Record<LocationKey, number>;
 };
 
-/** Per-day headcount (attendee + their guests, for every night of their
- *  stay) and PTO counts (attendee only, broken down by location) across
- *  every date in [startIso, endIso], for the admin calendar view. */
+/** Per-day room count (one per active booking staying that night, i.e.
+ *  distinct from headcount) plus headcount (attendee + their guests) and
+ *  PTO counts (attendee only, broken down by location) across every date
+ *  in [startIso, endIso], for the admin calendar view. */
 export function computeCalendarStats(
   allBookings: BookingWithGuests[],
   startIso: string,
@@ -141,6 +186,7 @@ export function computeCalendarStats(
   for (const date of isoDateRange(startIso, endIso)) {
     days[date] = {
       date,
+      rooms: 0,
       people: 0,
       ptoTotal: 0,
       ptoByLocation: Object.fromEntries(LOCATION_KEYS.map((key) => [key, 0])) as Record<
@@ -154,7 +200,9 @@ export function computeCalendarStats(
   for (const b of active) {
     const headcount = 1 + b.guests.length;
     for (const night of bookingNights(b)) {
-      if (days[night]) days[night].people += headcount;
+      if (!days[night]) continue;
+      days[night].rooms += 1;
+      days[night].people += headcount;
     }
     for (const ptoDate of parseJsonArray(b.ptoDates)) {
       if (!days[ptoDate]) continue;

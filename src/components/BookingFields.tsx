@@ -192,7 +192,11 @@ export default function BookingFields({
                 onChange={(v) => mainForm.setValue("flightArrivalAirline", v)}
               />
               <Field label="Flight #">
-                <input className="field" {...mainForm.register("flightArrivalNumber")} />
+                <input
+                  className="field"
+                  placeholder="e.g. AA2332"
+                  {...mainForm.register("flightArrivalNumber")}
+                />
               </Field>
               <Field label="Arrival date/time">
                 <input type="datetime-local" className="field" {...mainForm.register("flightArrival")} />
@@ -208,7 +212,11 @@ export default function BookingFields({
                 onChange={(v) => mainForm.setValue("flightDepartureAirline", v)}
               />
               <Field label="Flight #">
-                <input className="field" {...mainForm.register("flightDepartureNumber")} />
+                <input
+                  className="field"
+                  placeholder="e.g. UA772"
+                  {...mainForm.register("flightDepartureNumber")}
+                />
               </Field>
               <Field label="Departure date/time">
                 <input type="datetime-local" className="field" {...mainForm.register("flightDeparture")} />

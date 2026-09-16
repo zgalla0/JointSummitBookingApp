@@ -60,6 +60,17 @@ export function defaultCompanyPaidNights(): Date[] {
   return [config.allHandsDate, addDays(config.allHandsDate, 1)];
 }
 
+/** Splits PTO reporting into "before the summit" vs "after": the Monday
+ *  following Happy Hour, per how the company actually schedules coverage
+ *  (chosen over the All Hands date itself, which falls mid-week). */
+export function ptoBeforeAfterPivot(): Date {
+  const d = new Date(config.happyHourDate);
+  do {
+    d.setUTCDate(d.getUTCDate() + 1);
+  } while (d.getUTCDay() !== 1);
+  return d;
+}
+
 export function isWithinDiscountWindow(nightStart: Date): boolean {
   // Inclusive of both endpoints: "valid Jan 16-Jan 26" covers the night of the 26th too.
   return nightStart >= config.discountStart && nightStart <= config.discountEnd;
