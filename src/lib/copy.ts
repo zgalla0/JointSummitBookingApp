@@ -2,7 +2,7 @@ export const NOTICE = {
   opener: "Here's what you need to know before you get started.",
   pill: "Make all changes through this app, follow links through your email or search your name to update the booking.",
   playfulEmoji: "✨",
-  playful: "Don't email the planning committee!",
+  playful: "Don't slack/email the planning committee!",
   closer: "Run into something the page truly can't handle? That's the only time to reach out directly.",
 };
 
