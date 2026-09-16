@@ -4,6 +4,7 @@ import { toISODate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getBookingByToken } from "@/lib/get-booking-by-token";
 import { bookingToFormInput } from "@/lib/booking-to-form";
+import { INTERNAL_STATIC_CONTENT_KEYS } from "@/lib/internal-static-content";
 import EditBookingForm from "@/components/EditBookingForm";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +19,7 @@ export default async function EditBookingPage({
   if (!booking) notFound();
 
   const staticContent = await prisma.staticContent.findMany({
+    where: { key: { notIn: INTERNAL_STATIC_CONTENT_KEYS } },
     orderBy: { key: "asc" },
   });
 

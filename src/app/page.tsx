@@ -1,12 +1,14 @@
 import { config, defaultCompanyPaidNights, optionalCompanyPaidNights } from "@/lib/config";
 import { toISODate } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_STATIC_CONTENT_KEYS } from "@/lib/internal-static-content";
 import BookingForm from "@/components/BookingForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const staticContent = await prisma.staticContent.findMany({
+    where: { key: { notIn: INTERNAL_STATIC_CONTENT_KEYS } },
     orderBy: { key: "asc" },
   });
 

@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { toISODate } from "@/lib/format";
 import { buildExportWorkbook } from "@/lib/export-workbook";
-
-const LAST_EXPORT_KEY = "lastExportPulledAt";
+import { LAST_EXPORT_PULLED_AT_KEY } from "@/lib/internal-static-content";
 
 export async function GET() {
   const [bookings, lastExport] = await Promise.all([
@@ -10,7 +9,7 @@ export async function GET() {
       include: { guests: true },
       orderBy: { createdAt: "asc" },
     }),
-    prisma.staticContent.findUnique({ where: { key: LAST_EXPORT_KEY } }),
+    prisma.staticContent.findUnique({ where: { key: LAST_EXPORT_PULLED_AT_KEY } }),
   ]);
 
   // Stored as the `body` text rather than relying on `updatedAt`: an update
@@ -24,8 +23,8 @@ export async function GET() {
   // file it gets back.
   const now = new Date().toISOString();
   await prisma.staticContent.upsert({
-    where: { key: LAST_EXPORT_KEY },
-    create: { key: LAST_EXPORT_KEY, body: now },
+    where: { key: LAST_EXPORT_PULLED_AT_KEY },
+    create: { key: LAST_EXPORT_PULLED_AT_KEY, body: now },
     update: { body: now },
   });
 
