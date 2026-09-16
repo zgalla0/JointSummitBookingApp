@@ -246,7 +246,6 @@ export default function BookingFields({
                         bookableEnd={formConfig.bookableEnd}
                         discountStart={formConfig.discountStart}
                         discountEnd={formConfig.discountEnd}
-                        discountRateUsd={formConfig.discountRateUsd}
                         defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
                         optionalCompanyPaidNights={formConfig.optionalCompanyPaidNights}
                         value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
