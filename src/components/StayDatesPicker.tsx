@@ -318,19 +318,18 @@ export default function StayDatesPicker({
               {rt.label}, ${rt.priceUsd} USD per night
             </label>
           ))}
+          <a
+            href={HOTEL_ROOMS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-sm font-bold text-accent-dark hover:underline"
+          >
+            See what&apos;s different between these two rooms →
+          </a>
           <p className="text-xs text-muted">
             Room types are limited in availability. We&apos;ll do our best to match you with your
             selected room type, but it isn&apos;t guaranteed. Ask questions on the above if you have
-            any. You can check out the differences between the two rooms{" "}
-            <a
-              href={HOTEL_ROOMS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-accent-dark hover:underline"
-            >
-              here
-            </a>
-            .
+            any.
           </p>
         </div>
       )}
