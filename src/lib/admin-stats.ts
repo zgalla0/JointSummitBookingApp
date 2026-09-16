@@ -54,18 +54,24 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
     DIETARY_OPTION_KEYS.map((key) => [key, 0]),
   ) as Record<DietaryOptionKey, number>;
 
+  const notAttending = active.filter((b) => !b.isAttending).length;
+
   for (const b of active) {
+    if (b.flaggedForReview) flaggedForReview++;
+
+    // Declined bookings carry a zero-night placeholder and no real
+    // attendance/logistics data - nothing else to count for them.
+    if (!b.isAttending) continue;
+
     additionalGuestsAdult += b.guests.filter((g) => g.type === "ADULT").length;
     additionalGuestsChild += b.guests.filter((g) => g.type === "CHILD").length;
 
-    if (b.attendingHappyHour) {
-      happyHour++;
-      if (b.happyHourPlusOne) happyHourPlusOne++;
-    }
+    if (b.attendingHappyHour) happyHour++;
     if (b.attendingAllHands) allHands++;
-    if (b.attendingDinner) {
-      dinner++;
-      if (b.dinnerPlusOne) dinnerPlusOne++;
+    if (b.attendingDinner) dinner++;
+    for (const g of b.guests) {
+      if (g.attendingHappyHour) happyHourPlusOne++;
+      if (g.attendingDinner) dinnerPlusOne++;
     }
 
     const companyPaid = new Set(parseJsonArray(b.companyPaidNights));
@@ -80,7 +86,6 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
       roomTypeCounts[b.extraNightsRoomType as RoomTypeKey]++;
     }
 
-    if (b.flaggedForReview) flaggedForReview++;
     if (
       !b.flightArrivalAirline &&
       !b.flightArrivalNumber &&
@@ -100,6 +105,7 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
   return {
     totalActive: active.length,
     totalCancelled: cancelled.length,
+    notAttending,
     additionalGuestsAdult,
     additionalGuestsChild,
     happyHour,

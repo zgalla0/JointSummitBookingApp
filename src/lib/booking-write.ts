@@ -3,7 +3,7 @@ import { config } from "./config";
 import { toISODate } from "./format";
 import { isoDateRange, addIsoDays } from "./stay-tiles-client";
 import { ROOM_TYPE_KEYS } from "./room-types";
-import type { BookingFormInput } from "./booking-schema";
+import type { BookingFormInput, GuestInput } from "./booking-schema";
 
 /** True when any selected night falls outside the standard block, meaning a
  *  room type choice is required (the block config only lives server-side,
@@ -26,9 +26,17 @@ export function bookingWriteData(
   data: BookingFormInput,
   outsideBlock: boolean,
 ): Omit<Prisma.BookingUncheckedCreateInput, "magicLinkToken" | "magicLinkExpiresAt" | "guests"> {
+  // A non-attendee never picks stay dates - store a zero-night placeholder
+  // (checkout same day as check-in) so every downstream night/room/PTO
+  // computation naturally sees nothing for them, with no special-casing.
+  const placeholder = toISODate(config.bookableStart);
+  const stayStartIso = data.isAttending ? data.stayStart : placeholder;
+  const stayEndIso = data.isAttending ? data.stayEnd : placeholder;
+
   return {
     firstName: data.firstName,
     lastName: data.lastName,
+    isAttending: data.isAttending,
     // Guaranteed non-empty by the schema's refine; the type still carries
     // "" for the form's unselected default.
     location: data.location as Exclude<BookingFormInput["location"], "">,
@@ -36,16 +44,14 @@ export function bookingWriteData(
     reservationLastName: data.reservationLastName,
     hotelEmail: data.hotelEmail,
     detailsEmail: data.detailsEmail,
-    attendingHappyHour: data.attendingHappyHour,
-    happyHourPlusOne: data.attendingHappyHour && data.happyHourPlusOne,
-    attendingAllHands: data.attendingAllHands,
-    attendingDinner: data.attendingDinner,
-    dinnerPlusOne: data.attendingDinner && data.dinnerPlusOne,
-    stayStart: new Date(`${data.stayStart}T00:00:00.000Z`),
-    stayEnd: new Date(`${data.stayEnd}T00:00:00.000Z`),
-    companyPaidNights: JSON.stringify(data.companyPaidNights),
-    extraNightsRoomType: outsideBlock ? data.extraNightsRoomType : null,
-    ptoDates: data.ptoDates.length > 0 ? JSON.stringify(data.ptoDates) : null,
+    attendingHappyHour: data.isAttending && data.attendingHappyHour,
+    attendingAllHands: data.isAttending && data.attendingAllHands,
+    attendingDinner: data.isAttending && data.attendingDinner,
+    stayStart: new Date(`${stayStartIso}T00:00:00.000Z`),
+    stayEnd: new Date(`${stayEndIso}T00:00:00.000Z`),
+    companyPaidNights: JSON.stringify(data.isAttending ? data.companyPaidNights : []),
+    extraNightsRoomType: data.isAttending && outsideBlock ? data.extraNightsRoomType : null,
+    ptoDates: data.isAttending && data.ptoDates.length > 0 ? JSON.stringify(data.ptoDates) : null,
     dietaryOptions: JSON.stringify(data.dietaryOptions),
     dietaryOther: data.dietaryOptions.includes("OTHER") ? data.dietaryOther || null : null,
     flightArrivalAirline: data.flightArrivalAirline || null,
@@ -59,4 +65,17 @@ export function bookingWriteData(
     flaggedForReview: data.guests.length > 1,
     flagReason: data.guests.length > 1 ? "More than 1 additional guest" : null,
   };
+}
+
+/** Shared guest field mapping, used by both create and edit. */
+export function guestWriteData(guests: GuestInput[]) {
+  return guests.map((g) => ({
+    firstName: g.firstName,
+    lastName: g.lastName,
+    type: g.type,
+    attendingHappyHour: g.attendingHappyHour,
+    attendingDinner: g.attendingDinner,
+    dietaryOptions: JSON.stringify(g.dietaryOptions),
+    dietaryOther: g.dietaryOptions.includes("OTHER") ? g.dietaryOther || null : null,
+  }));
 }

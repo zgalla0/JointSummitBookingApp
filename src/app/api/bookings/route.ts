@@ -4,7 +4,7 @@ import { findDuplicateBooking } from "@/lib/duplicate-check";
 import { prisma } from "@/lib/prisma";
 import { generateMagicLinkToken, magicLinkExpiry, magicLinkUrl } from "@/lib/magic-link";
 import { sendConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
-import { bookingWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
+import { bookingWriteData, guestWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const outsideBlock = hasNightsOutsideBlock(data.stayStart, data.stayEnd);
+  const outsideBlock = data.isAttending ? hasNightsOutsideBlock(data.stayStart, data.stayEnd) : false;
   if (outsideBlock && !isValidRoomType(data.extraNightsRoomType)) {
     return NextResponse.json(
       {
@@ -44,11 +44,7 @@ export async function POST(req: Request) {
       magicLinkToken,
       magicLinkExpiresAt: magicLinkExpiry(),
       guests: {
-        create: data.guests.map((g) => ({
-          firstName: g.firstName,
-          lastName: g.lastName,
-          type: g.type,
-        })),
+        create: guestWriteData(data.guests),
       },
     },
     include: { guests: true },

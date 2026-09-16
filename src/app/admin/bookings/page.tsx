@@ -54,6 +54,11 @@ export default async function AdminBookingsPage() {
                     >
                       {b.status}
                     </span>
+                    {!b.isAttending && (
+                      <span className="ml-1 rounded-full bg-pay-self-soft px-2 py-0.5 text-xs font-semibold text-pay-self-text">
+                        Not attending
+                      </span>
+                    )}
                   </td>
                   <td className="py-2.5 pr-4">{b.flaggedForReview ? "⚠️" : ""}</td>
                 </tr>

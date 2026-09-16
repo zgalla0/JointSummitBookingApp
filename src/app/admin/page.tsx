@@ -51,6 +51,7 @@ export default async function AdminDashboardPage() {
         <Card eyebrow="Overview" title="Bookings">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Stat label="Active bookings" value={stats.totalActive} />
+            <Stat label="Not attending" value={stats.notAttending} />
             <Stat label="Cancelled" value={stats.totalCancelled} />
             <Stat label="Additional adults" value={stats.additionalGuestsAdult} />
             <Stat label="Additional children" value={stats.additionalGuestsChild} />

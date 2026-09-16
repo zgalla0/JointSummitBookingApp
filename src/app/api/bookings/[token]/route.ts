@@ -6,7 +6,7 @@ import { getBookingByToken } from "@/lib/get-booking-by-token";
 import { isLockedIn } from "@/lib/config";
 import { magicLinkUrl } from "@/lib/magic-link";
 import { sendEditConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
-import { bookingWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
+import { bookingWriteData, guestWriteData, hasNightsOutsideBlock, isValidRoomType } from "@/lib/booking-write";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -55,7 +55,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
     );
   }
 
-  const outsideBlock = hasNightsOutsideBlock(data.stayStart, data.stayEnd);
+  const outsideBlock = data.isAttending ? hasNightsOutsideBlock(data.stayStart, data.stayEnd) : false;
   if (outsideBlock && !isValidRoomType(data.extraNightsRoomType)) {
     return NextResponse.json(
       {
@@ -74,11 +74,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
       data: {
         ...bookingWriteData(data, outsideBlock),
         guests: {
-          create: data.guests.map((g) => ({
-            firstName: g.firstName,
-            lastName: g.lastName,
-            type: g.type,
-          })),
+          create: guestWriteData(data.guests),
         },
       },
       include: { guests: true },

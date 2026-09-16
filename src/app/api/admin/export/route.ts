@@ -15,6 +15,7 @@ export async function GET() {
     return {
       id: b.id,
       status: b.status,
+      isAttending: b.isAttending,
       firstName: b.firstName,
       lastName: b.lastName,
       location: b.location,
@@ -23,10 +24,8 @@ export async function GET() {
       hotelEmail: b.hotelEmail,
       detailsEmail: b.detailsEmail,
       attendingHappyHour: b.attendingHappyHour,
-      happyHourPlusOne: b.happyHourPlusOne,
       attendingAllHands: b.attendingAllHands,
       attendingDinner: b.attendingDinner,
-      dinnerPlusOne: b.dinnerPlusOne,
       stayStart: toISODate(b.stayStart),
       stayEnd: toISODate(b.stayEnd),
       nightsTotal: nights.length,
@@ -36,7 +35,15 @@ export async function GET() {
       nightsSelfPaidDates: nights.filter((n) => !companyPaid.has(n)).join("; "),
       extraNightsRoomType: b.extraNightsRoomType ?? "",
       ptoDates: parseJsonArray(b.ptoDates).join("; "),
-      additionalGuests: b.guests.map((g) => `${g.firstName} ${g.lastName} (${g.type})`).join("; "),
+      additionalGuests: b.guests
+        .map((g) => {
+          const events = [g.attendingHappyHour && "HH", g.attendingDinner && "Dinner"]
+            .filter(Boolean)
+            .join("+");
+          const diet = parseJsonArray(g.dietaryOptions).join("/");
+          return `${g.firstName} ${g.lastName} (${g.type}${events ? `, ${events}` : ""}${diet ? `, diet: ${diet}` : ""})`;
+        })
+        .join("; "),
       dietaryOptions: parseJsonArray(b.dietaryOptions).join("; "),
       dietaryOther: b.dietaryOther ?? "",
       flightArrivalAirline: b.flightArrivalAirline ?? "",

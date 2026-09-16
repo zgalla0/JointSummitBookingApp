@@ -46,6 +46,7 @@ export default function BookingFields({
     mainForm.getValues("hotelEmail") === mainForm.getValues("detailsEmail"),
   );
 
+  const isAttending = mainForm.watch("isAttending");
   const stayStart = mainForm.watch("stayStart");
   const stayEnd = mainForm.watch("stayEnd");
   const companyPaidNights = mainForm.watch("companyPaidNights");
@@ -109,134 +110,165 @@ export default function BookingFields({
         </div>
       </Card>
 
-      <Card eyebrow="Events" title="Which events are you attending?">
-        <div className="space-y-3">
-          <Checkbox
-            label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`}
-            {...mainForm.register("attendingHappyHour")}
-          />
-          {attendingHappyHour && (
-            <div className="ml-7">
-              <Checkbox
-                label="Will your companion join Happy Hour too?"
-                {...mainForm.register("happyHourPlusOne")}
-              />
-            </div>
-          )}
-          <Checkbox
-            label={`All Hands (${formatShortDate(formConfig.allHandsDate)})`}
-            {...mainForm.register("attendingAllHands")}
-          />
-          <Checkbox
-            label={`Dinner (${formatShortDate(formConfig.dinnerDate)})`}
-            {...mainForm.register("attendingDinner")}
-          />
-          {attendingDinner && (
-            <div className="ml-7">
-              <Checkbox
-                label="Will your companion join Dinner too?"
-                {...mainForm.register("dinnerPlusOne")}
-              />
-            </div>
-          )}
+      <Card eyebrow="Attending?" title="Are you attending the summit?">
+        <div className="flex flex-wrap gap-3">
+          <label
+            className={`flex-1 cursor-pointer rounded-xl border-2 p-3 text-center text-sm font-semibold transition-colors ${
+              isAttending
+                ? "border-accent bg-accent-soft text-accent-dark"
+                : "border-hairline text-muted hover:border-accent/40"
+            }`}
+          >
+            <input
+              type="radio"
+              className="sr-only"
+              checked={isAttending}
+              onChange={() => mainForm.setValue("isAttending", true)}
+            />
+            Yes, I&apos;m attending
+          </label>
+          <label
+            className={`flex-1 cursor-pointer rounded-xl border-2 p-3 text-center text-sm font-semibold transition-colors ${
+              !isAttending
+                ? "border-pay-self bg-pay-self-soft text-pay-self-text"
+                : "border-hairline text-muted hover:border-pay-self/40"
+            }`}
+          >
+            <input
+              type="radio"
+              className="sr-only"
+              checked={!isAttending}
+              onChange={() => mainForm.setValue("isAttending", false)}
+            />
+            No, I&apos;m not attending
+          </label>
         </div>
-      </Card>
-
-      <Card eyebrow="Hotel booking" title="Stay dates">
-        <StayDatesPicker
-          bookableStart={formConfig.bookableStart}
-          bookableEnd={formConfig.bookableEnd}
-          blockStart={formConfig.blockStart}
-          blockEnd={formConfig.blockEnd}
-          discountStart={formConfig.discountStart}
-          discountEnd={formConfig.discountEnd}
-          defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
-          value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
-          onChange={(patch) => {
-            for (const [key, val] of Object.entries(patch)) {
-              mainForm.setValue(key as keyof BookingFormInput, val as never, { shouldValidate: false });
-            }
-          }}
-        />
-        {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
-          <p className="mt-2 text-sm text-red-600">Please select your stay nights.</p>
+        {!isAttending && (
+          <p className="mt-3 text-sm text-muted">
+            No problem - everything below is optional. Just submit the form to let the planning
+            team know you won&apos;t be there.
+          </p>
         )}
       </Card>
 
-      <Card eyebrow="Companion" title="Additional guests">
-        <GuestFields control={mainForm.control} register={mainForm.register} />
-      </Card>
-
-      <Card eyebrow="Food" title="Dietary restrictions">
-        <DietaryChecklist
-          selected={dietaryOptions}
-          other={dietaryOther}
-          onChange={(next) => mainForm.setValue("dietaryOptions", next)}
-          onOtherChange={(val) => mainForm.setValue("dietaryOther", val)}
-        />
-      </Card>
-
-      <Card eyebrow="Travel" title="Flight details">
-        <div className="space-y-5">
-          <p className="text-sm text-muted">
-            This helps us group people with similar arrival times into carpools to and from the
-            hotel. Arrival and departure may be different flights, so each gets its own airline
-            and flight number.
-          </p>
-          <div className="space-y-3 rounded-xl border border-hairline p-3">
-            <p className="field-label">Arrival</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <AirlineField
-                label="Airline"
-                value={flightArrivalAirline}
-                onChange={(v) => mainForm.setValue("flightArrivalAirline", v)}
-              />
-              <Field label="Flight #">
-                <input
-                  className="field"
-                  placeholder="e.g. AA2332"
-                  {...mainForm.register("flightArrivalNumber")}
-                />
-              </Field>
-              <Field label="Arrival date/time">
-                <input type="datetime-local" className="field" {...mainForm.register("flightArrival")} />
-              </Field>
-            </div>
+      <div className={!isAttending ? "pointer-events-none space-y-5 opacity-40 select-none" : "space-y-5"}>
+        <Card eyebrow="Events" title="Which events are you attending?">
+          <div className="space-y-3">
+            <Checkbox
+              label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`}
+              {...mainForm.register("attendingHappyHour")}
+            />
+            <Checkbox
+              label={`All Hands (${formatShortDate(formConfig.allHandsDate)})`}
+              {...mainForm.register("attendingAllHands")}
+            />
+            <Checkbox
+              label={`Dinner (${formatShortDate(formConfig.dinnerDate)})`}
+              {...mainForm.register("attendingDinner")}
+            />
           </div>
-          <div className="space-y-3 rounded-xl border border-hairline p-3">
-            <p className="field-label">Departure</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <AirlineField
-                label="Airline"
-                value={flightDepartureAirline}
-                onChange={(v) => mainForm.setValue("flightDepartureAirline", v)}
-              />
-              <Field label="Flight #">
-                <input
-                  className="field"
-                  placeholder="e.g. UA772"
-                  {...mainForm.register("flightDepartureNumber")}
-                />
-              </Field>
-              <Field label="Departure date/time">
-                <input type="datetime-local" className="field" {...mainForm.register("flightDeparture")} />
-              </Field>
-            </div>
-          </div>
-          <Field label="Other flight notes">
-            <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
-          </Field>
-        </div>
-      </Card>
+        </Card>
 
-      <Card eyebrow="Anything else" title="Anything else you'd like the planning team to know?">
-        <textarea
-          className="field"
-          rows={3}
-          placeholder="Optional"
-          {...mainForm.register("additionalNotes")}
-        />
-      </Card>
+        <Card eyebrow="Food" title="Dietary restrictions">
+          <DietaryChecklist
+            selected={dietaryOptions}
+            other={dietaryOther}
+            onChange={(next) => mainForm.setValue("dietaryOptions", next)}
+            onOtherChange={(val) => mainForm.setValue("dietaryOther", val)}
+          />
+        </Card>
+
+        <Card eyebrow="Hotel booking" title="Stay dates">
+          <StayDatesPicker
+            bookableStart={formConfig.bookableStart}
+            bookableEnd={formConfig.bookableEnd}
+            blockStart={formConfig.blockStart}
+            blockEnd={formConfig.blockEnd}
+            discountStart={formConfig.discountStart}
+            discountEnd={formConfig.discountEnd}
+            defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
+            value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
+            onChange={(patch) => {
+              for (const [key, val] of Object.entries(patch)) {
+                mainForm.setValue(key as keyof BookingFormInput, val as never, { shouldValidate: false });
+              }
+            }}
+          />
+          {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
+            <p className="mt-2 text-sm text-red-600">Please select your stay nights.</p>
+          )}
+        </Card>
+
+        <Card eyebrow="Companion" title="Additional guests">
+          <GuestFields
+            mainForm={mainForm}
+            attendingHappyHour={attendingHappyHour}
+            attendingDinner={attendingDinner}
+          />
+        </Card>
+
+        <Card eyebrow="Travel" title="Flight details">
+          <div className="space-y-5">
+            <p className="text-sm text-muted">
+              This helps us group people with similar arrival times into carpools to and from the
+              hotel. Arrival and departure may be different flights, so each gets its own airline
+              and flight number.
+            </p>
+            <div className="space-y-3 rounded-xl border border-hairline p-3">
+              <p className="field-label">Arrival</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <AirlineField
+                  label="Airline"
+                  value={flightArrivalAirline}
+                  onChange={(v) => mainForm.setValue("flightArrivalAirline", v)}
+                />
+                <Field label="Flight #">
+                  <input
+                    className="field"
+                    placeholder="e.g. AA2332"
+                    {...mainForm.register("flightArrivalNumber")}
+                  />
+                </Field>
+                <Field label="Arrival date/time">
+                  <input type="datetime-local" className="field" {...mainForm.register("flightArrival")} />
+                </Field>
+              </div>
+            </div>
+            <div className="space-y-3 rounded-xl border border-hairline p-3">
+              <p className="field-label">Departure</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <AirlineField
+                  label="Airline"
+                  value={flightDepartureAirline}
+                  onChange={(v) => mainForm.setValue("flightDepartureAirline", v)}
+                />
+                <Field label="Flight #">
+                  <input
+                    className="field"
+                    placeholder="e.g. UA772"
+                    {...mainForm.register("flightDepartureNumber")}
+                  />
+                </Field>
+                <Field label="Departure date/time">
+                  <input type="datetime-local" className="field" {...mainForm.register("flightDeparture")} />
+                </Field>
+              </div>
+            </div>
+            <Field label="Other flight notes">
+              <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
+            </Field>
+          </div>
+        </Card>
+
+        <Card eyebrow="Anything else" title="Anything else you'd like the planning team to know?">
+          <textarea
+            className="field"
+            rows={3}
+            placeholder="Optional"
+            {...mainForm.register("additionalNotes")}
+          />
+        </Card>
+      </div>
 
       {staticContent.length > 0 && (
         <Card eyebrow="Reference" title="Event info, Q&A, and timing">

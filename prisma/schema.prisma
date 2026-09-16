@@ -37,19 +37,22 @@ model Booking {
   lastName  String
   location  LocationRegion
 
+  // False means this person isn't coming to the summit at all - the form
+  // greys out everything else and they can submit right away. Defaults to
+  // true since most people who fill out the form are attending.
+  isAttending Boolean @default(true)
+
   // Hotel reservation details (separate from work name, may differ)
   reservationFirstName String
   reservationLastName  String
   hotelEmail           String // email used for the hotel booking
   detailsEmail         String // email for transportation / schedule / other details
 
-  // Event attendance, each with an optional +1 joining that event
-  // (All Hands has no +1 option, capacity is fixed)
+  // Event attendance. Whether an additional guest joins a given event is
+  // tracked per-guest on BookingGuest instead of as a single +1 flag here.
   attendingHappyHour Boolean @default(false)
-  happyHourPlusOne   Boolean @default(false)
   attendingAllHands  Boolean @default(false)
   attendingDinner    Boolean @default(false)
-  dinnerPlusOne      Boolean @default(false)
 
   // Stay dates: stayStart is the first selected night, stayEnd is the
   // morning-after checkout date (one day after the last selected night)
@@ -119,6 +122,14 @@ model BookingGuest {
   firstName String
   lastName  String
   type      GuestType
+
+  // Whether this specific guest joins the attendee at each event (only
+  // asked when the attendee themselves is attending that event), plus
+  // dietary restrictions for this guest specifically.
+  attendingHappyHour Boolean @default(false)
+  attendingDinner    Boolean @default(false)
+  dietaryOptions     String? // JSON-encoded string[] of option keys
+  dietaryOther       String? // free text, used only when "Other" is selected
 
   @@index([bookingId])
 }

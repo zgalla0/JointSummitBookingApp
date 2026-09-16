@@ -58,6 +58,7 @@ export default async function AdminBookingDetailPage({
 
         <Card eyebrow="Status" title="Overview">
           <Row label="Status" value={booking.status} />
+          <Row label="Attending the summit" value={booking.isAttending ? "Yes" : "No"} />
           <Row
             label="Location"
             value={LOCATION_OPTIONS.find((o) => o.key === booking.location)?.label ?? booking.location}
@@ -77,9 +78,9 @@ export default async function AdminBookingDetailPage({
         </Card>
 
         <Card eyebrow="Events" title="Attendance">
-          <Row label="Happy Hour" value={booking.attendingHappyHour ? (booking.happyHourPlusOne ? "Yes, with companion" : "Yes") : "No"} />
+          <Row label="Happy Hour" value={booking.attendingHappyHour ? "Yes" : "No"} />
           <Row label="All Hands" value={booking.attendingAllHands ? "Yes" : "No"} />
-          <Row label="Dinner" value={booking.attendingDinner ? (booking.dinnerPlusOne ? "Yes, with companion" : "Yes") : "No"} />
+          <Row label="Dinner" value={booking.attendingDinner ? "Yes" : "No"} />
         </Card>
 
         <Card eyebrow="Hotel booking" title="Stay">
@@ -95,8 +96,14 @@ export default async function AdminBookingDetailPage({
           {booking.guests.length === 0 ? (
             <p className="text-sm text-muted">None</p>
           ) : (
-            booking.guests.map((g) => (
-              <Row key={g.id} label={g.type} value={`${g.firstName} ${g.lastName}`} />
+            booking.guests.map((g, i) => (
+              <div key={g.id} className={i > 0 ? "mt-3 border-t border-hairline pt-3" : ""}>
+                <Row label={g.type} value={`${g.firstName} ${g.lastName}`} />
+                <Row label="Joining Happy Hour" value={g.attendingHappyHour ? "Yes" : "No"} />
+                <Row label="Joining Dinner" value={g.attendingDinner ? "Yes" : "No"} />
+                <Row label="Dietary" value={parseJsonArray(g.dietaryOptions).join(", ")} />
+                <Row label="Dietary (other)" value={g.dietaryOther} />
+              </div>
             ))
           )}
         </Card>

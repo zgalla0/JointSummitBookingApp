@@ -13,6 +13,10 @@ export const guestSchema = z.object({
   firstName: z.string().trim(),
   lastName: z.string().trim(),
   type: z.enum(["ADULT", "CHILD"]),
+  attendingHappyHour: z.boolean(),
+  attendingDinner: z.boolean(),
+  dietaryOptions: z.array(z.enum(DIETARY_OPTION_KEYS)).max(DIETARY_OPTION_KEYS.length),
+  dietaryOther: z.string().trim().max(500),
 });
 
 // Step 0: duplicate check, collected before the rest of the form.
@@ -26,6 +30,11 @@ export const bookingFormSchema = z
   .object({
     firstName: z.string().trim().min(1, "First name is required"),
     lastName: z.string().trim().min(1, "Last name is required"),
+
+    // False skips every requirement below (stay dates, etc.) - the form
+    // greys those sections out and lets a non-attendee submit right away.
+    isAttending: z.boolean(),
+
     reservationFirstName: z.string().trim().min(1, "First name for the reservation is required"),
     reservationLastName: z.string().trim().min(1, "Last name for the reservation is required"),
     hotelEmail: z.string().trim().email("Enter a valid email"),
@@ -42,13 +51,14 @@ export const bookingFormSchema = z
       .refine((v): boolean => v !== "", { message: "Please select your location" }),
 
     attendingHappyHour: z.boolean(),
-    happyHourPlusOne: z.boolean(),
     attendingAllHands: z.boolean(),
     attendingDinner: z.boolean(),
-    dinnerPlusOne: z.boolean(),
 
-    stayStart: isoDate,
-    stayEnd: isoDate,
+    // "" when not attending (or not yet chosen); enforced as a real
+    // YYYY-MM-DD pair only when isAttending is true, in the superRefine
+    // below, since a non-attendee never needs to pick stay dates at all.
+    stayStart: z.string().trim(),
+    stayEnd: z.string().trim(),
     companyPaidNights: z.array(isoDate).max(31),
 
     // "" when the stay never leaves the standard block; required (checked
@@ -80,9 +90,25 @@ export const bookingFormSchema = z
 
     additionalNotes: z.string().trim().max(2000),
   })
-  .refine((data) => data.stayEnd > data.stayStart, {
-    message: "Stay end date must be after the start date",
-    path: ["stayEnd"],
+  .superRefine((data, ctx) => {
+    // Not attending: none of the stay-date requirements below apply.
+    if (!data.isAttending) return;
+
+    if (!isoDate.safeParse(data.stayStart).success || !isoDate.safeParse(data.stayEnd).success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please select your stay nights",
+        path: ["stayEnd"],
+      });
+      return;
+    }
+    if (data.stayEnd <= data.stayStart) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Stay end date must be after the start date",
+        path: ["stayEnd"],
+      });
+    }
   });
 
 export type BookingFormInput = z.infer<typeof bookingFormSchema>;
