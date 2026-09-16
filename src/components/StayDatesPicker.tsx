@@ -106,6 +106,11 @@ export default function StayDatesPicker({
     [selectedNights, blockStart, blockEnd],
   );
 
+  const hasNightsOutsideDiscountWindow = useMemo(
+    () => selectedNights.some((d) => d < discountStart || d > discountEnd),
+    [selectedNights, discountStart, discountEnd],
+  );
+
   function isInBlock(day: string): boolean {
     return day >= blockStart && day <= blockEnd;
   }
@@ -293,7 +298,11 @@ export default function StayDatesPicker({
         checking out Saturday means you&apos;re covering 2 nights: Thursday and Friday.
       </p>
 
-      <p className="rounded-xl bg-background p-3 text-xs text-muted">
+      <p
+        className={`rounded-xl p-3 text-xs ${
+          hasNightsOutsideDiscountWindow ? "bg-warning-soft font-bold text-warning" : "bg-background text-muted"
+        }`}
+      >
         <span aria-hidden className="mr-1">
           ⚠️
         </span>
