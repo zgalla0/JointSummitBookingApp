@@ -185,11 +185,11 @@ export default function BookingForm({
       <div className="animate-in space-y-1">
         <p className="eyebrow">Hotel Booking</p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Q1 Joint All Hands Summit Hotel Booking
+          Q1 Joint All Hands Summit Attendance and Hotel Booking
         </h1>
       </div>
 
-      <p className="animate-in rounded-2xl bg-accent-soft px-5 py-4 text-lg font-bold text-accent-dark sm:text-xl">
+      <p className="animate-in rounded-2xl bg-warning-soft px-5 py-4 text-lg font-bold text-warning sm:text-xl">
         {NO_ROOM_WARNING}
       </p>
 
@@ -202,63 +202,112 @@ export default function BookingForm({
       )}
 
       {step === "identity" && (
-        <div className="grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-start">
+        <div className="grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-stretch">
+          <Card
+            eyebrow="What this form is for"
+            title="A few things to know"
+            className="h-full"
+          >
+            <ul className="list-disc space-y-3 pl-5 text-sm text-muted">
+              <li>
+                This form is the attendance and hotel form.
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>
+                    <span className="rounded bg-warning-soft px-1.5 py-0.5 font-bold text-warning">
+                      Complete this even if you can&apos;t come.
+                    </span>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Make sure to buy your flight as soon as you can
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>
+                    Your flight can be to two separate locations if you&apos;re
+                    starting/ending somewhere different, and can be on different
+                    dates if you want to arrive or leave at different times so
+                    long as the cost is comparable.
+                  </li>
+                  <li>
+                    The flight should be expensed however you expense your
+                    expenses (differs by country and FIT/1099).
+                  </li>
+                  <li>
+                    Contractors: invites will be directly emailed/messaged to
+                    you.
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Hotel rooms will be booked and paid for, so you don&apos;t need
+                to worry about them! The nights will be based on this form. If
+                you&apos;re interested in additional nights{" "}
+                <strong className="text-foreground">
+                  at the hotel we&apos;ll be staying at
+                </strong>
+                , mark that on this form.
+              </li>
+              <li>
+                Keep an eye out 1-2 weeks before the summit for specific details
+                on the summit (location and times for the hotel, happy hour, all
+                hands, etc).
+              </li>
+              <li>
+                Usual attire (once locations for happy hour and dinner are set
+                we will let you know if there are any changes):
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>Happy Hour - Casual</li>
+                  <li>All Hands Summit - Business casual</li>
+                  <li>
+                    Dinner - A bit more than casual, a bit less than dressy
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </Card>
+
           <div className="space-y-6">
-            <Card eyebrow="What this form is for" title="A few things to know">
-              <ul className="list-disc space-y-3 pl-5 text-sm text-muted">
-                <li>
-                  This form is the attendance and hotel form.
-                  <ul className="mt-1 list-disc space-y-1 pl-5">
-                    <li>
-                      <span className="rounded bg-warning-soft px-1.5 py-0.5 font-bold text-warning">
-                        Complete this even if you can&apos;t come.
-                      </span>
-                    </li>
-                  </ul>
-                </li>
-                <li>
-                  Make sure to buy your flight as soon as you can - the dates
-                  are on the All W2 Employees calendar.
-                  <ul className="mt-1 list-disc space-y-1 pl-5">
-                    <li>
-                      Your flight can be to two separate locations if
-                      you&apos;re starting/ending somewhere different, and can
-                      be on different dates if you want to arrive or leave at
-                      different times.
-                    </li>
-                    <li>The flight should be expensed.</li>
-                    <li>
-                      Contractors: invites will be directly emailed/messaged to
-                      you.
-                    </li>
-                  </ul>
-                </li>
-                <li>
-                  Hotel rooms will be booked and paid for, so you don&apos;t
-                  need to worry about them! The nights will be based on this
-                  form. If you&apos;re interested in additional nights{" "}
-                  <strong className="text-foreground">
-                    at the hotel we&apos;ll be staying at
-                  </strong>
-                  , mark that on this form.
-                </li>
-                <li>
-                  Keep an eye out 1-2 weeks before the summit for specific
-                  details on the summit (location and times for the hotel, happy
-                  hour, all hands, etc).
-                </li>
-                <li>
-                  Usual attire (check the details mentioned above for the exact
-                  dress code):
-                  <ul className="mt-1 list-disc space-y-1 pl-5">
-                    <li>Happy Hour - Casual</li>
-                    <li>All Hands Summit - Business casual</li>
-                    <li>
-                      Dinner - A bit more than casual, a bit less than dressy
-                    </li>
-                  </ul>
-                </li>
-              </ul>
+            <Card
+              eyebrow="Get started"
+              title="Start the form here, or get your magic link again to edit your form"
+            >
+              <form
+                onSubmit={identityForm.handleSubmit(onIdentitySubmit)}
+                className="space-y-4"
+              >
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field
+                    label="First name"
+                    error={identityForm.formState.errors.firstName?.message}
+                  >
+                    <input
+                      className="field"
+                      {...identityForm.register("firstName")}
+                    />
+                  </Field>
+                  <Field
+                    label="Last name"
+                    error={identityForm.formState.errors.lastName?.message}
+                  >
+                    <input
+                      className="field"
+                      {...identityForm.register("lastName")}
+                    />
+                  </Field>
+                </div>
+                <Field
+                  label="Email"
+                  error={identityForm.formState.errors.email?.message}
+                >
+                  <input
+                    className="field"
+                    {...identityForm.register("email")}
+                  />
+                </Field>
+                <Button type="submit" disabled={checking}>
+                  {checking ? "Checking..." : "Continue"}
+                </Button>
+              </form>
             </Card>
 
             <Card eyebrow="TLDR" title="Summit info at a glance">
@@ -297,47 +346,6 @@ export default function BookingForm({
               </ul>
             </Card>
           </div>
-
-          <Card
-            eyebrow="Get started"
-            title="Let's find your name and email"
-            className="lg:sticky lg:top-6"
-          >
-            <form
-              onSubmit={identityForm.handleSubmit(onIdentitySubmit)}
-              className="space-y-4"
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field
-                  label="First name"
-                  error={identityForm.formState.errors.firstName?.message}
-                >
-                  <input
-                    className="field"
-                    {...identityForm.register("firstName")}
-                  />
-                </Field>
-                <Field
-                  label="Last name"
-                  error={identityForm.formState.errors.lastName?.message}
-                >
-                  <input
-                    className="field"
-                    {...identityForm.register("lastName")}
-                  />
-                </Field>
-              </div>
-              <Field
-                label="Email"
-                error={identityForm.formState.errors.email?.message}
-              >
-                <input className="field" {...identityForm.register("email")} />
-              </Field>
-              <Button type="submit" disabled={checking}>
-                {checking ? "Checking..." : "Continue"}
-              </Button>
-            </form>
-          </Card>
         </div>
       )}
 

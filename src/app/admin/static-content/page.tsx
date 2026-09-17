@@ -1,11 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import AdminNav from "@/components/AdminNav";
 import StaticContentManager from "@/components/StaticContentManager";
+import { INTERNAL_STATIC_CONTENT_KEYS } from "@/lib/internal-static-content";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminStaticContentPage() {
-  const items = await prisma.staticContent.findMany({ orderBy: { key: "asc" } });
+  const items = await prisma.staticContent.findMany({
+    where: { key: { notIn: INTERNAL_STATIC_CONTENT_KEYS } },
+    orderBy: { key: "asc" },
+  });
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">

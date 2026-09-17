@@ -13,7 +13,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Q1 Joint All Hands Summit Hotel Booking",
+  title: "Q1 Joint All Hands Summit Attendance and Hotel Booking",
   description: "Book, edit, or cancel your hotel block reservation for the Q1 Summit.",
 };
 

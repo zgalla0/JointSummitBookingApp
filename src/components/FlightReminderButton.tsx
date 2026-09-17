@@ -4,10 +4,12 @@ import { useState } from "react";
 import Button from "./ui/Button";
 
 export default function FlightReminderButton({ missingCount }: { missingCount: number }) {
+  const [confirming, setConfirming] = useState(false);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
 
   async function send() {
+    setConfirming(false);
     setSending(true);
     setResult(null);
     try {
@@ -21,10 +23,33 @@ export default function FlightReminderButton({ missingCount }: { missingCount: n
     }
   }
 
+  if (confirming) {
+    return (
+      <div className="max-w-sm space-y-3 rounded-xl border-2 border-warning bg-warning-soft p-3">
+        <p className="text-sm font-semibold text-warning">
+          This will email everyone with a missing flight to add in their details. Are you sure you
+          want to do this?
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="primary" onClick={send} disabled={sending}>
+            {sending ? "Sending..." : "Yes, send it"}
+          </Button>
+          <Button variant="ghost" onClick={() => setConfirming(false)} disabled={sending}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
-      <Button variant="secondary" onClick={send} disabled={sending || missingCount === 0}>
-        {sending ? "Sending..." : `Send flight-details reminder (${missingCount})`}
+      <Button
+        variant="secondary"
+        onClick={() => setConfirming(true)}
+        disabled={sending || missingCount === 0}
+      >
+        {`Send flight-details reminder (${missingCount})`}
       </Button>
       {result && <p className="text-sm text-muted">{result}</p>}
     </div>

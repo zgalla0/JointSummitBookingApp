@@ -23,10 +23,12 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 /** Visually clusters a handful of related Stats together (e.g. an event and
  *  its companion count) inside a card that may hold several such clusters -
  *  a "circle within a circle" so related numbers are easy to compare at a
- *  glance, instead of one undifferentiated grid of stats. */
+ *  glance, instead of one undifferentiated grid of stats. Stacked
+ *  vertically (rather than left-to-right) so every group reads the same
+ *  way regardless of how many other groups happen to fit on the same row. */
 function StatGroup({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-1 flex-wrap items-start gap-4 rounded-xl border-2 border-accent/20 bg-background p-3">
+    <div className="flex flex-1 flex-col gap-3 rounded-xl border-2 border-accent/20 bg-background p-3">
       {children}
     </div>
   );
@@ -120,13 +122,19 @@ export default async function AdminDashboardPage() {
         </Card>
 
         <Card eyebrow="Coverage" title="PTO coverage">
-          <div className="space-y-5">
-            <PtoBucketRow heading="Total PTO days" bucket={pto.total} />
-            <PtoBucketRow heading={`Before the summit (through ${pivotLabel})`} bucket={pto.before} />
-            <PtoBucketRow heading={`On/after ${pivotLabel}`} bucket={pto.after} />
-            <div className="border-t border-hairline pt-4">
-              <Stat label="Flagged for review" value={stats.flaggedForReview} />
-            </div>
+          <div className="flex flex-wrap gap-4">
+            <StatGroup>
+              <PtoBucketRow heading="Total PTO days" bucket={pto.total} />
+            </StatGroup>
+            <StatGroup>
+              <PtoBucketRow heading={`Before the summit (through ${pivotLabel})`} bucket={pto.before} />
+            </StatGroup>
+            <StatGroup>
+              <PtoBucketRow heading={`On/after ${pivotLabel}`} bucket={pto.after} />
+            </StatGroup>
+          </div>
+          <div className="mt-4 border-t border-hairline pt-4">
+            <Stat label="Flagged for review" value={stats.flaggedForReview} />
           </div>
         </Card>
 
