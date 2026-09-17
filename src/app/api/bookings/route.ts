@@ -65,10 +65,7 @@ export async function POST(req: Request) {
     to: booking.detailsEmail,
     firstName: booking.firstName,
     magicLink,
-    reservationFirstName: booking.reservationFirstName,
-    reservationLastName: booking.reservationLastName,
-    stayStart: booking.stayStart,
-    stayEnd: booking.stayEnd,
+    booking,
   });
 
   if (booking.additionalNotes) {

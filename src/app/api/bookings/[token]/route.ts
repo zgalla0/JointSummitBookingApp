@@ -105,8 +105,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
     to: updated.detailsEmail,
     firstName: updated.firstName,
     magicLink: magicLinkUrl(token),
-    stayStart: updated.stayStart,
-    stayEnd: updated.stayEnd,
+    booking: updated,
   });
 
   // Only when the note is new or changed, not on every re-save of an edit

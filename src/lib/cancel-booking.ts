@@ -16,14 +16,14 @@ export async function cancelBooking(booking: Booking, { byAdmin }: { byAdmin: bo
   const cancelled = await prisma.booking.update({
     where: { id: booking.id },
     data: { status: "CANCELLED", cancelledAt: now, cancelledByAdmin: byAdmin },
+    include: { guests: true },
   });
 
   await sendCancellationEmail({
     to: cancelled.detailsEmail,
     firstName: cancelled.firstName,
     magicLink: magicLinkUrl(cancelled.magicLinkToken),
-    stayStart: cancelled.stayStart,
-    stayEnd: cancelled.stayEnd,
+    booking: cancelled,
   });
 
   if (hotelNotified) {
