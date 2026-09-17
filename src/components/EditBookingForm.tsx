@@ -84,9 +84,7 @@ export default function EditBookingForm({
   }
 
   function onSaveInvalid() {
-    setError(
-      "There are missing items that must be completed before submission - check the fields highlighted in red above.",
-    );
+    setError("You're missing some required items above, check the sections highlighted in red.");
   }
 
   async function onCancelConfirmed() {
@@ -168,7 +166,7 @@ export default function EditBookingForm({
       {header}
       <NoticeBannerFull />
 
-      {error && (
+      {step !== "edit" && error && (
         <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div>
       )}
 
@@ -194,6 +192,12 @@ export default function EditBookingForm({
           <BookingFields mainForm={form} formConfig={formConfig} />
 
           <NoticeBannerShort />
+
+          {error && (
+            <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">
+              {error}
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={saving}>
