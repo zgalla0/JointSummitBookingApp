@@ -64,8 +64,10 @@ export default async function AdminBookingDetailPage({
             value={LOCATION_OPTIONS.find((o) => o.key === booking.location)?.label ?? booking.location}
           />
           <Row label="Hotel reservation name" value={`${booking.reservationFirstName} ${booking.reservationLastName}`} />
+          <Row label="Name tag" value={booking.nameTag} />
           <Row label="Hotel booking email" value={booking.hotelEmail} />
           <Row label="Details email" value={booking.detailsEmail} />
+          <Row label="Cuesta email" value={booking.cuestaEmail} />
           <Row
             label="Cancelled"
             value={

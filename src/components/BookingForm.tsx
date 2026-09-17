@@ -18,7 +18,11 @@ import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
 import { SUBMIT_REMINDER, NO_ROOM_WARNING } from "@/lib/copy";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
-import BookingFields, { Field, type FormConfig, type StaticContentItem } from "./BookingFields";
+import BookingFields, {
+  Field,
+  type FormConfig,
+  type StaticContentItem,
+} from "./BookingFields";
 
 export type { FormConfig };
 
@@ -31,8 +35,10 @@ const emptyDefaults: BookingFormInput = {
   location: "",
   reservationFirstName: "",
   reservationLastName: "",
+  nameTag: "",
   hotelEmail: "",
   detailsEmail: "",
+  cuestaEmail: "",
   attendingHappyHour: false,
   attendingAllHands: false,
   attendingDinner: false,
@@ -98,10 +104,13 @@ export default function BookingForm({
         mainForm.setValue("reservationLastName", values.lastName);
         mainForm.setValue("hotelEmail", values.email);
         mainForm.setValue("detailsEmail", values.email);
+        mainForm.setValue("cuestaEmail", values.email);
         setStep("form");
       }
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
+      setSubmitError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
     } finally {
       setChecking(false);
     }
@@ -114,7 +123,12 @@ export default function BookingForm({
   function needsRoomType(values: BookingFormInput): boolean {
     return (
       values.isAttending &&
-      (hasNightOutsideRange(values.stayStart, values.stayEnd, formConfig.blockStart, formConfig.blockEnd) ||
+      (hasNightOutsideRange(
+        values.stayStart,
+        values.stayEnd,
+        formConfig.blockStart,
+        formConfig.blockEnd,
+      ) ||
         hasNightOutsideRange(
           values.stayStart,
           values.stayEnd,
@@ -128,7 +142,8 @@ export default function BookingForm({
     if (values.extraNightsRoomType === "" && needsRoomType(values)) {
       mainForm.setError("extraNightsRoomType", {
         type: "manual",
-        message: "Please choose a room type for the night(s) outside the standard rate",
+        message:
+          "Please choose a room type for the night(s) outside the standard rate",
       });
       onMainInvalid();
       return;
@@ -143,12 +158,17 @@ export default function BookingForm({
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.error?.formErrors?.[0] ?? "Something went wrong, please try again.");
+        throw new Error(
+          data?.error?.formErrors?.[0] ??
+            "Something went wrong, please try again.",
+        );
       }
       setSuccessLink(data.magicLink);
       setStep("success");
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
+      setSubmitError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -176,104 +196,141 @@ export default function BookingForm({
       <NoticeBannerFull />
 
       {submitError && (
-        <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{submitError}</div>
+        <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+          {submitError}
+        </div>
       )}
 
       {step === "identity" && (
-        <>
-          <Card eyebrow="Before you start" title="A few things to know">
-            <ul className="list-disc space-y-3 pl-5 text-sm text-muted">
-              <li>
-                This form is the attendance and hotel form.
-                <ul className="mt-1 list-disc space-y-1 pl-5">
-                  <li>
-                    <span className="rounded bg-warning-soft px-1.5 py-0.5 font-bold text-warning">
-                      Complete this even if you can&apos;t come.
-                    </span>
-                  </li>
-                </ul>
-              </li>
-              <li>
-                Make sure to buy your flight as soon as you can - the dates are on the All W2 Employees
-                calendar.
-                <ul className="mt-1 list-disc space-y-1 pl-5">
-                  <li>
-                    Your flight can be to two separate locations if you&apos;re starting/ending
-                    somewhere different, and can be on different dates if you want to arrive or leave
-                    at different times.
-                  </li>
-                  <li>The flight should be expensed.</li>
-                  <li>Contractors: invites will be directly emailed/messaged to you.</li>
-                </ul>
-              </li>
-              <li>
-                Hotel rooms will be booked and paid for, so you don&apos;t need to worry about them!
-                The nights will be based on this form. If you&apos;re interested in additional nights{" "}
-                <strong className="text-foreground">at the hotel we&apos;ll be staying at</strong>,
-                mark that on this form.
-              </li>
-              <li>
-                Keep an eye out 1-2 weeks before the summit for specific details on the summit
-                (location and times for the hotel, happy hour, all hands, etc).
-              </li>
-              <li>
-                Usual attire (check the details mentioned above for the exact dress code):
-                <ul className="mt-1 list-disc space-y-1 pl-5">
-                  <li>Happy Hour - Casual</li>
-                  <li>All Hands Summit - Business casual</li>
-                  <li>Dinner - A bit more than casual, a bit less than dressy</li>
-                </ul>
-              </li>
-            </ul>
-          </Card>
+        <div className="grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-start">
+          <div className="space-y-6">
+            <Card eyebrow="What this form is for" title="A few things to know">
+              <ul className="list-disc space-y-3 pl-5 text-sm text-muted">
+                <li>
+                  This form is the attendance and hotel form.
+                  <ul className="mt-1 list-disc space-y-1 pl-5">
+                    <li>
+                      <span className="rounded bg-warning-soft px-1.5 py-0.5 font-bold text-warning">
+                        Complete this even if you can&apos;t come.
+                      </span>
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  Make sure to buy your flight as soon as you can - the dates
+                  are on the All W2 Employees calendar.
+                  <ul className="mt-1 list-disc space-y-1 pl-5">
+                    <li>
+                      Your flight can be to two separate locations if
+                      you&apos;re starting/ending somewhere different, and can
+                      be on different dates if you want to arrive or leave at
+                      different times.
+                    </li>
+                    <li>The flight should be expensed.</li>
+                    <li>
+                      Contractors: invites will be directly emailed/messaged to
+                      you.
+                    </li>
+                  </ul>
+                </li>
+                <li>
+                  Hotel rooms will be booked and paid for, so you don&apos;t
+                  need to worry about them! The nights will be based on this
+                  form. If you&apos;re interested in additional nights{" "}
+                  <strong className="text-foreground">
+                    at the hotel we&apos;ll be staying at
+                  </strong>
+                  , mark that on this form.
+                </li>
+                <li>
+                  Keep an eye out 1-2 weeks before the summit for specific
+                  details on the summit (location and times for the hotel, happy
+                  hour, all hands, etc).
+                </li>
+                <li>
+                  Usual attire (check the details mentioned above for the exact
+                  dress code):
+                  <ul className="mt-1 list-disc space-y-1 pl-5">
+                    <li>Happy Hour - Casual</li>
+                    <li>All Hands Summit - Business casual</li>
+                    <li>
+                      Dinner - A bit more than casual, a bit less than dressy
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </Card>
 
-          <Card eyebrow="Before you book" title="Summit info at a glance">
-            <ul className="space-y-2 text-sm text-muted">
-              <li>
-                <strong className="text-foreground">Dates:</strong>{" "}
-                {formatMonthDay(formConfig.happyHourDate)}–{formatMonthDay(formConfig.allHandsDate)},
-                2026
-              </li>
-              <li>
-                <strong className="text-foreground">Fly into:</strong> Mexico City International
-                Airport (MEX)
-              </li>
-              <li>
-                <strong className="text-foreground">Airport to hotel:</strong> About 30-60 minutes by
-                car, depending on traffic
-              </li>
-              <li>
-                <strong className="text-foreground">Hotel:</strong>{" "}
-                <a
-                  href={HOTEL_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-semibold text-accent-dark hover:underline"
-                >
-                  {HOTEL_NAME}
-                </a>
-                , {HOTEL_ADDRESS}
-              </li>
-              <li>
-                <strong className="text-foreground">Schedule:</strong> Happy Hour (
-                {formatShortDate(formConfig.happyHourDate)}), All Hands (
-                {formatShortDate(formConfig.allHandsDate)}), Dinner (
-                {formatShortDate(formConfig.dinnerDate)})
-              </li>
-            </ul>
-          </Card>
+            <Card eyebrow="TLDR" title="Summit info at a glance">
+              <ul className="space-y-2 text-sm text-muted">
+                <li>
+                  <strong className="text-foreground">Dates:</strong>{" "}
+                  {formatMonthDay(formConfig.happyHourDate)}–
+                  {formatMonthDay(formConfig.allHandsDate)}, 2026
+                </li>
+                <li>
+                  <strong className="text-foreground">Fly into:</strong> Mexico
+                  City International Airport (MEX)
+                </li>
+                <li>
+                  <strong className="text-foreground">Airport to hotel:</strong>{" "}
+                  About 30-60 minutes by car, depending on traffic
+                </li>
+                <li>
+                  <strong className="text-foreground">Hotel:</strong>{" "}
+                  <a
+                    href={HOTEL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-accent-dark hover:underline"
+                  >
+                    {HOTEL_NAME}
+                  </a>
+                  , {HOTEL_ADDRESS}
+                </li>
+                <li>
+                  <strong className="text-foreground">Schedule:</strong> Happy
+                  Hour ({formatShortDate(formConfig.happyHourDate)}), All Hands
+                  ({formatShortDate(formConfig.allHandsDate)}), Dinner (
+                  {formatShortDate(formConfig.dinnerDate)})
+                </li>
+              </ul>
+            </Card>
+          </div>
 
-          <Card eyebrow="Get started" title="Let's find your name and email">
-            <form onSubmit={identityForm.handleSubmit(onIdentitySubmit)} className="space-y-4">
+          <Card
+            eyebrow="Get started"
+            title="Let's find your name and email"
+            className="lg:sticky lg:top-6"
+          >
+            <form
+              onSubmit={identityForm.handleSubmit(onIdentitySubmit)}
+              className="space-y-4"
+            >
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="First name" error={identityForm.formState.errors.firstName?.message}>
-                  <input className="field" {...identityForm.register("firstName")} />
+                <Field
+                  label="First name"
+                  error={identityForm.formState.errors.firstName?.message}
+                >
+                  <input
+                    className="field"
+                    {...identityForm.register("firstName")}
+                  />
                 </Field>
-                <Field label="Last name" error={identityForm.formState.errors.lastName?.message}>
-                  <input className="field" {...identityForm.register("lastName")} />
+                <Field
+                  label="Last name"
+                  error={identityForm.formState.errors.lastName?.message}
+                >
+                  <input
+                    className="field"
+                    {...identityForm.register("lastName")}
+                  />
                 </Field>
               </div>
-              <Field label="Email" error={identityForm.formState.errors.email?.message}>
+              <Field
+                label="Email"
+                error={identityForm.formState.errors.email?.message}
+              >
                 <input className="field" {...identityForm.register("email")} />
               </Field>
               <Button type="submit" disabled={checking}>
@@ -281,20 +338,24 @@ export default function BookingForm({
               </Button>
             </form>
           </Card>
-        </>
+        </div>
       )}
 
       {step === "duplicate" && (
         <Card>
           <div className="space-y-3">
             <p>
-              Looks like you&apos;ve already submitted a booking. We&apos;ve emailed a link to the
-              email associated with your original form (note this may not be your Cuesta email) to
-              manage your existing booking. If you don&apos;t see it, use &quot;Resend my
-              link&quot; on the lookup page.
+              Looks like you&apos;ve already submitted a booking. We&apos;ve
+              emailed a link to the email associated with your original form
+              (note this may not be your Cuesta email) to manage your existing
+              booking. If you don&apos;t see it, use &quot;Resend my link&quot;
+              on the lookup page.
             </p>
             <NoticeBannerShort />
-            <Link href="/my-booking" className="font-semibold text-accent-dark hover:underline">
+            <Link
+              href="/my-booking"
+              className="font-semibold text-accent-dark hover:underline"
+            >
               Go to my booking lookup page →
             </Link>
           </div>
@@ -302,7 +363,10 @@ export default function BookingForm({
       )}
 
       {step === "form" && (
-        <form onSubmit={mainForm.handleSubmit(onMainSubmit, onMainInvalid)} className="space-y-5">
+        <form
+          onSubmit={mainForm.handleSubmit(onMainSubmit, onMainInvalid)}
+          className="space-y-5"
+        >
           <BookingFields
             mainForm={mainForm}
             formConfig={formConfig}
@@ -327,13 +391,16 @@ export default function BookingForm({
         <Card title="You're all set!">
           <div className="space-y-3">
             <p className="text-muted">
-              We&apos;ve saved your booking. A confirmation email is on its way with your details
-              and your personal link.
+              We&apos;ve saved your booking. A confirmation email is on its way
+              with your details and your personal link.
             </p>
             {successLink && (
               <p className="break-all">
                 Your personal link (save this to make future changes):{" "}
-                <a href={successLink} className="font-semibold text-accent-dark hover:underline">
+                <a
+                  href={successLink}
+                  className="font-semibold text-accent-dark hover:underline"
+                >
                   {successLink}
                 </a>
               </p>

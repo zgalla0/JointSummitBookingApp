@@ -64,6 +64,9 @@ export default function BookingFields({
   const [sameEmail, setSameEmail] = useState(
     mainForm.getValues("hotelEmail") === mainForm.getValues("detailsEmail"),
   );
+  const [sameCuestaEmail, setSameCuestaEmail] = useState(
+    mainForm.getValues("detailsEmail") === mainForm.getValues("cuestaEmail"),
+  );
   const [miniStep, setMiniStepState] = useState<MiniStep>(gateEvents ? "about" : "done");
 
   function setMiniStep(next: MiniStep) {
@@ -79,6 +82,7 @@ export default function BookingFields({
       "reservationLastName",
       "hotelEmail",
       "detailsEmail",
+      "cuestaEmail",
       "location",
     ]);
     if (!valid) return;
@@ -93,6 +97,7 @@ export default function BookingFields({
   const ptoDates = mainForm.watch("ptoDates");
   const extraNightsRoomType = mainForm.watch("extraNightsRoomType");
   const hotelEmail = mainForm.watch("hotelEmail");
+  const detailsEmail = mainForm.watch("detailsEmail");
   const attendingHappyHour = mainForm.watch("attendingHappyHour");
   const attendingDinner = mainForm.watch("attendingDinner");
   const dietaryOptions = mainForm.watch("dietaryOptions");
@@ -124,6 +129,16 @@ export default function BookingFields({
               <input className="field" {...mainForm.register("reservationLastName")} />
             </Field>
           </div>
+          <Field
+            label="Name for name tag"
+            error={mainForm.formState.errors.nameTag?.message}
+          >
+            <input
+              className="field"
+              placeholder="Optional - only if different from the name above"
+              {...mainForm.register("nameTag")}
+            />
+          </Field>
           <Field label="Email for hotel booking" error={mainForm.formState.errors.hotelEmail?.message}>
             <input className="field" {...mainForm.register("hotelEmail")} />
           </Field>
@@ -136,6 +151,17 @@ export default function BookingFields({
             onChange={(e) => {
               setSameEmail(e.target.checked);
               if (e.target.checked) mainForm.setValue("detailsEmail", hotelEmail);
+            }}
+          />
+          <Field label="Cuesta email" error={mainForm.formState.errors.cuestaEmail?.message}>
+            <input className="field" disabled={sameCuestaEmail} {...mainForm.register("cuestaEmail")} />
+          </Field>
+          <Checkbox
+            label="Use the same email as summit details"
+            checked={sameCuestaEmail}
+            onChange={(e) => {
+              setSameCuestaEmail(e.target.checked);
+              if (e.target.checked) mainForm.setValue("cuestaEmail", detailsEmail);
             }}
           />
           <Field label="Location" error={mainForm.formState.errors.location?.message}>

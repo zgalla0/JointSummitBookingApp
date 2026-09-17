@@ -45,8 +45,11 @@ model Booking {
   // Hotel reservation details (separate from work name, may differ)
   reservationFirstName String
   reservationLastName  String
+  nameTag              String? // name to print on the summit name tag, if different from their name
   hotelEmail           String // email used for the hotel booking
   detailsEmail         String // email for transportation / schedule / other details
+  cuestaEmail          String // work email, matched against the HR roster upload on the admin Roster page
+
 
   // Event attendance. Whether an additional guest joins a given event is
   // tracked per-guest on BookingGuest instead of as a single +1 flag here.

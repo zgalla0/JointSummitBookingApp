@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/admin/bookings", label: "Bookings" },
   { href: "/admin/calendar", label: "Calendar" },
   { href: "/admin/flights", label: "Flights" },
+  { href: "/admin/roster", label: "Roster check" },
   { href: "/admin/static-content", label: "Static content" },
 ];
 

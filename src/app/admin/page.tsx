@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { prisma } from "@/lib/prisma";
 import { computeAdminStats, computePtoCoverage, type PtoBucketStats } from "@/lib/admin-stats";
 import { DIETARY_OPTIONS } from "@/lib/dietary-options";
@@ -15,6 +16,18 @@ function Stat({ label, value }: { label: string; value: string | number }) {
     <div>
       <p className="text-2xl font-bold tracking-tight">{value}</p>
       <p className="text-sm text-muted">{label}</p>
+    </div>
+  );
+}
+
+/** Visually clusters a handful of related Stats together (e.g. an event and
+ *  its companion count) inside a card that may hold several such clusters -
+ *  a "circle within a circle" so related numbers are easy to compare at a
+ *  glance, instead of one undifferentiated grid of stats. */
+function StatGroup({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex flex-1 flex-wrap items-start gap-4 rounded-xl border-2 border-accent/20 bg-background p-3">
+      {children}
     </div>
   );
 }
@@ -49,36 +62,52 @@ export default async function AdminDashboardPage() {
         </div>
 
         <Card eyebrow="Overview" title="Bookings">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Stat label="Active bookings" value={stats.totalActive} />
-            <Stat label="Not attending" value={stats.notAttending} />
-            <Stat label="Cancelled" value={stats.totalCancelled} />
-            <Stat label="Additional adults" value={stats.additionalGuestsAdult} />
-            <Stat label="Additional children" value={stats.additionalGuestsChild} />
+          <div className="flex flex-wrap gap-4">
+            <StatGroup>
+              <Stat label="Active bookings" value={stats.totalActive} />
+              <Stat label="Not attending" value={stats.notAttending} />
+              <Stat label="Cancelled" value={stats.totalCancelled} />
+            </StatGroup>
+            <StatGroup>
+              <Stat label="Additional adults" value={stats.additionalGuestsAdult} />
+              <Stat label="Additional children" value={stats.additionalGuestsChild} />
+            </StatGroup>
           </div>
         </Card>
 
         <Card eyebrow="Attendance" title="Events">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Stat label="Happy Hour" value={stats.happyHour} />
-            <Stat label="Happy Hour companion" value={stats.happyHourPlusOne} />
-            <Stat label="All Hands" value={stats.allHands} />
-            <Stat label="Dinner" value={stats.dinner} />
-            <Stat label="Dinner companion" value={stats.dinnerPlusOne} />
+          <div className="flex flex-wrap gap-4">
+            <StatGroup>
+              <Stat label="Happy Hour" value={stats.happyHour} />
+              <Stat label="Happy Hour companion" value={stats.happyHourPlusOne} />
+            </StatGroup>
+            <StatGroup>
+              <Stat label="All Hands" value={stats.allHands} />
+            </StatGroup>
+            <StatGroup>
+              <Stat label="Dinner" value={stats.dinner} />
+              <Stat label="Dinner companion" value={stats.dinnerPlusOne} />
+            </StatGroup>
           </div>
         </Card>
 
         <Card eyebrow="Hotel booking" title="Room nights">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Stat label="Company-paid nights" value={stats.companyPaidNights} />
-            <Stat label="Self-paid nights" value={stats.selfPaidNights} />
-            <Stat label="Nights in discount window" value={stats.discountWindowNights} />
-            <Stat label="Nights outside discount window" value={stats.outsideDiscountWindowNights} />
+          <div className="flex flex-wrap gap-4">
+            <StatGroup>
+              <Stat label="Company-paid nights" value={stats.companyPaidNights} />
+              <Stat label="Self-paid nights" value={stats.selfPaidNights} />
+            </StatGroup>
+            <StatGroup>
+              <Stat label="Nights in discount window" value={stats.discountWindowNights} />
+              <Stat label="Nights outside discount window" value={stats.outsideDiscountWindowNights} />
+            </StatGroup>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {ROOM_TYPES.map((rt) => (
-              <Stat key={rt.key} label={`${rt.label} nights`} value={stats.roomTypeCounts[rt.key]} />
-            ))}
+          <div className="mt-4 flex flex-wrap gap-4">
+            <StatGroup>
+              {ROOM_TYPES.map((rt) => (
+                <Stat key={rt.key} label={`${rt.label} nights`} value={stats.roomTypeCounts[rt.key]} />
+              ))}
+            </StatGroup>
           </div>
         </Card>
 

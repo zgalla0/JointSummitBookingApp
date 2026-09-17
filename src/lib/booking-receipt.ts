@@ -38,6 +38,7 @@ export function buildBookingReceiptText(booking: BookingWithGuests): string {
   const location = LOCATION_OPTIONS.find((o) => o.key === booking.location)?.label ?? booking.location;
 
   lines.push(`Reservation name: ${booking.reservationFirstName} ${booking.reservationLastName}`);
+  if (booking.nameTag) lines.push(`Name tag: ${booking.nameTag}`);
   lines.push(`Location: ${location}`);
   lines.push("");
   lines.push(

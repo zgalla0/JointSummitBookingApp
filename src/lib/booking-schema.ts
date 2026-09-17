@@ -46,8 +46,12 @@ export const bookingFormSchema = z
 
     reservationFirstName: z.string().trim().min(1, "First name for the reservation is required"),
     reservationLastName: z.string().trim().min(1, "Last name for the reservation is required"),
+    // Optional: only needed if the attendee wants something other than their
+    // legal name printed on their summit name tag.
+    nameTag: z.string().trim().max(200),
     hotelEmail: z.string().trim().email("Enter a valid email"),
     detailsEmail: z.string().trim().email("Enter a valid email"),
+    cuestaEmail: z.string().trim().email("Enter a valid email"),
 
     // "" is only a valid form-default (nothing chosen yet); the refine
     // below rejects it at submit time so this is effectively mandatory.
