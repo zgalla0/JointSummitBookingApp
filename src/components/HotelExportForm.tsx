@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { formatShortDate } from "@/lib/format";
+import type { HotelExportPreviewRow } from "@/lib/hotel-export-rows";
 import {
   HOTEL_EXPORT_PULLER_OPTIONS,
   HOTEL_EXPORT_PURPOSE_DEFAULT,
@@ -10,7 +11,13 @@ import {
 import Button from "./ui/Button";
 import Card from "./ui/Card";
 
-type ExportResult = {
+type PreviewResult = {
+  since: string | null;
+  counts: { newCount: number; editedCount: number; cancelledCount: number };
+  rows: HotelExportPreviewRow[];
+};
+
+type SendResult = {
   since: string | null;
   generatedAt: string;
   counts: { newCount: number; editedCount: number; cancelledCount: number };
@@ -18,6 +25,34 @@ type ExportResult = {
   filename: string;
   fileBase64: string;
 };
+
+const CATEGORY_BG: Record<HotelExportPreviewRow["category"], string> = {
+  New: "#e2f5e6",
+  Edited: "#fff6dc",
+  Cancelled: "#fde2e4",
+};
+
+const CELL_BG: Record<HotelExportPreviewRow["category"], string> = {
+  New: "#c6efce",
+  Edited: "#fff2cc",
+  Cancelled: "#ffc7ce",
+};
+
+const PREVIEW_COLUMNS: { key: keyof HotelExportPreviewRow["data"]; label: string }[] = [
+  { key: "whatChanged", label: "What changed" },
+  { key: "reservationFirstName", label: "First name" },
+  { key: "reservationLastName", label: "Last name" },
+  { key: "nameTag", label: "Name tag" },
+  { key: "checkIn", label: "Check in" },
+  { key: "checkOut", label: "Check out" },
+  { key: "nights", label: "Nights" },
+  { key: "nightsCompanyPaid", label: "Co. paid" },
+  { key: "nightsSelfPaid", label: "Self paid" },
+  { key: "roomType", label: "Room type" },
+  { key: "totalOccupants", label: "Occupants" },
+  { key: "additionalGuestNames", label: "Guests" },
+  { key: "contactEmail", label: "Email" },
+];
 
 function downloadBase64File(base64: string, filename: string) {
   const bytes = atob(base64);
@@ -34,17 +69,69 @@ function downloadBase64File(base64: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function PreviewTable({ preview }: { preview: PreviewResult }) {
+  if (preview.rows.length === 0) {
+    return <p className="text-sm text-muted">No new, edited, or cancelled bookings in this window.</p>;
+  }
+  return (
+    <div className="overflow-x-auto rounded-xl border border-hairline">
+      <table className="w-full min-w-[900px] text-sm">
+        <thead>
+          <tr className="border-b border-hairline bg-background text-left text-xs text-muted uppercase">
+            <th className="px-3 py-2 font-semibold">Status</th>
+            {PREVIEW_COLUMNS.map((col) => (
+              <th key={col.key} className="px-3 py-2 font-semibold">
+                {col.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {preview.rows.map((row, i) => {
+            const wholeRow = row.highlightFields.length === 0;
+            return (
+              <tr key={i} className="border-b border-hairline last:border-0">
+                <td className="px-3 py-2 font-semibold" style={{ background: CATEGORY_BG[row.category] }}>
+                  {row.category}
+                </td>
+                {PREVIEW_COLUMNS.map((col) => {
+                  const highlighted = wholeRow || row.highlightFields.includes(col.key);
+                  return (
+                    <td
+                      key={col.key}
+                      className="px-3 py-2 whitespace-nowrap"
+                      style={highlighted ? { background: CELL_BG[row.category] } : undefined}
+                    >
+                      {String(row.data[col.key])}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function HotelExportForm() {
   const [lastExportAt, setLastExportAt] = useState<string | null>(null);
   const [loadingLast, setLoadingLast] = useState(true);
+  const [showOverride, setShowOverride] = useState(false);
   const [sinceOverride, setSinceOverride] = useState("");
+
+  const [previewing, setPreviewing] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<PreviewResult | null>(null);
+
   const [pulledBy, setPulledBy] = useState("");
   const [pulledByOther, setPulledByOther] = useState("");
   const [purpose, setPurpose] = useState(HOTEL_EXPORT_PURPOSE_DEFAULT);
   const [purposeOther, setPurposeOther] = useState("");
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<ExportResult | null>(null);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [result, setResult] = useState<SendResult | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -55,20 +142,49 @@ export default function HotelExportForm() {
       .finally(() => setLoadingLast(false));
   }, []);
 
-  async function generate() {
+  function onSinceChange(value: string) {
+    setSinceOverride(value);
+    // A changed date invalidates whatever was previewed - force a fresh
+    // Pull before Send to Hotel becomes available again.
+    setPreview(null);
+    setResult(null);
+  }
+
+  async function pull() {
+    setPreviewing(true);
+    setPreviewError(null);
+    setResult(null);
+    try {
+      const res = await fetch("/api/admin/hotel-export/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ since: sinceOverride || undefined }),
+      });
+      if (!res.ok) throw new Error("Something went wrong, please try again.");
+      const data: PreviewResult = await res.json();
+      setPreview(data);
+    } catch (err) {
+      setPreviewError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setPreviewing(false);
+    }
+  }
+
+  async function send() {
+    if (!preview) return;
     const resolvedPulledBy = pulledBy === "Other" ? pulledByOther.trim() : pulledBy;
     const resolvedPurpose = purpose === "Other" ? purposeOther.trim() : purpose;
     if (!resolvedPulledBy) {
-      setError("Please say who's pulling this export.");
+      setSendError("Please say who's pulling this export.");
       return;
     }
     if (!resolvedPurpose) {
-      setError("Please say what this export is for.");
+      setSendError("Please say what this export is for.");
       return;
     }
 
-    setGenerating(true);
-    setError(null);
+    setSending(true);
+    setSendError(null);
     setResult(null);
     setCopied(false);
     try {
@@ -76,7 +192,7 @@ export default function HotelExportForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          since: sinceOverride || undefined,
+          since: preview.since ?? undefined,
           pulledBy: resolvedPulledBy,
           purpose: resolvedPurpose,
         }),
@@ -87,11 +203,12 @@ export default function HotelExportForm() {
       }
       setResult(data);
       setLastExportAt(data.generatedAt);
+      setPreview(null);
       downloadBase64File(data.fileBase64, data.filename);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setSendError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
-      setGenerating(false);
+      setSending(false);
     }
   }
 
@@ -109,108 +226,140 @@ export default function HotelExportForm() {
 
   return (
     <div className="space-y-6">
-      <Card eyebrow="Pull" title="Send to Hotel">
+      <Card eyebrow="Step 1" title="Pull">
         <div className="space-y-4">
           <p className="text-sm text-muted">
             {loadingLast
               ? "Loading last export date..."
               : lastExportAt
-                ? `Last pulled ${formatShortDate(lastExportAt)}. By default, this includes only what's changed since then.`
-                : "This will be the first pull - everything currently active and attending will be included as new."}
+                ? `Last sent to the hotel ${formatShortDate(lastExportAt)}. Pulling will show what's changed since then.`
+                : "This will be the first pull - everything currently active and attending will show as new."}
           </p>
 
-          <div>
-            <label className="field-label" htmlFor="since-override">
-              Only include changes since (optional - overrides the default above for this pull)
-            </label>
-            <input
-              id="since-override"
-              type="date"
-              className="field max-w-xs"
-              value={sinceOverride}
-              onChange={(e) => setSinceOverride(e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-3 rounded-xl border border-hairline p-3">
-            <p className="field-label">Log this pull</p>
-
+          {!showOverride ? (
+            <button
+              type="button"
+              onClick={() => setShowOverride(true)}
+              className="text-sm font-semibold text-accent-dark hover:underline"
+            >
+              Need a different date range instead?
+            </button>
+          ) : (
             <div>
-              <label className="field-label" htmlFor="pulled-by">
-                Who is pulling this?
+              <label className="field-label" htmlFor="since-override">
+                Only include changes since
               </label>
-              <select
-                id="pulled-by"
-                className="field"
-                value={pulledBy}
-                onChange={(e) => setPulledBy(e.target.value)}
-              >
-                <option value="">Select a name</option>
-                {HOTEL_EXPORT_PULLER_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              {pulledBy === "Other" && (
-                <input
-                  className="field mt-2"
-                  placeholder="Enter name"
-                  value={pulledByOther}
-                  onChange={(e) => setPulledByOther(e.target.value)}
-                />
-              )}
-            </div>
-
-            <div>
-              <label className="field-label" htmlFor="purpose">
-                Purpose
-              </label>
-              <select id="purpose" className="field" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
-                {HOTEL_EXPORT_PURPOSE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              {purpose === "Other" && (
-                <input
-                  className="field mt-2"
-                  placeholder="What is this export for?"
-                  value={purposeOther}
-                  onChange={(e) => setPurposeOther(e.target.value)}
-                />
-              )}
+              <input
+                id="since-override"
+                type="date"
+                className="field max-w-xs"
+                value={sinceOverride}
+                onChange={(e) => onSinceChange(e.target.value)}
+              />
               <p className="mt-1.5 text-xs text-muted">
-                If you need this information for something other than the hotel roster, use the &quot;View
-                All Data&quot; export on the Dashboard instead.
+                Leave blank and this goes back to the default above.
               </p>
             </div>
-          </div>
+          )}
 
-          <Button onClick={generate} disabled={generating}>
-            {generating ? "Generating..." : "Send to Hotel"}
+          <Button onClick={pull} disabled={previewing}>
+            {previewing ? "Pulling..." : "Pull"}
           </Button>
         </div>
       </Card>
 
-      {error && <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div>}
+      {previewError && <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{previewError}</div>}
 
-      {result && (
-        <Card eyebrow="Result" title="Summary">
+      {preview && (
+        <Card eyebrow="Step 2" title="What will be sent to the hotel">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-4 text-sm">
               <span className="rounded-lg bg-[#e2f5e6] px-3 py-1.5 font-semibold text-[#1f7a3d]">
-                {result.counts.newCount} new
+                {preview.counts.newCount} new
               </span>
               <span className="rounded-lg bg-warning-soft px-3 py-1.5 font-semibold text-warning">
-                {result.counts.editedCount} edited
+                {preview.counts.editedCount} edited
               </span>
               <span className="rounded-lg bg-[#fde2e4] px-3 py-1.5 font-semibold text-[#b3261e]">
-                {result.counts.cancelledCount} cancelled
+                {preview.counts.cancelledCount} cancelled
               </span>
             </div>
 
+            <PreviewTable preview={preview} />
+
+            <div className="space-y-3 rounded-xl border border-hairline p-3">
+              <p className="field-label">Log this pull</p>
+
+              <div>
+                <label className="field-label" htmlFor="pulled-by">
+                  Who is pulling this?
+                </label>
+                <select
+                  id="pulled-by"
+                  className="field"
+                  value={pulledBy}
+                  onChange={(e) => setPulledBy(e.target.value)}
+                >
+                  <option value="">Select a name</option>
+                  {HOTEL_EXPORT_PULLER_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {pulledBy === "Other" && (
+                  <input
+                    className="field mt-2"
+                    placeholder="Enter name"
+                    value={pulledByOther}
+                    onChange={(e) => setPulledByOther(e.target.value)}
+                  />
+                )}
+              </div>
+
+              <div>
+                <label className="field-label" htmlFor="purpose">
+                  Purpose
+                </label>
+                <select
+                  id="purpose"
+                  className="field"
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                >
+                  {HOTEL_EXPORT_PURPOSE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {purpose === "Other" && (
+                  <input
+                    className="field mt-2"
+                    placeholder="What is this export for?"
+                    value={purposeOther}
+                    onChange={(e) => setPurposeOther(e.target.value)}
+                  />
+                )}
+                <p className="mt-1.5 text-xs text-muted">
+                  If you need this information for something other than the hotel roster, use the
+                  &quot;View All Data&quot; export on the Dashboard instead.
+                </p>
+              </div>
+            </div>
+
+            {sendError && <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{sendError}</div>}
+
+            <Button onClick={send} disabled={sending}>
+              {sending ? "Sending..." : "Send to Hotel"}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {result && (
+        <Card eyebrow="Sent" title="Summary">
+          <div className="space-y-4">
             <div>
               <label className="field-label" htmlFor="summary-text">
                 Paste this into your email to the hotel
@@ -229,8 +378,8 @@ export default function HotelExportForm() {
             </div>
 
             <p className="text-sm text-muted">
-              {result.filename} has been downloaded. Green rows are new, yellow are edited, red are
-              cancelled.
+              {result.filename} has been downloaded and logged below. Pull again to review before your
+              next send.
             </p>
           </div>
         </Card>

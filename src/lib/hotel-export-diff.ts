@@ -17,6 +17,17 @@ export type HotelExportClassification = {
   cancelledRows: ClassifiedRow[];
 };
 
+/** Parses the optional manual "since" override from a request body - a
+ *  plain date string, or absent/invalid, in which case the caller falls
+ *  back to the tracked last-pull timestamp. Shared by the preview and send
+ *  routes so a "Send to Hotel" reuses exactly the comparison point its
+ *  preceding "Pull" showed. */
+export function parseOverrideSince(value: unknown): Date | null {
+  if (typeof value !== "string" || !value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 type SnapshotFields = Pick<
   HotelExportSnapshot,
   | "reservationFirstName"

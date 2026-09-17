@@ -6,7 +6,9 @@ import {
   classifyForHotelExport,
   currentHotelSnapshotFields,
   buildHotelExportSummary,
+  parseOverrideSince,
 } from "@/lib/hotel-export-diff";
+import { buildHotelExportRows } from "@/lib/hotel-export-rows";
 import { buildHotelExportWorkbook } from "@/lib/hotel-export-workbook";
 
 // Read-only: lets the admin page show "changes since ..." before the admin
@@ -16,12 +18,6 @@ export async function GET() {
     where: { key: LAST_HOTEL_EXPORT_PULLED_AT_KEY },
   });
   return NextResponse.json({ lastExportAt: lastExport?.body ?? null });
-}
-
-function parseOverrideSince(value: unknown): Date | null {
-  if (typeof value !== "string" || !value) return null;
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function parseRequiredString(value: unknown): string {
@@ -53,8 +49,9 @@ export async function POST(request: NextRequest) {
   const snapshots = new Map(snapshotRows.map((s) => [s.bookingId, s]));
 
   const { newRows, editedRows, cancelledRows } = classifyForHotelExport(bookings, since, snapshots);
+  const rows = buildHotelExportRows(newRows, editedRows, cancelledRows);
 
-  const workbook = buildHotelExportWorkbook(newRows, editedRows, cancelledRows, since);
+  const workbook = buildHotelExportWorkbook(rows, since);
   const buffer = await workbook.xlsx.writeBuffer();
 
   // Every pull re-bases the snapshot table against current data (so future
