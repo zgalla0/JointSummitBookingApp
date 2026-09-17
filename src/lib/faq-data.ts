@@ -26,7 +26,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
             "Your flight",
             "Transportation to/from the airport or airport parking, both from your home and at the summit destination",
             "Any transportation needed during the summit",
-            "Food needed while traveling",
+            "Food needed while traveling or at the summit",
           ]),
           p("A few things to keep in mind:"),
           ul([
