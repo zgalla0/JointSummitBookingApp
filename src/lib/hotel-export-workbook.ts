@@ -1,25 +1,24 @@
 import ExcelJS from "exceljs";
-import type { HotelExportCategory, HotelExportPreviewRow } from "./hotel-export-rows";
+import type { HotelExportPreviewRow } from "./hotel-export-rows";
 
-const NEW_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC6EFCE" } };
-const EDITED_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" } };
-const CANCELLED_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFC7CE" } };
+const NEW_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9F2D9" } };
+const CANCELLED_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8D7D7" } };
+const EDITED_CELL_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDF3C7" } };
 const HEADER_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5E7EB" } };
 
-function fillFor(category: HotelExportCategory): ExcelJS.Fill {
-  if (category === "New") return NEW_FILL;
-  if (category === "Edited") return EDITED_FILL;
-  return CANCELLED_FILL;
-}
-
 /** Builds the Hotel Export workbook from the same row list shown in the
- *  "Pull" preview - a single sheet listing only the bookings the hotel
- *  actually needs to hear about (new, edited, or cancelled since the last
- *  send), color-coded per category, with a "What changed" column for
- *  edited rows - never a full re-dump of every booking. New/Cancelled rows
- *  highlight in full (the whole booking is what's new or gone); Edited
- *  rows highlight only the specific cell(s) that changed, so e.g. a single
- *  updated stay date doesn't paint the whole row. */
+ *  "Pull" preview - the full current roster (every active, attending
+ *  booking, plus any not-yet-cleared cancellation), so the hotel always has
+ *  an accurate complete picture, not just a diff. Highlighting layers on
+ *  top, in strict priority order and never blending two colors on one
+ *  row/cell:
+ *   1. New since the last export -> whole row green.
+ *   2. Cancelled (and not yet cleared) -> whole row red.
+ *   3. Edited (existed before, still active, something changed) -> row
+ *      stays white; only the specific changed cell(s) (plus "What changed")
+ *      go yellow.
+ *   4. Otherwise unchanged -> row stays white, nothing highlighted.
+ */
 export function buildHotelExportWorkbook(rows: HotelExportPreviewRow[], since: Date | null): ExcelJS.Workbook {
   const workbook = new ExcelJS.Workbook();
   workbook.created = new Date();
@@ -27,13 +26,13 @@ export function buildHotelExportWorkbook(rows: HotelExportPreviewRow[], since: D
   const sheet = workbook.addWorksheet("Hotel Export");
 
   const legendText = since
-    ? `Changes since ${since.toISOString().slice(0, 16).replace("T", " ")} UTC. Green = new, yellow = edited, red = cancelled.`
-    : "First-ever pull - everything below is new to the hotel. Green = new, yellow = edited, red = cancelled.";
+    ? "Full current roster. Green = new since last export, yellow highlighted cells = changed since last export, red = cancelled (not yet cleared), white = unchanged."
+    : "First-ever pull - full current roster, everything below is new to the hotel. Green = new, yellow = edited, red = cancelled, white = unchanged.";
   const legendRow = sheet.addRow([legendText]);
   legendRow.font = { italic: true, size: 9, color: { argb: "FF6B7280" } };
 
   if (rows.length === 0) {
-    const emptyRow = sheet.addRow(["No new, edited, or cancelled bookings in this window."]);
+    const emptyRow = sheet.addRow(["No bookings on file yet."]);
     sheet.mergeCells(legendRow.number, 1, legendRow.number, 12);
     sheet.mergeCells(emptyRow.number, 1, emptyRow.number, 12);
     return workbook;
@@ -50,13 +49,14 @@ export function buildHotelExportWorkbook(rows: HotelExportPreviewRow[], since: D
 
   rows.forEach(({ category, data, highlightFields }) => {
     const excelRow = sheet.addRow(headers.map((h) => data[h as keyof typeof data] as ExcelJS.CellValue));
-    const fill = fillFor(category);
-    if (highlightFields.length === 0) {
-      excelRow.eachCell((cell) => (cell.fill = fill));
-    } else {
+    if (category === "New") {
+      excelRow.eachCell((cell) => (cell.fill = NEW_FILL));
+    } else if (category === "Cancelled") {
+      excelRow.eachCell((cell) => (cell.fill = CANCELLED_FILL));
+    } else if (category === "Edited") {
       headers.forEach((header, i) => {
         if (highlightFields.includes(header)) {
-          excelRow.getCell(i + 1).fill = fill;
+          excelRow.getCell(i + 1).fill = EDITED_CELL_FILL;
         }
       });
     }

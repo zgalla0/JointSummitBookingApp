@@ -21,8 +21,8 @@ export async function POST(request: NextRequest) {
   const since = overrideSince ?? (lastExport?.body ? new Date(lastExport.body) : null);
   const snapshots = new Map(snapshotRows.map((s) => [s.bookingId, s]));
 
-  const { newRows, editedRows, cancelledRows } = classifyForHotelExport(bookings, since, snapshots);
-  const rows = buildHotelExportRows(newRows, editedRows, cancelledRows);
+  const { newRows, editedRows, unchangedRows, cancelledRows } = classifyForHotelExport(bookings, since, snapshots);
+  const rows = buildHotelExportRows(newRows, editedRows, unchangedRows, cancelledRows);
 
   return NextResponse.json({
     since: since ? since.toISOString() : null,

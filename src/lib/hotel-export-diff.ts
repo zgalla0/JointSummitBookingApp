@@ -15,6 +15,7 @@ export type FieldChange = { fields: string[]; description: string };
 export type HotelExportClassification = {
   newRows: ClassifiedRow[];
   editedRows: ClassifiedRow[];
+  unchangedRows: ClassifiedRow[];
   cancelledRows: ClassifiedRow[];
 };
 
@@ -40,7 +41,6 @@ export function parseOverrideSince(value: unknown): Date | null {
 export type HotelExportFields = {
   reservationFirstName: string;
   reservationLastName: string;
-  nameTag: string;
   checkIn: string;
   checkOut: string;
   nights: number;
@@ -62,7 +62,6 @@ export function computeHotelExportFields(b: BookingWithGuests): HotelExportField
   return {
     reservationFirstName: b.reservationFirstName,
     reservationLastName: b.reservationLastName,
-    nameTag: b.nameTag ?? "",
     checkIn: toISODate(b.stayStart),
     checkOut: toISODate(b.stayEnd),
     nights: nights.length,
@@ -70,7 +69,7 @@ export function computeHotelExportFields(b: BookingWithGuests): HotelExportField
     nightsSelfPaid: nights.filter((n) => !companyPaid.has(n)).length,
     roomType,
     totalOccupants: 1 + b.guests.length,
-    additionalGuestNames: b.guests.map((g) => `${g.firstName} ${g.lastName}`).join("; "),
+    additionalGuestNames: b.guests.map((g) => `${g.firstName} ${g.lastName}`).join(", "),
     contactEmail: b.hotelEmail,
   };
 }
@@ -78,7 +77,6 @@ export function computeHotelExportFields(b: BookingWithGuests): HotelExportField
 const FIELD_LABELS: Record<keyof HotelExportFields, string> = {
   reservationFirstName: "First name",
   reservationLastName: "Last name",
-  nameTag: "Name tag",
   checkIn: "Check-in",
   checkOut: "Check-out",
   nights: "Nights",
@@ -86,7 +84,7 @@ const FIELD_LABELS: Record<keyof HotelExportFields, string> = {
   nightsSelfPaid: "Self-paid nights",
   roomType: "Room type",
   totalOccupants: "Occupants",
-  additionalGuestNames: "Guests",
+  additionalGuestNames: "Other occupants",
   contactEmail: "Contact email",
 };
 
@@ -100,12 +98,17 @@ function displayValue(value: string | number): string {
  *  by the same number of days on both ends). Returns [] when nothing
  *  hotel-relevant actually changed (e.g. the booking's `updatedAt` moved
  *  because of a dietary edit). `prev` is null when no snapshot was ever
- *  taken for this booking (it predates this feature, the snapshot table
- *  was just reshaped, or this is the very first pull) - in that case we
- *  can't say what changed, only that something did, so `fields` comes back
- *  empty (the caller falls back to highlighting the whole row). */
+ *  taken for this booking (it predates this feature, or the snapshot table
+ *  was just reshaped) - in that case every column counts as "changed" so
+ *  each cell (never the whole row) still gets highlighted, rather than
+ *  silently treating an unknown prior state as "nothing changed". */
 export function diffHotelSnapshot(prev: HotelExportFields | null, curr: HotelExportFields): FieldChange[] {
-  if (!prev) return [{ fields: [], description: "Updated (no prior snapshot on record to compare against)" }];
+  if (!prev) {
+    return (Object.keys(curr) as (keyof HotelExportFields)[]).map((key) => ({
+      fields: [key],
+      description: `${FIELD_LABELS[key]} recorded (no prior snapshot on record to compare against)`,
+    }));
+  }
 
   const changes: FieldChange[] = [];
   for (const key of Object.keys(curr) as (keyof HotelExportFields)[]) {
@@ -119,12 +122,16 @@ export function diffHotelSnapshot(prev: HotelExportFields | null, curr: HotelExp
   return changes;
 }
 
-/** Splits bookings into what the hotel needs to hear about since `since`
- *  (null on the very first-ever pull, in which case every currently active,
- *  attending booking counts as "new" and nothing counts as edited/cancelled
- *  - there's no prior pull the hotel could already know about). Bookings
- *  that aren't attending never need a hotel room, so they're skipped
- *  entirely regardless of category. */
+/** Classifies every booking that could ever appear on a Hotel Export pull,
+ *  since the hotel now needs the full current roster every time, not just
+ *  what changed. Priority is New, then Cancelled, then Edited, then
+ *  Unchanged - each booking lands in exactly one bucket. `since` is null
+ *  only on the very first-ever pull, in which case every currently active,
+ *  attending booking counts as "new" (there's no prior pull the hotel could
+ *  already know about). Bookings that aren't attending never need a hotel
+ *  room, so they're skipped entirely. A cancelled booking stays in
+ *  `cancelledRows` on every pull - regardless of `since` - until an admin
+ *  marks it cleared once the hotel has actually processed it. */
 export function classifyForHotelExport(
   bookings: BookingWithGuests[],
   since: Date | null,
@@ -132,13 +139,12 @@ export function classifyForHotelExport(
 ): HotelExportClassification {
   const newRows: ClassifiedRow[] = [];
   const editedRows: ClassifiedRow[] = [];
+  const unchangedRows: ClassifiedRow[] = [];
   const cancelledRows: ClassifiedRow[] = [];
 
   for (const b of bookings) {
     if (b.status === "CANCELLED") {
-      if (since && b.cancelledAt && b.cancelledAt > since) {
-        cancelledRows.push({ booking: b });
-      }
+      if (!b.hotelExportClearedAt) cancelledRows.push({ booking: b });
       continue;
     }
 
@@ -149,18 +155,23 @@ export function classifyForHotelExport(
       continue;
     }
 
-    if (b.updatedAt > since) {
-      const snapshot = snapshots.get(b.id) ?? null;
-      const changes = diffHotelSnapshot(snapshot, computeHotelExportFields(b));
-      if (changes.length > 0) {
-        editedRows.push({
-          booking: b,
-          whatChanged: changes.map((c) => c.description).join("; "),
-          changedFields: [...new Set(changes.flatMap((c) => c.fields))],
-        });
-      }
+    if (b.updatedAt <= since) {
+      unchangedRows.push({ booking: b });
+      continue;
+    }
+
+    const snapshot = snapshots.get(b.id) ?? null;
+    const changes = diffHotelSnapshot(snapshot, computeHotelExportFields(b));
+    if (changes.length > 0) {
+      editedRows.push({
+        booking: b,
+        whatChanged: changes.map((c) => c.description).join("; "),
+        changedFields: [...new Set(changes.flatMap((c) => c.fields))],
+      });
+    } else {
+      unchangedRows.push({ booking: b });
     }
   }
 
-  return { newRows, editedRows, cancelledRows };
+  return { newRows, editedRows, unchangedRows, cancelledRows };
 }

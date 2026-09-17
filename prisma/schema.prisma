@@ -105,6 +105,12 @@ model Booking {
   flaggedForReview Boolean       @default(false)
   flagReason       String? // free-text note on why this record needs admin attention
 
+  // Set once an admin confirms the hotel has actually processed this
+  // cancellation ("Mark as cleared" on the Hotel Export page). Until then, a
+  // cancelled booking keeps showing up - highlighted red - on every Hotel
+  // Export pull, even ones after it was already included in a prior send.
+  hotelExportClearedAt DateTime?
+
   // Magic link
   magicLinkToken     String    @unique
   magicLinkExpiresAt DateTime
@@ -152,7 +158,6 @@ model HotelExportSnapshot {
 
   reservationFirstName String
   reservationLastName  String
-  nameTag              String
   checkIn              String
   checkOut             String
   nights               Int

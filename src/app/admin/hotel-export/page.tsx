@@ -17,9 +17,9 @@ export default async function AdminHotelExportPage() {
           <p className="eyebrow">Admin</p>
           <h1 className="text-3xl font-bold tracking-tight">Hotel export</h1>
           <p className="text-sm text-muted">
-            Pull to preview only the bookings that are new, edited, or cancelled since the last export,
-            color-coded so changes are obvious at a glance - then generate the excel file and a draft
-            email for you to send to the hotel yourself (nothing is emailed automatically). Every
+            Pull to preview the full current roster, color-coded so what&apos;s new, changed, or
+            cancelled since the last export is obvious at a glance - then generate the excel file and a
+            draft email for you to send to the hotel yourself (nothing is emailed automatically). Every
             export you generate is logged below.
           </p>
         </div>

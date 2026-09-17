@@ -26,23 +26,17 @@ type SendResult = {
   fileBase64: string;
 };
 
-const CATEGORY_BG: Record<HotelExportPreviewRow["category"], string> = {
-  New: "#e2f5e6",
-  Edited: "#fff6dc",
-  Cancelled: "#fde2e4",
-};
-
-const CELL_BG: Record<HotelExportPreviewRow["category"], string> = {
-  New: "#c6efce",
-  Edited: "#fff2cc",
-  Cancelled: "#ffc7ce",
-};
+// Literal, exact colors (also used in the generated Excel file) - each row
+// or cell gets exactly one of these, or none. New/Cancelled color the whole
+// row; Edited colors only the specific changed cell(s), never the row.
+const NEW_ROW_BG = "#D9F2D9";
+const CANCELLED_ROW_BG = "#F8D7D7";
+const EDITED_CELL_BG = "#FDF3C7";
 
 const PREVIEW_COLUMNS: { key: keyof HotelExportPreviewRow["data"]; label: string }[] = [
   { key: "whatChanged", label: "What changed" },
   { key: "reservationFirstName", label: "First name" },
   { key: "reservationLastName", label: "Last name" },
-  { key: "nameTag", label: "Name tag" },
   { key: "checkIn", label: "Check in" },
   { key: "checkOut", label: "Check out" },
   { key: "nights", label: "Nights" },
@@ -50,7 +44,7 @@ const PREVIEW_COLUMNS: { key: keyof HotelExportPreviewRow["data"]; label: string
   { key: "nightsSelfPaid", label: "Self paid" },
   { key: "roomType", label: "Room type" },
   { key: "totalOccupants", label: "Occupants" },
-  { key: "additionalGuestNames", label: "Guests" },
+  { key: "additionalGuestNames", label: "Other occupants" },
   { key: "contactEmail", label: "Email" },
 ];
 
@@ -69,13 +63,21 @@ function downloadBase64File(base64: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function PreviewTable({ preview }: { preview: PreviewResult }) {
+function PreviewTable({
+  preview,
+  onClear,
+  clearingId,
+}: {
+  preview: PreviewResult;
+  onClear: (bookingId: string) => void;
+  clearingId: string | null;
+}) {
   if (preview.rows.length === 0) {
-    return <p className="text-sm text-muted">No new, edited, or cancelled bookings in this window.</p>;
+    return <p className="text-sm text-muted">No bookings on file yet.</p>;
   }
   return (
     <div className="overflow-x-auto rounded-xl border border-hairline">
-      <table className="w-full min-w-[900px] text-sm">
+      <table className="w-full min-w-[1000px] text-sm">
         <thead>
           <tr className="border-b border-hairline bg-background text-left text-xs text-muted uppercase">
             <th className="px-3 py-2 font-semibold">Status</th>
@@ -84,28 +86,44 @@ function PreviewTable({ preview }: { preview: PreviewResult }) {
                 {col.label}
               </th>
             ))}
+            <th className="px-3 py-2 font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {preview.rows.map((row, i) => {
-            const wholeRow = row.highlightFields.length === 0;
+          {preview.rows.map((row) => {
+            const rowBg =
+              row.category === "New" ? NEW_ROW_BG : row.category === "Cancelled" ? CANCELLED_ROW_BG : undefined;
             return (
-              <tr key={i} className="border-b border-hairline last:border-0">
-                <td className="px-3 py-2 font-semibold" style={{ background: CATEGORY_BG[row.category] }}>
-                  {row.category}
-                </td>
+              <tr
+                key={row.bookingId}
+                className="border-b border-hairline last:border-0"
+                style={rowBg ? { background: rowBg } : undefined}
+              >
+                <td className="px-3 py-2 font-semibold">{row.category}</td>
                 {PREVIEW_COLUMNS.map((col) => {
-                  const highlighted = wholeRow || row.highlightFields.includes(col.key);
+                  const cellHighlighted = row.category === "Edited" && row.highlightFields.includes(col.key);
                   return (
                     <td
                       key={col.key}
                       className="px-3 py-2 whitespace-nowrap"
-                      style={highlighted ? { background: CELL_BG[row.category] } : undefined}
+                      style={cellHighlighted ? { background: EDITED_CELL_BG } : undefined}
                     >
                       {String(row.data[col.key])}
                     </td>
                   );
                 })}
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {row.category === "Cancelled" && (
+                    <button
+                      type="button"
+                      onClick={() => onClear(row.bookingId)}
+                      disabled={clearingId === row.bookingId}
+                      className="rounded-lg border border-hairline bg-white px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-black/[0.03] disabled:opacity-50"
+                    >
+                      {clearingId === row.bookingId ? "Clearing..." : "✓ Mark as cleared"}
+                    </button>
+                  )}
+                </td>
               </tr>
             );
           })}
@@ -124,6 +142,9 @@ export default function HotelExportForm() {
   const [previewing, setPreviewing] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [preview, setPreview] = useState<PreviewResult | null>(null);
+
+  const [clearingId, setClearingId] = useState<string | null>(null);
+  const [clearError, setClearError] = useState<string | null>(null);
 
   const [pulledBy, setPulledBy] = useState("");
   const [pulledByOther, setPulledByOther] = useState("");
@@ -167,6 +188,34 @@ export default function HotelExportForm() {
       setPreviewError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setPreviewing(false);
+    }
+  }
+
+  async function clearCancelled(bookingId: string) {
+    setClearingId(bookingId);
+    setClearError(null);
+    try {
+      const res = await fetch("/api/admin/hotel-export/clear-cancelled", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.formErrors?.[0] ?? "Something went wrong, please try again.");
+      }
+      setPreview((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          rows: prev.rows.filter((r) => r.bookingId !== bookingId),
+          counts: { ...prev.counts, cancelledCount: Math.max(0, prev.counts.cancelledCount - 1) },
+        };
+      });
+    } catch (err) {
+      setClearError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setClearingId(null);
     }
   }
 
@@ -232,7 +281,7 @@ export default function HotelExportForm() {
             {loadingLast
               ? "Loading last export date..."
               : lastExportAt
-                ? `Last generated for the hotel ${formatShortDate(lastExportAt)}. Pulling will show what's changed since then.`
+                ? `Last generated for the hotel ${formatShortDate(lastExportAt)}. Pulling will show the full roster, with what's changed since then highlighted.`
                 : "This will be the first pull - everything currently active and attending will show as new."}
           </p>
 
@@ -277,19 +326,29 @@ export default function HotelExportForm() {
       {preview && (
         <Card eyebrow="Step 2" title="Review before generating">
           <div className="space-y-4">
+            <p className="text-sm text-muted">
+              This is the full current roster. Highlighting only calls out what&apos;s new, changed, or
+              cancelled since the last export - everything else is shown as-is for reference.
+            </p>
+
             <div className="flex flex-wrap gap-4 text-sm">
-              <span className="rounded-lg bg-[#e2f5e6] px-3 py-1.5 font-semibold text-[#1f7a3d]">
+              <span className="rounded-lg px-3 py-1.5 font-semibold" style={{ background: NEW_ROW_BG, color: "#1f7a3d" }}>
                 {preview.counts.newCount} new
               </span>
-              <span className="rounded-lg bg-warning-soft px-3 py-1.5 font-semibold text-warning">
+              <span className="rounded-lg px-3 py-1.5 font-semibold" style={{ background: EDITED_CELL_BG, color: "#8a6d1d" }}>
                 {preview.counts.editedCount} edited
               </span>
-              <span className="rounded-lg bg-[#fde2e4] px-3 py-1.5 font-semibold text-[#b3261e]">
+              <span
+                className="rounded-lg px-3 py-1.5 font-semibold"
+                style={{ background: CANCELLED_ROW_BG, color: "#b3261e" }}
+              >
                 {preview.counts.cancelledCount} cancelled
               </span>
             </div>
 
-            <PreviewTable preview={preview} />
+            <PreviewTable preview={preview} onClear={clearCancelled} clearingId={clearingId} />
+
+            {clearError && <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{clearError}</div>}
 
             <div className="space-y-3 rounded-xl border border-hairline p-3">
               <p className="field-label">Log this pull</p>
