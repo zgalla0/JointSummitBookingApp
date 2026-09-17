@@ -37,7 +37,7 @@ export default async function AdminHotelExportPage() {
               <p className="text-sm font-semibold text-warning">
                 For everyday internal use, use &quot;View All Data&quot; above. Only use the Hotel Export
                 below when you actually need to send an updated roster to the hotel - it&apos;s logged
-                every time, and pulling it re-bases what counts as changed on your next send.
+                every time, and pulling it re-bases what counts as changed on the next send.
               </p>
             </div>
           </div>

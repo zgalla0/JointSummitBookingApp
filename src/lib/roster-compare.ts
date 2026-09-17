@@ -132,6 +132,17 @@ export async function parseRosterFile(fileName: string, buffer: Buffer): Promise
   return rowsToRoster(rows);
 }
 
+/** Best-effort first name for a reminder email's greeting, from whatever
+ *  format the roster's name column happens to use - "Last, First" (common
+ *  in HR exports) or "First Last". Falls back to "there" for a blank name. */
+export function guessFirstName(employeeName: string): string {
+  const trimmed = employeeName.trim();
+  if (!trimmed) return "there";
+  const commaIndex = trimmed.indexOf(",");
+  const namePart = commaIndex >= 0 ? trimmed.slice(commaIndex + 1) : trimmed;
+  return namePart.trim().split(/\s+/)[0] || "there";
+}
+
 /** Compares the uploaded roster against every currently-active booking's
  *  Cuesta email (case/whitespace-insensitive), in both directions: who's
  *  on the roster but hasn't submitted the form, and who's submitted the

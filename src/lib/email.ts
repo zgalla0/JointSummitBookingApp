@@ -72,6 +72,29 @@ export async function sendFlightDetailsReminderEmail(data: Omit<BookingEmailData
   logStubEmail("flight-details-reminder", data);
 }
 
+// Admin-triggered (bulk, from the Roster check page): a reminder to
+// employees on the uploaded roster who don't have a submission yet. Unlike
+// sendFlightDetailsReminderEmail, there's no existing booking (and so no
+// magic link) to reference - this person hasn't submitted at all.
+export async function sendFormReminderEmail(data: { to: string; firstName: string }) {
+  logStubEmail("form-not-submitted-reminder", {
+    to: data.to,
+    firstName: data.firstName,
+    body: [
+      `Hi ${data.firstName},`,
+      "",
+      "Just a friendly reminder, we don't have a response from you yet for the Q1 Joint All Hands Summit Attendance and Hotel Booking form. Whether you're planning to attend or not, we'd appreciate you filling it out so we can plan accordingly.",
+      "",
+      "If you already submitted this and think you're seeing this by mistake, double check that the email you used on the form matches your Cuesta email in Rippling exactly, we're comparing against that to confirm submissions.",
+      "",
+      "Just a heads up, if the form isn't filled out, we won't be able to hold a hotel room for you at the summit.",
+      "",
+      "Thanks so much!",
+      "Q1 Summit Planning Team",
+    ].join("\n"),
+  });
+}
+
 // Auto-sent to the planning team (ADMIN_NOTIFICATION_EMAIL, once Stage 4
 // wires up real delivery) whenever an attendee fills in the "anything else"
 // note on submit or edit - not sent when that field is left blank.

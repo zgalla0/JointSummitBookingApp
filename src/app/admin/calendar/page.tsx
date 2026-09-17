@@ -17,6 +17,18 @@ export default async function AdminCalendarPage() {
   const dayStats = computeCalendarStats(bookings, startIso, endIso);
   const calendarRows = buildCalendarGrid(startIso, endIso);
 
+  const summitEventDates = new Map<string, string[]>();
+  for (const [date, label] of [
+    [config.happyHourDate, "Happy Hour"],
+    [config.allHandsDate, "All Hands"],
+    [config.dinnerDate, "Dinner"],
+  ] as const) {
+    const iso = toISODate(date);
+    const labels = summitEventDates.get(iso) ?? [];
+    if (!labels.includes(label)) labels.push(label);
+    summitEventDates.set(iso, labels);
+  }
+
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <AdminNav />
@@ -34,7 +46,9 @@ export default async function AdminCalendarPage() {
           <p>
             🛏️ = rooms booked that night (one per booking, regardless of guests). 👥 = total
             people staying that night (attendee + guests). PTO = attendees marked PTO that day,
-            broken down by location ({LOCATION_OPTIONS.map((o) => o.label).join(" / ")}).
+            broken down by location ({LOCATION_OPTIONS.map((o) => o.label).join(" / ")}). A
+            light-blue circle around the date marks a summit event day (Happy Hour, All Hands, or
+            Dinner).
           </p>
         </Card>
 
@@ -54,7 +68,7 @@ export default async function AdminCalendarPage() {
               <div key={i} className="grid grid-cols-7 gap-2">
                 {row.map((day, j) =>
                   day ? (
-                    <CalendarDayTile key={day} stats={dayStats[day]} />
+                    <CalendarDayTile key={day} stats={dayStats[day]} eventLabels={summitEventDates.get(day)} />
                   ) : (
                     <div key={j} />
                   ),
@@ -68,11 +82,18 @@ export default async function AdminCalendarPage() {
   );
 }
 
-function CalendarDayTile({ stats }: { stats: CalendarDayStats }) {
+function CalendarDayTile({ stats, eventLabels }: { stats: CalendarDayStats; eventLabels?: string[] }) {
   const day = stats.date.slice(-2);
   return (
     <div className="flex flex-col items-center gap-1 rounded-xl border border-hairline bg-surface px-1 py-2 text-center">
-      <span className="font-mono text-sm font-semibold">{day}</span>
+      <span
+        title={eventLabels?.join(" · ")}
+        className={`flex h-7 w-7 items-center justify-center rounded-full font-mono text-sm font-semibold ${
+          eventLabels ? "bg-accent-soft ring-2 ring-accent text-accent-dark" : ""
+        }`}
+      >
+        {day}
+      </span>
       <span className="text-sm font-bold text-accent-dark">🛏️ {stats.rooms}</span>
       <span className="text-[10px] text-muted">👥 {stats.people}</span>
       <span className="text-[10px] font-semibold text-warning">PTO {stats.ptoTotal}</span>

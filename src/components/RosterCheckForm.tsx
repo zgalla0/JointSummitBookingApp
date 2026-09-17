@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { RosterComparison } from "@/lib/roster-compare";
+import { guessFirstName, type RosterComparison } from "@/lib/roster-compare";
 import Button from "./ui/Button";
 import Card from "./ui/Card";
+import RosterReminderButton from "./RosterReminderButton";
 
 export default function RosterCheckForm() {
   const [file, setFile] = useState<File | null>(null);
@@ -73,31 +74,39 @@ export default function RosterCheckForm() {
             {result.missingFromForm.length === 0 ? (
               <p className="text-sm text-muted">Everyone on the roster has submitted the form.</p>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-hairline">
-                <table className="w-full min-w-[600px] text-sm">
-                  <thead>
-                    <tr className="border-b border-hairline bg-background text-left text-xs text-muted uppercase">
-                      <th className="px-3 py-2 font-semibold">Name</th>
-                      <th className="px-3 py-2 font-semibold">Title</th>
-                      <th className="px-3 py-2 font-semibold">Employment type</th>
-                      <th className="px-3 py-2 font-semibold">Cuesta email</th>
-                      <th className="px-3 py-2 font-semibold">Location</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {result.missingFromForm.map((r, i) => (
-                      <tr key={`${r.cuestaEmail}-${i}`} className="border-b border-hairline last:border-0">
-                        <td className="px-3 py-2 font-medium">{r.employeeName}</td>
-                        <td className="px-3 py-2">{r.title}</td>
-                        <td className="px-3 py-2">{r.employmentType}</td>
-                        <td className="px-3 py-2">{r.cuestaEmail}</td>
-                        <td className="px-3 py-2">
-                          {[r.state, r.country].filter(Boolean).join(", ")}
-                        </td>
+              <div className="space-y-4">
+                <div className="overflow-x-auto rounded-xl border border-hairline">
+                  <table className="w-full min-w-[600px] text-sm">
+                    <thead>
+                      <tr className="border-b border-hairline bg-background text-left text-xs text-muted uppercase">
+                        <th className="px-3 py-2 font-semibold">Name</th>
+                        <th className="px-3 py-2 font-semibold">Title</th>
+                        <th className="px-3 py-2 font-semibold">Employment type</th>
+                        <th className="px-3 py-2 font-semibold">Cuesta email</th>
+                        <th className="px-3 py-2 font-semibold">Location</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {result.missingFromForm.map((r, i) => (
+                        <tr key={`${r.cuestaEmail}-${i}`} className="border-b border-hairline last:border-0">
+                          <td className="px-3 py-2 font-medium">{r.employeeName}</td>
+                          <td className="px-3 py-2">{r.title}</td>
+                          <td className="px-3 py-2">{r.employmentType}</td>
+                          <td className="px-3 py-2">{r.cuestaEmail}</td>
+                          <td className="px-3 py-2">
+                            {[r.state, r.country].filter(Boolean).join(", ")}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <RosterReminderButton
+                  recipients={result.missingFromForm.map((r) => ({
+                    email: r.cuestaEmail,
+                    firstName: guessFirstName(r.employeeName),
+                  }))}
+                />
               </div>
             )}
           </Card>
