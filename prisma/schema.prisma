@@ -137,24 +137,31 @@ model BookingGuest {
   @@index([bookingId])
 }
 
-// One row per Booking, holding the hotel-relevant field values as of the
-// last Hotel Export pull. Booking itself only tracks `updatedAt`, not which
-// fields changed or what they changed from, so this is the only place that
-// makes the "What changed" column on that export possible. Refreshed after
-// every Hotel Export pull; deleted once a booking is cancelled (nothing
-// left to diff going forward).
+// One row per Booking, mirroring the exact columns of a Hotel Export row
+// (see HotelExportFields in hotel-export-rows.ts) as of the last send.
+// Booking itself only tracks `updatedAt`, not which fields changed or what
+// they changed from, so this is the only place that makes the "What
+// changed" column - and per-cell highlighting - possible: the next pull
+// diffs each column against this snapshot directly, field by field, so
+// any column that differs is caught with no separate list of "things that
+// count as a change" to maintain by hand. Refreshed after every send;
+// deleted once a booking is cancelled (nothing left to diff going
+// forward).
 model HotelExportSnapshot {
   bookingId String @id
 
   reservationFirstName String
   reservationLastName  String
-  nameTag              String?
-  stayStart            DateTime
-  stayEnd              DateTime
-  companyPaidNights    String?
-  extraNightsRoomType  String?
-  guestCount           Int
-  guestNames           String // "First Last; First Last", sorted - for detecting added/removed/renamed guests
+  nameTag              String
+  checkIn              String
+  checkOut             String
+  nights               Int
+  nightsCompanyPaid    Int
+  nightsSelfPaid       Int
+  roomType             String
+  totalOccupants       Int
+  additionalGuestNames String
+  contactEmail         String
 
   updatedAt DateTime @updatedAt
 }

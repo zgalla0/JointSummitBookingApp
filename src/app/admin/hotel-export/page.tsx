@@ -17,16 +17,17 @@ export default async function AdminHotelExportPage() {
           <p className="eyebrow">Admin</p>
           <h1 className="text-3xl font-bold tracking-tight">Hotel export</h1>
           <p className="text-sm text-muted">
-            Pull to preview only the bookings that are new, edited, or cancelled since the last send,
-            color-coded so changes are obvious at a glance - then send that same preview to the hotel.
-            Since this file leaves the building, every send is logged below.
+            Pull to preview only the bookings that are new, edited, or cancelled since the last export,
+            color-coded so changes are obvious at a glance - then generate the excel file and a draft
+            email for you to send to the hotel yourself (nothing is emailed automatically). Every
+            export you generate is logged below.
           </p>
         </div>
         <HotelExportForm />
 
-        <Card eyebrow="Log" title="Recent sends">
+        <Card eyebrow="Log" title="Recent hotel exports">
           {log.length === 0 ? (
-            <p className="text-sm text-muted">Nothing sent to the hotel yet.</p>
+            <p className="text-sm text-muted">No hotel exports generated yet.</p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-hairline">
               <table className="w-full min-w-[500px] text-sm">

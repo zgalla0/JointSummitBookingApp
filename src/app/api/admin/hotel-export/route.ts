@@ -2,14 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { toISODate } from "@/lib/format";
 import { LAST_HOTEL_EXPORT_PULLED_AT_KEY } from "@/lib/internal-static-content";
-import {
-  classifyForHotelExport,
-  currentHotelSnapshotFields,
-  buildHotelExportSummary,
-  parseOverrideSince,
-} from "@/lib/hotel-export-diff";
+import { classifyForHotelExport, computeHotelExportFields, parseOverrideSince } from "@/lib/hotel-export-diff";
 import { buildHotelExportRows } from "@/lib/hotel-export-rows";
 import { buildHotelExportWorkbook } from "@/lib/hotel-export-workbook";
+import { buildHotelExportDraftEmail } from "@/lib/hotel-export-email";
 
 // Read-only: lets the admin page show "changes since ..." before the admin
 // commits to actually generating (and thereby re-basing) an export.
@@ -28,8 +24,9 @@ export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const overrideSince = parseOverrideSince((body as { since?: unknown })?.since);
 
-  // The "Send to Hotel" export leaves the building, so - unlike "View All
-  // Data" - it requires a log entry before it will generate anything.
+  // This export leaves the building (as a draft the admin sends
+  // themselves), so - unlike "View All Data" - it requires a log entry
+  // before it will generate anything.
   const pulledBy = parseRequiredString((body as { pulledBy?: unknown })?.pulledBy);
   const purpose = parseRequiredString((body as { purpose?: unknown })?.purpose);
   if (!pulledBy || !purpose) {
@@ -54,7 +51,7 @@ export async function POST(request: NextRequest) {
   const workbook = buildHotelExportWorkbook(rows, since);
   const buffer = await workbook.xlsx.writeBuffer();
 
-  // Every pull re-bases the snapshot table against current data (so future
+  // Every send re-bases the snapshot table against current data (so future
   // diffs stay accurate, even for bookings not included in this pull) and
   // advances the tracked "last export" timestamp - regardless of whether
   // this particular pull used a manual override for its comparison window.
@@ -70,7 +67,7 @@ export async function POST(request: NextRequest) {
       update: { body: now.toISOString() },
     }),
     ...activeAttending.map((b) => {
-      const fields = currentHotelSnapshotFields(b);
+      const fields = computeHotelExportFields(b);
       return prisma.hotelExportSnapshot.upsert({
         where: { bookingId: b.id },
         create: { bookingId: b.id, ...fields },
@@ -86,7 +83,7 @@ export async function POST(request: NextRequest) {
     since: since ? since.toISOString() : null,
     generatedAt: now.toISOString(),
     counts,
-    summary: buildHotelExportSummary(since, counts),
+    draftEmail: buildHotelExportDraftEmail(rows),
     filename: `hotel-export-${toISODate(now)}.xlsx`,
     fileBase64: Buffer.from(buffer).toString("base64"),
   });

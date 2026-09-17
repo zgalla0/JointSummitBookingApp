@@ -165,10 +165,11 @@ export default async function AdminDashboardPage() {
                 href="/admin/hotel-export"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-soft px-4 py-2.5 text-sm font-semibold text-accent-dark shadow-sm transition-all duration-200 ease-out hover:bg-accent-soft/70 hover:scale-[1.02] active:scale-[0.98]"
               >
-                Send to Hotel →
+                Hotel Export →
               </Link>
               <p className="mt-2 text-sm text-muted">
-                The diff-aware export that actually goes to the hotel - logs who pulled it and why.
+                Diff-aware excel plus a draft email for the hotel - you send it yourself. Logs who
+                pulled it and why.
               </p>
             </div>
           </div>

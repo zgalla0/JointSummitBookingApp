@@ -21,7 +21,7 @@ type SendResult = {
   since: string | null;
   generatedAt: string;
   counts: { newCount: number; editedCount: number; cancelledCount: number };
-  summary: string;
+  draftEmail: string;
   filename: string;
   fileBase64: string;
 };
@@ -145,7 +145,7 @@ export default function HotelExportForm() {
   function onSinceChange(value: string) {
     setSinceOverride(value);
     // A changed date invalidates whatever was previewed - force a fresh
-    // Pull before Send to Hotel becomes available again.
+    // Pull before generating becomes available again.
     setPreview(null);
     setResult(null);
   }
@@ -170,7 +170,7 @@ export default function HotelExportForm() {
     }
   }
 
-  async function send() {
+  async function generate() {
     if (!preview) return;
     const resolvedPulledBy = pulledBy === "Other" ? pulledByOther.trim() : pulledBy;
     const resolvedPurpose = purpose === "Other" ? purposeOther.trim() : purpose;
@@ -212,15 +212,15 @@ export default function HotelExportForm() {
     }
   }
 
-  async function copySummary() {
+  async function copyDraft() {
     if (!result) return;
     try {
-      await navigator.clipboard.writeText(result.summary);
+      await navigator.clipboard.writeText(result.draftEmail);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Clipboard access can fail silently (permissions, insecure context) -
-      // the summary is still right there in the textarea to select by hand.
+      // the draft is still right there in the textarea to select by hand.
     }
   }
 
@@ -232,46 +232,50 @@ export default function HotelExportForm() {
             {loadingLast
               ? "Loading last export date..."
               : lastExportAt
-                ? `Last sent to the hotel ${formatShortDate(lastExportAt)}. Pulling will show what's changed since then.`
+                ? `Last generated for the hotel ${formatShortDate(lastExportAt)}. Pulling will show what's changed since then.`
                 : "This will be the first pull - everything currently active and attending will show as new."}
           </p>
 
-          {!showOverride ? (
-            <button
-              type="button"
-              onClick={() => setShowOverride(true)}
-              className="text-sm font-semibold text-accent-dark hover:underline"
-            >
-              Need a different date range instead?
-            </button>
-          ) : (
-            <div>
-              <label className="field-label" htmlFor="since-override">
-                Only include changes since
-              </label>
-              <input
-                id="since-override"
-                type="date"
-                className="field max-w-xs"
-                value={sinceOverride}
-                onChange={(e) => onSinceChange(e.target.value)}
-              />
-              <p className="mt-1.5 text-xs text-muted">
-                Leave blank and this goes back to the default above.
-              </p>
-            </div>
-          )}
+          <div>
+            {!showOverride ? (
+              <button
+                type="button"
+                onClick={() => setShowOverride(true)}
+                className="text-sm font-semibold text-accent-dark hover:underline"
+              >
+                Need a different date range instead?
+              </button>
+            ) : (
+              <div>
+                <label className="field-label" htmlFor="since-override">
+                  Only include changes since
+                </label>
+                <input
+                  id="since-override"
+                  type="date"
+                  className="field max-w-xs"
+                  value={sinceOverride}
+                  onChange={(e) => onSinceChange(e.target.value)}
+                />
+                <p className="mt-1.5 text-xs text-muted">
+                  Leave blank and this goes back to the default above.
+                </p>
+              </div>
+            )}
+          </div>
 
-          <Button onClick={pull} disabled={previewing}>
-            {previewing ? "Pulling..." : "Pull"}
-          </Button>
+          <div>
+            <Button onClick={pull} disabled={previewing}>
+              {previewing ? "Pulling..." : "Pull"}
+            </Button>
+          </div>
         </div>
       </Card>
 
       {previewError && <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{previewError}</div>}
 
       {preview && (
-        <Card eyebrow="Step 2" title="What will be sent to the hotel">
+        <Card eyebrow="Step 2" title="Review before generating">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-4 text-sm">
               <span className="rounded-lg bg-[#e2f5e6] px-3 py-1.5 font-semibold text-[#1f7a3d]">
@@ -350,37 +354,39 @@ export default function HotelExportForm() {
 
             {sendError && <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{sendError}</div>}
 
-            <Button onClick={send} disabled={sending}>
-              {sending ? "Sending..." : "Send to Hotel"}
+            <Button onClick={generate} disabled={sending}>
+              {sending ? "Generating..." : "Generate Draft for Hotel"}
             </Button>
           </div>
         </Card>
       )}
 
       {result && (
-        <Card eyebrow="Sent" title="Summary">
+        <Card eyebrow="Draft ready" title="Email draft for the hotel">
           <div className="space-y-4">
+            <p className="text-sm text-muted">
+              {result.filename} has been downloaded. Nothing has been emailed yet - copy the draft below
+              into your own email, attach the file, and send it to the hotel yourself.
+            </p>
+
             <div>
-              <label className="field-label" htmlFor="summary-text">
-                Paste this into your email to the hotel
+              <label className="field-label" htmlFor="draft-email">
+                Draft email
               </label>
               <textarea
-                id="summary-text"
+                id="draft-email"
                 readOnly
-                className="field h-20 resize-none font-mono text-xs"
-                value={result.summary}
+                className="field h-56 resize-y font-mono text-xs"
+                value={result.draftEmail}
               />
               <div className="mt-2">
-                <Button type="button" variant="secondary" onClick={copySummary}>
-                  {copied ? "Copied!" : "Copy summary"}
+                <Button type="button" variant="secondary" onClick={copyDraft}>
+                  {copied ? "Copied!" : "Copy draft"}
                 </Button>
               </div>
             </div>
 
-            <p className="text-sm text-muted">
-              {result.filename} has been downloaded and logged below. Pull again to review before your
-              next send.
-            </p>
+            <p className="text-sm text-muted">This pull has been logged below. Pull again for your next export.</p>
           </div>
         </Card>
       )}

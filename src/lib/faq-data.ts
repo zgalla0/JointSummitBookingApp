@@ -69,6 +69,14 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
           ]),
         ],
       },
+      {
+        question: "Is there space to step out for calls?",
+        blocks: [
+          p(
+            "We don't book additional rooms or spaces for taking meetings. If the general spaces around the hotel are too busy or loud, we'd suggest taking your call from your room instead.",
+          ),
+        ],
+      },
     ],
   },
   {
@@ -169,6 +177,14 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         blocks: [
           p(
             "We'll try to set up a Teams meeting during the session so you can join remotely, but that doesn't always work out so please bear with us.",
+          ),
+        ],
+      },
+      {
+        question: "How should I log my time in Kantata for the Summit?",
+        blocks: [
+          p(
+            "Search Kantata (Mavenlink) for the Summit project associated with the current quarter and year, join that project, and log your hours there for any time you're at the Summit, including your travel time to and from the event.",
           ),
         ],
       },
