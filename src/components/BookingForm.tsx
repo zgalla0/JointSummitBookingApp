@@ -15,7 +15,7 @@ import { hasNightOutsideRange } from "@/lib/stay-tiles-client";
 import { formatShortDate, formatMonthDay } from "@/lib/format";
 import { HOTEL_NAME, HOTEL_URL, HOTEL_ADDRESS } from "@/lib/hotel-info";
 import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
-import { SUBMIT_REMINDER } from "@/lib/copy";
+import { SUBMIT_REMINDER, NO_ROOM_WARNING } from "@/lib/copy";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import BookingFields, { Field, type FormConfig, type StaticContentItem } from "./BookingFields";
@@ -169,6 +169,10 @@ export default function BookingForm({
         </h1>
       </div>
 
+      <p className="animate-in rounded-2xl bg-accent-soft px-5 py-4 text-lg font-bold text-accent-dark sm:text-xl">
+        {NO_ROOM_WARNING}
+      </p>
+
       <NoticeBannerFull />
 
       {submitError && (
@@ -177,6 +181,52 @@ export default function BookingForm({
 
       {step === "identity" && (
         <>
+          <Card eyebrow="Before you start" title="A few things to know">
+            <ul className="list-disc space-y-3 pl-5 text-sm text-muted">
+              <li>
+                This form is the attendance and hotel form.
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>
+                    <span className="rounded bg-warning-soft px-1.5 py-0.5 font-bold text-warning">
+                      Complete this even if you can&apos;t come.
+                    </span>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                Make sure to buy your flight as soon as you can - the dates are on the All W2 Employees
+                calendar.
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>
+                    Your flight can be to two separate locations if you&apos;re starting/ending
+                    somewhere different, and can be on different dates if you want to arrive or leave
+                    at different times.
+                  </li>
+                  <li>The flight should be expensed.</li>
+                  <li>Contractors: invites will be directly emailed/messaged to you.</li>
+                </ul>
+              </li>
+              <li>
+                Hotel rooms will be booked and paid for, so you don&apos;t need to worry about them!
+                The nights will be based on this form. If you&apos;re interested in additional nights{" "}
+                <strong className="text-foreground">at the hotel we&apos;ll be staying at</strong>,
+                mark that on this form.
+              </li>
+              <li>
+                Keep an eye out 1-2 weeks before the summit for specific details on the summit
+                (location and times for the hotel, happy hour, all hands, etc).
+              </li>
+              <li>
+                Usual attire (check the details mentioned above for the exact dress code):
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  <li>Happy Hour - Casual</li>
+                  <li>All Hands Summit - Business casual</li>
+                  <li>Dinner - A bit more than casual, a bit less than dressy</li>
+                </ul>
+              </li>
+            </ul>
+          </Card>
+
           <Card eyebrow="Before you book" title="Summit info at a glance">
             <ul className="space-y-2 text-sm text-muted">
               <li>

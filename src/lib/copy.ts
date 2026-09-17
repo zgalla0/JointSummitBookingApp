@@ -1,3 +1,8 @@
+// Shown prominently at the top of the landing page - not an alarm, just
+// making sure nobody skips the form assuming a room is reserved by default.
+export const NO_ROOM_WARNING =
+  "If you don't fill out this form, you will not have a room at the Summit hotel.";
+
 export const NOTICE = {
   opener: "Here's what you need to know before you get started.",
   pill: "Make all changes through this app, follow links through your email or search your name to update the booking.",

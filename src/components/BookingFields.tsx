@@ -317,8 +317,7 @@ export default function BookingFields({
                       <div className="space-y-5">
                         <p className="text-sm text-muted">
                           This helps us group people with similar arrival times into carpools to and
-                          from the hotel. Arrival and departure may be different flights, so each gets
-                          its own airline and flight number.
+                          from the hotel.
                         </p>
                         <div className="space-y-3 rounded-xl border border-hairline p-3">
                           <p className="field-label">Arrival</p>
