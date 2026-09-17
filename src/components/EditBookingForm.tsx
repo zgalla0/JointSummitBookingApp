@@ -10,7 +10,7 @@ import { hasNightOutsideRange } from "@/lib/stay-tiles-client";
 import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
-import BookingFields, { type FormConfig, type StaticContentItem } from "./BookingFields";
+import BookingFields, { type FormConfig } from "./BookingFields";
 
 type Step = "edit" | "confirmCancel" | "cancelled" | "saved";
 
@@ -18,14 +18,12 @@ export default function EditBookingForm({
   token,
   defaultValues,
   formConfig,
-  staticContent,
   isCancelled,
   lockedIn,
 }: {
   token: string;
   defaultValues: BookingFormInput;
   formConfig: FormConfig;
-  staticContent: StaticContentItem[];
   isCancelled: boolean;
   lockedIn: boolean;
 }) {
@@ -111,7 +109,7 @@ export default function EditBookingForm({
   const header = (
     <div className="animate-in space-y-1">
       <p className="eyebrow">Manage your booking</p>
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Your Summit hotel booking</h1>
+      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Summit attendance &amp; booking form</h1>
     </div>
   );
 
@@ -193,7 +191,7 @@ export default function EditBookingForm({
         </Card>
       ) : (
         <form onSubmit={form.handleSubmit(onSave, onSaveInvalid)} className="space-y-5">
-          <BookingFields mainForm={form} formConfig={formConfig} staticContent={staticContent} />
+          <BookingFields mainForm={form} formConfig={formConfig} />
 
           <NoticeBannerShort />
 

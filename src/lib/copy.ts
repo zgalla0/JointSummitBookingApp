@@ -8,7 +8,11 @@ export const NOTICE = {
   pill: "Make all changes through this app, follow links through your email or search your name to update the booking.",
   playfulEmoji: "✨",
   playful: "Don't slack/email the planning committee!",
-  closer: "Run into something the page truly can't handle? That's the only time to reach out directly.",
+  summitDetails:
+    "Need details on how the summits work? Ask your manager, buddy, or someone in your project who has gone to one.",
+  closer:
+    "Run into something the page can't handle? That's the only time to reach out directly. Due to how many " +
+    "people are attending the event, we cannot field all questions.",
 };
 
 // Short version (with the sparkle line), reused on the lookup page only.

@@ -41,13 +41,11 @@ type MiniStep = "about" | "events" | "done";
 export default function BookingFields({
   mainForm,
   formConfig,
-  staticContent,
   gateEvents = false,
   onGateDoneChange,
 }: {
   mainForm: UseFormReturn<BookingFormInput>;
   formConfig: FormConfig;
-  staticContent: StaticContentItem[];
   /** When true, About You + Attending? (shown together) then Events must
    *  be completed one page at a time, in order, before the rest of the
    *  form (which the Companion section depends on, via
@@ -420,19 +418,6 @@ export default function BookingFields({
           )}
         </>
       ) : null}
-
-      {staticContent.length > 0 && (
-        <Card eyebrow="Reference" title="Event info, Q&A, and timing">
-          <div className="space-y-3">
-            {staticContent.map((item) => (
-              <div key={item.key}>
-                {item.title && <h3 className="font-semibold">{item.title}</h3>}
-                {item.body && <p className="whitespace-pre-wrap text-sm text-muted">{item.body}</p>}
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
     </>
   );
 }

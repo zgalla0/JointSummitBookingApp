@@ -346,6 +346,19 @@ export default function BookingForm({
               </ul>
             </Card>
           </div>
+
+          {staticContent.length > 0 && (
+            <Card eyebrow="Reference" title="Event info, Q&A, and timing" className="lg:col-span-2">
+              <div className="space-y-3">
+                {staticContent.map((item) => (
+                  <div key={item.key}>
+                    {item.title && <h3 className="font-semibold">{item.title}</h3>}
+                    {item.body && <p className="whitespace-pre-wrap text-sm text-muted">{item.body}</p>}
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
         </div>
       )}
 
@@ -378,7 +391,6 @@ export default function BookingForm({
           <BookingFields
             mainForm={mainForm}
             formConfig={formConfig}
-            staticContent={staticContent}
             gateEvents
             onGateDoneChange={setGateDone}
           />

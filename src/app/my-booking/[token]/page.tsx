@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import { config, defaultCompanyPaidNights, optionalCompanyPaidNights, isLockedIn } from "@/lib/config";
 import { toISODate } from "@/lib/format";
-import { prisma } from "@/lib/prisma";
 import { getBookingByToken } from "@/lib/get-booking-by-token";
 import { bookingToFormInput } from "@/lib/booking-to-form";
-import { INTERNAL_STATIC_CONTENT_KEYS } from "@/lib/internal-static-content";
 import EditBookingForm from "@/components/EditBookingForm";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +15,6 @@ export default async function EditBookingPage({
   const { token } = await params;
   const booking = await getBookingByToken(token);
   if (!booking) notFound();
-
-  const staticContent = await prisma.staticContent.findMany({
-    where: { key: { notIn: INTERNAL_STATIC_CONTENT_KEYS } },
-    orderBy: { key: "asc" },
-  });
 
   const formConfig = {
     bookableStart: toISODate(config.bookableStart),
@@ -44,7 +37,6 @@ export default async function EditBookingPage({
         token={token}
         defaultValues={bookingToFormInput(booking)}
         formConfig={formConfig}
-        staticContent={staticContent.map((s) => ({ key: s.key, title: s.title, body: s.body }))}
         isCancelled={booking.status === "CANCELLED"}
         lockedIn={isLockedIn()}
       />

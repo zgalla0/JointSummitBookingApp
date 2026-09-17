@@ -10,12 +10,13 @@
   --accent-soft: #edf9ff;
   --warning: #d97706;
   --warning-soft: #fef3c7;
-  /* Calmer amber used only for the "no room" banner - lighter than
-     --warning-soft, paired with --foreground instead of --warning so it
-     reads as an FYI rather than an alarm. Everywhere else that uses
-     --warning/--warning-soft (flight-reminder confirm, PTO badge, outside-
-     window borders) keeps that louder pair, since those actually need it. */
-  --notice-bg: #fffdf5;
+  /* Calmer amber used only for the "no room" banner - paired with
+     --foreground instead of --warning so it reads as an FYI rather than an
+     alarm, while still being clearly yellow (not washed out). Everywhere
+     else that uses --warning/--warning-soft (flight-reminder confirm, PTO
+     badge, outside-window borders) keeps that louder pair, since those
+     actually need it. */
+  --notice-bg: #fde68a;
   --pay-self: #ffb37a;
   --pay-self-soft: #ffead2;
   --pay-self-text: #7c3a12;
