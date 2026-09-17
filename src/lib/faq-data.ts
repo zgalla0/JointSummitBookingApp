@@ -61,7 +61,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
           ul([
             'Click "Projects" on the left-hand side',
             'Set the filter to "Joinable Projects"',
-            'Search "Q3"',
+            'Search "Q1"',
             'Click the blue "Join" button',
           ]),
           p(
