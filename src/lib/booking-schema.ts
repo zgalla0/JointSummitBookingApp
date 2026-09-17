@@ -51,7 +51,13 @@ export const bookingFormSchema = z
     nameTag: z.string().trim().max(200),
     hotelEmail: z.string().trim().email("Enter a valid email"),
     detailsEmail: z.string().trim().email("Enter a valid email"),
-    cuestaEmail: z.string().trim().email("Enter a valid email"),
+    cuestaEmail: z
+      .string()
+      .trim()
+      .email("Enter a valid email")
+      .refine((v) => v.toLowerCase().endsWith("@cuestapartners.com"), {
+        message: "Cuesta email must be a @cuestapartners.com address",
+      }),
 
     // "" is only a valid form-default (nothing chosen yet); the refine
     // below rejects it at submit time so this is effectively mandatory.

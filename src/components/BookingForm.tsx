@@ -177,7 +177,7 @@ export default function BookingForm({
 
   function onMainInvalid() {
     setSubmitError(
-      "There are missing items that must be completed before submission - check the fields highlighted in red above.",
+      "You must fill in additional items above, see red highlights for items missed.",
     );
   }
 
@@ -196,7 +196,7 @@ export default function BookingForm({
 
       <NoticeBannerFull />
 
-      {submitError && (
+      {step !== "form" && submitError && (
         <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">
           {submitError}
         </div>
@@ -403,6 +403,12 @@ export default function BookingForm({
           {gateDone && (
             <>
               <p className="text-sm text-muted">{SUBMIT_REMINDER}</p>
+
+              {submitError && (
+                <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700">
+                  {submitError}
+                </div>
+              )}
 
               <Button type="submit" disabled={submitting}>
                 {submitting ? "Submitting..." : "Submit booking"}

@@ -152,7 +152,12 @@ export default function BookingFields({
             }}
           />
           <Field label="Cuesta email" error={mainForm.formState.errors.cuestaEmail?.message}>
-            <input className="field" disabled={sameCuestaEmail} {...mainForm.register("cuestaEmail")} />
+            <input
+              className="field"
+              placeholder="you@cuestapartners.com"
+              disabled={sameCuestaEmail}
+              {...mainForm.register("cuestaEmail")}
+            />
           </Field>
           <Checkbox
             label="Use the same email as summit details"
