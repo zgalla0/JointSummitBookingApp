@@ -156,9 +156,9 @@ export default async function AdminDashboardPage() {
               <p className="mb-1 text-xs font-semibold tracking-wide text-muted uppercase">
                 Of those missing, by location
               </p>
-              <div className="space-y-3">
+              <div className="divide-y divide-hairline">
                 {LOCATION_OPTIONS.map((loc) => (
-                  <div key={loc.key}>
+                  <div key={loc.key} className="py-3 text-center first:pt-0 last:pb-0">
                     <div className="grid grid-cols-2 gap-4">
                       <Stat label="Missing" value={flightCoverage.byLocation[loc.key].missing} />
                       <Stat label="% of total" value={`${flightCoverage.byLocation[loc.key].missingShare}%`} />
