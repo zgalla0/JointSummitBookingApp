@@ -12,7 +12,7 @@ export default async function AdminStaticContentPage() {
   });
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <AdminNav />
       <div className="space-y-6">
         <div className="animate-in space-y-1">

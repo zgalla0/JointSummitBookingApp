@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-14 sm:py-20">
+    <main className="mx-auto w-full max-w-sm px-4 py-14 sm:py-20">
       <div className="space-y-6">
         <div className="animate-in space-y-1">
           <p className="eyebrow">Admin</p>

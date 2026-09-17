@@ -13,7 +13,7 @@ export default async function AdminBookingsPage() {
   });
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
+    <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <AdminNav />
       <div className="space-y-6">
         <div className="animate-in space-y-1">
@@ -43,7 +43,7 @@ export default async function AdminBookingsPage() {
                   </td>
                   <td className="py-2.5 pr-4 text-muted">{b.hotelEmail}</td>
                   <td className="py-2.5 pr-4 whitespace-nowrap">
-                    {formatShortDate(b.stayStart)} - {formatShortDate(b.stayEnd)}
+                    {b.isAttending ? `${formatShortDate(b.stayStart)} - ${formatShortDate(b.stayEnd)}` : "-"}
                   </td>
                   <td className="py-2.5 pr-4">{b.guests.length}</td>
                   <td className="py-2.5 pr-4">

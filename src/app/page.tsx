@@ -28,7 +28,7 @@ export default async function Home() {
   };
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10 sm:py-14">
+    <main className="mx-auto w-full max-w-5xl px-4 py-10 sm:py-14">
       <BookingForm
         formConfig={formConfig}
         staticContent={staticContent.map((s) => ({ key: s.key, title: s.title, body: s.body }))}

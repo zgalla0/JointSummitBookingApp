@@ -32,7 +32,7 @@ export default async function AdminBookingDetailPage({
   const nights = bookingNights(booking);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <AdminNav />
       <div className="space-y-6">
         <div className="animate-in space-y-1">
@@ -86,8 +86,8 @@ export default async function AdminBookingDetailPage({
         </Card>
 
         <Card eyebrow="Hotel booking" title="Stay">
-          <Row label="Check in" value={formatShortDate(booking.stayStart)} />
-          <Row label="Check out" value={formatShortDate(booking.stayEnd)} />
+          <Row label="Check in" value={booking.isAttending ? formatShortDate(booking.stayStart) : null} />
+          <Row label="Check out" value={booking.isAttending ? formatShortDate(booking.stayEnd) : null} />
           <Row label="Nights" value={nights.length} />
           <Row label="Company-paid nights" value={nights.filter((n) => companyPaid.has(n)).join(", ") || "None"} />
           <Row label="Extra-nights room type" value={booking.extraNightsRoomType} />

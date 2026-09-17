@@ -16,7 +16,7 @@
      else that uses --warning/--warning-soft (flight-reminder confirm, PTO
      badge, outside-window borders) keeps that louder pair, since those
      actually need it. */
-  --notice-bg: #fde68a;
+  --notice-bg: #fff1d0;
   --pay-self: #ffb37a;
   --pay-self-soft: #ffead2;
   --pay-self-text: #7c3a12;

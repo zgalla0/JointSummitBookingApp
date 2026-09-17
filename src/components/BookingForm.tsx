@@ -18,6 +18,7 @@ import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
 import { SUBMIT_REMINDER, NO_ROOM_WARNING } from "@/lib/copy";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
+import FaqSection from "./FaqSection";
 import BookingFields, {
   Field,
   type FormConfig,
@@ -359,6 +360,10 @@ export default function BookingForm({
               </div>
             </Card>
           )}
+
+          <div className="lg:col-span-2">
+            <FaqSection />
+          </div>
         </div>
       )}
 

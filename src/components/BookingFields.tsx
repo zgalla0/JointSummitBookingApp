@@ -84,8 +84,8 @@ export default function BookingFields({
       "location",
     ]);
     if (!valid) return;
-    // Not attending: nothing else on the form applies to them, so skip
-    // Events and everything after it entirely and go straight to submit.
+    // Not attending: Events and everything else that depends on attending
+    // don't apply, so skip straight past them - only Comments still shows.
     setMiniStep(isAttending ? "events" : "done");
   }
 
@@ -231,185 +231,189 @@ export default function BookingFields({
             Next
           </Button>
         </div>
-      ) : isAttending ? (
+      ) : (
         <>
-          <div className="space-y-5">
-                <Card
-                  eyebrow="Events"
-                  title="Which events are you attending?"
-                  className={mainForm.formState.errors.attendingHappyHour ? "border-2 border-red-500" : ""}
-                >
-                  <div className="space-y-3">
-                    <Checkbox
-                      label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`}
-                      {...mainForm.register("attendingHappyHour")}
-                    />
-                    <Checkbox
-                      label={`All Hands (${formatShortDate(formConfig.allHandsDate)})`}
-                      {...mainForm.register("attendingAllHands")}
-                    />
-                    <Checkbox
-                      label={`Dinner (${formatShortDate(formConfig.dinnerDate)})`}
-                      {...mainForm.register("attendingDinner")}
-                    />
-                  </div>
-                  {mainForm.formState.errors.attendingHappyHour?.message && (
-                    <p className="mt-2 text-sm font-semibold text-red-600">
-                      {mainForm.formState.errors.attendingHappyHour.message}
-                    </p>
-                  )}
-                </Card>
-
-                {miniStep !== "events" && (
-                  <>
-                    <Card
-                      eyebrow="Food"
-                      title="Dietary restrictions"
-                      className={mainForm.formState.errors.dietaryOptions ? "border-2 border-red-500" : ""}
-                    >
-                      <DietaryChecklist
-                        selected={dietaryOptions}
-                        other={dietaryOther}
-                        onChange={(next) => mainForm.setValue("dietaryOptions", next)}
-                        onOtherChange={(val) => mainForm.setValue("dietaryOther", val)}
-                      />
-                      {mainForm.formState.errors.dietaryOptions?.message && (
-                        <p className="mt-2 text-sm font-semibold text-red-600">
-                          {mainForm.formState.errors.dietaryOptions.message}
-                        </p>
-                      )}
-                    </Card>
-
-                    <Card
-                      eyebrow="Hotel booking"
-                      title="Stay dates"
-                      className={
-                        mainForm.formState.errors.stayStart ||
-                        mainForm.formState.errors.stayEnd ||
-                        mainForm.formState.errors.extraNightsRoomType
-                          ? "border-2 border-red-500"
-                          : ""
-                      }
-                    >
-                      <StayDatesPicker
-                        bookableStart={formConfig.bookableStart}
-                        bookableEnd={formConfig.bookableEnd}
-                        discountStart={formConfig.discountStart}
-                        discountEnd={formConfig.discountEnd}
-                        defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
-                        optionalCompanyPaidNights={formConfig.optionalCompanyPaidNights}
-                        value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
-                        onChange={(patch) => {
-                          for (const [key, val] of Object.entries(patch)) {
-                            mainForm.setValue(key as keyof BookingFormInput, val as never, {
-                              shouldValidate: false,
-                            });
-                          }
-                          if (patch.extraNightsRoomType) {
-                            mainForm.clearErrors("extraNightsRoomType");
-                          }
-                        }}
-                      />
-                      {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
-                        <p className="mt-2 text-sm font-semibold text-red-600">
-                          Please select your stay nights.
-                        </p>
-                      )}
-                      {mainForm.formState.errors.extraNightsRoomType?.message && (
-                        <p className="mt-2 text-sm font-semibold text-red-600">
-                          {mainForm.formState.errors.extraNightsRoomType.message}
-                        </p>
-                      )}
-                    </Card>
-
-                    <Card
-                      eyebrow="Companion"
-                      title="Additional guests"
-                      className={mainForm.formState.errors.guests ? "border-2 border-red-500" : ""}
-                    >
-                      <GuestFields
-                        mainForm={mainForm}
-                        attendingHappyHour={attendingHappyHour}
-                        attendingDinner={attendingDinner}
-                      />
-                      {guestsListError && (
-                        <p className="mt-2 text-sm font-semibold text-red-600">{guestsListError}</p>
-                      )}
-                    </Card>
-
-                    <Card eyebrow="Travel" title="Flight details">
-                      <div className="space-y-5">
-                        <p className="text-sm text-muted">
-                          This helps us group people with similar arrival times into carpools to and
-                          from the hotel.
-                        </p>
-                        <div className="space-y-3 rounded-xl border border-hairline p-3">
-                          <p className="field-label">Arrival</p>
-                          <div className="grid gap-4 sm:grid-cols-2">
-                            <AirlineField
-                              label="Airline"
-                              value={flightArrivalAirline}
-                              onChange={(v) => mainForm.setValue("flightArrivalAirline", v)}
-                            />
-                            <Field label="Flight #">
-                              <input
-                                className="field"
-                                placeholder="e.g. AA2332"
-                                {...mainForm.register("flightArrivalNumber")}
-                              />
-                            </Field>
-                            <Field label="Arrival date/time">
-                              <input
-                                type="datetime-local"
-                                className="field"
-                                {...mainForm.register("flightArrival")}
-                              />
-                            </Field>
-                          </div>
-                        </div>
-                        <div className="space-y-3 rounded-xl border border-hairline p-3">
-                          <p className="field-label">Departure</p>
-                          <div className="grid gap-4 sm:grid-cols-2">
-                            <AirlineField
-                              label="Airline"
-                              value={flightDepartureAirline}
-                              onChange={(v) => mainForm.setValue("flightDepartureAirline", v)}
-                            />
-                            <Field label="Flight #">
-                              <input
-                                className="field"
-                                placeholder="e.g. UA772"
-                                {...mainForm.register("flightDepartureNumber")}
-                              />
-                            </Field>
-                            <Field label="Departure date/time">
-                              <input
-                                type="datetime-local"
-                                className="field"
-                                {...mainForm.register("flightDeparture")}
-                              />
-                            </Field>
-                          </div>
-                        </div>
-                        <Field label="Other flight notes">
-                          <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
-                        </Field>
-                      </div>
-                    </Card>
-
-                    <Card eyebrow="Anything else" title="Anything else you'd like the planning team to know?">
-                      <textarea
-                        className="field"
-                        rows={3}
-                        placeholder="Optional"
-                        {...mainForm.register("additionalNotes")}
-                      />
-                    </Card>
-                  </>
+          {isAttending && (
+            <div className="space-y-5">
+              <Card
+                eyebrow="Events"
+                title="Which events are you attending?"
+                className={mainForm.formState.errors.attendingHappyHour ? "border-2 border-red-500" : ""}
+              >
+                <div className="space-y-3">
+                  <Checkbox
+                    label={`Happy Hour (${formatShortDate(formConfig.happyHourDate)})`}
+                    {...mainForm.register("attendingHappyHour")}
+                  />
+                  <Checkbox
+                    label={`All Hands (${formatShortDate(formConfig.allHandsDate)})`}
+                    {...mainForm.register("attendingAllHands")}
+                  />
+                  <Checkbox
+                    label={`Dinner (${formatShortDate(formConfig.dinnerDate)})`}
+                    {...mainForm.register("attendingDinner")}
+                  />
+                </div>
+                {mainForm.formState.errors.attendingHappyHour?.message && (
+                  <p className="mt-2 text-sm font-semibold text-red-600">
+                    {mainForm.formState.errors.attendingHappyHour.message}
+                  </p>
                 )}
-              </div>
+              </Card>
 
-          {miniStep === "events" && (
+              {miniStep !== "events" && (
+                <>
+                  <Card
+                    eyebrow="Food"
+                    title="Dietary restrictions"
+                    className={mainForm.formState.errors.dietaryOptions ? "border-2 border-red-500" : ""}
+                  >
+                    <DietaryChecklist
+                      selected={dietaryOptions}
+                      other={dietaryOther}
+                      onChange={(next) => mainForm.setValue("dietaryOptions", next)}
+                      onOtherChange={(val) => mainForm.setValue("dietaryOther", val)}
+                    />
+                    {mainForm.formState.errors.dietaryOptions?.message && (
+                      <p className="mt-2 text-sm font-semibold text-red-600">
+                        {mainForm.formState.errors.dietaryOptions.message}
+                      </p>
+                    )}
+                  </Card>
+
+                  <Card
+                    eyebrow="Hotel booking"
+                    title="Stay dates"
+                    className={
+                      mainForm.formState.errors.stayStart ||
+                      mainForm.formState.errors.stayEnd ||
+                      mainForm.formState.errors.extraNightsRoomType
+                        ? "border-2 border-red-500"
+                        : ""
+                    }
+                  >
+                    <StayDatesPicker
+                      bookableStart={formConfig.bookableStart}
+                      bookableEnd={formConfig.bookableEnd}
+                      discountStart={formConfig.discountStart}
+                      discountEnd={formConfig.discountEnd}
+                      defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
+                      optionalCompanyPaidNights={formConfig.optionalCompanyPaidNights}
+                      value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
+                      onChange={(patch) => {
+                        for (const [key, val] of Object.entries(patch)) {
+                          mainForm.setValue(key as keyof BookingFormInput, val as never, {
+                            shouldValidate: false,
+                          });
+                        }
+                        if (patch.extraNightsRoomType) {
+                          mainForm.clearErrors("extraNightsRoomType");
+                        }
+                      }}
+                    />
+                    {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
+                      <p className="mt-2 text-sm font-semibold text-red-600">
+                        Please select your stay nights.
+                      </p>
+                    )}
+                    {mainForm.formState.errors.extraNightsRoomType?.message && (
+                      <p className="mt-2 text-sm font-semibold text-red-600">
+                        {mainForm.formState.errors.extraNightsRoomType.message}
+                      </p>
+                    )}
+                  </Card>
+
+                  <Card
+                    eyebrow="Companion"
+                    title="Additional guests"
+                    className={mainForm.formState.errors.guests ? "border-2 border-red-500" : ""}
+                  >
+                    <GuestFields
+                      mainForm={mainForm}
+                      attendingHappyHour={attendingHappyHour}
+                      attendingDinner={attendingDinner}
+                    />
+                    {guestsListError && (
+                      <p className="mt-2 text-sm font-semibold text-red-600">{guestsListError}</p>
+                    )}
+                  </Card>
+
+                  <Card eyebrow="Travel" title="Flight details">
+                    <div className="space-y-5">
+                      <p className="text-sm text-muted">
+                        This helps us group people with similar arrival times into carpools to and
+                        from the hotel.
+                      </p>
+                      <div className="space-y-3 rounded-xl border border-hairline p-3">
+                        <p className="field-label">Arrival</p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <AirlineField
+                            label="Airline"
+                            value={flightArrivalAirline}
+                            onChange={(v) => mainForm.setValue("flightArrivalAirline", v)}
+                          />
+                          <Field label="Flight #">
+                            <input
+                              className="field"
+                              placeholder="e.g. AA2332"
+                              {...mainForm.register("flightArrivalNumber")}
+                            />
+                          </Field>
+                          <Field label="Arrival date/time">
+                            <input
+                              type="datetime-local"
+                              className="field"
+                              {...mainForm.register("flightArrival")}
+                            />
+                          </Field>
+                        </div>
+                      </div>
+                      <div className="space-y-3 rounded-xl border border-hairline p-3">
+                        <p className="field-label">Departure</p>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <AirlineField
+                            label="Airline"
+                            value={flightDepartureAirline}
+                            onChange={(v) => mainForm.setValue("flightDepartureAirline", v)}
+                          />
+                          <Field label="Flight #">
+                            <input
+                              className="field"
+                              placeholder="e.g. UA772"
+                              {...mainForm.register("flightDepartureNumber")}
+                            />
+                          </Field>
+                          <Field label="Departure date/time">
+                            <input
+                              type="datetime-local"
+                              className="field"
+                              {...mainForm.register("flightDeparture")}
+                            />
+                          </Field>
+                        </div>
+                      </div>
+                      <Field label="Other flight notes">
+                        <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
+                      </Field>
+                    </div>
+                  </Card>
+                </>
+              )}
+            </div>
+          )}
+
+          {(!isAttending || miniStep !== "events") && (
+            <Card eyebrow="Comments" title="Anything else you'd like the planning team to know?">
+              <textarea
+                className="field"
+                rows={3}
+                placeholder="Optional"
+                {...mainForm.register("additionalNotes")}
+              />
+            </Card>
+          )}
+
+          {isAttending && miniStep === "events" && (
             <div className="flex justify-end">
               <Button type="button" onClick={() => setMiniStep("done")}>
                 Next
@@ -417,7 +421,7 @@ export default function BookingFields({
             </div>
           )}
         </>
-      ) : null}
+      )}
     </>
   );
 }
