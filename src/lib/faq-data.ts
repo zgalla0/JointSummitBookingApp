@@ -55,7 +55,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: "How should I log my time in Kantata for the Summit?",
         blocks: [
           p(
-            'Use the Mavenlink project "Internal - Q3 2026 Summit North America" and log your hours there for any time you\'re at the Summit, including your travel time to and from the event.',
+            'Use the Mavenlink project "Internal - Q1 2027 Joint Summit" and log your hours there for any time you\'re at the Summit, including your travel time to and from the event.',
           ),
           p("If you don't see the project:"),
           ul([
