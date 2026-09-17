@@ -231,7 +231,7 @@ export default function BookingForm({
                   </li>
                   <li>
                     The flight should be expensed however you expense your
-                    expenses (differs by country and FIT/1099).
+                    expenses (differs by country and FTE/1099).
                   </li>
                   <li>
                     Contractors: invites will be directly emailed/messaged to
@@ -250,8 +250,8 @@ export default function BookingForm({
               </li>
               <li>
                 Keep an eye out 1-2 weeks before the summit for specific details
-                on the summit (location and times for the hotel, happy hour, all
-                hands, etc).
+                on the summit (location and times for happy hour, all hands,
+                etc).
               </li>
               <li>
                 Usual attire (once locations for happy hour and dinner are set
