@@ -2,18 +2,14 @@ import { NOTICE, NOTICE_SHORT } from "@/lib/copy";
 
 export function NoticeBannerFull() {
   return (
-    <div className="animate-in rounded-2xl bg-accent-soft p-5 sm:p-6">
+    <div className="animate-in space-y-2 rounded-2xl bg-accent-soft p-5 sm:p-6">
       <p className="text-base font-medium text-foreground">{NOTICE.opener}</p>
-      <p className="mt-2 text-sm text-muted">• {NOTICE.summitDetails}</p>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center rounded-full bg-surface px-3 py-1 text-sm font-semibold text-foreground shadow-sm">
-          {NOTICE.pill}
-        </span>
-        <span className="inline-flex items-center gap-1.5 text-sm font-bold text-accent-dark">
-          {NOTICE.playfulEmoji} {NOTICE.playful} {NOTICE.playfulEmoji}
-        </span>
-      </div>
-      <p className="mt-3 text-sm text-muted">{NOTICE.closer}</p>
+      <p className="text-sm text-muted">{NOTICE.summitDetails}</p>
+      <p className="text-sm text-muted">{NOTICE.pill}</p>
+      <p className="text-sm font-semibold text-accent-dark">
+        {NOTICE.playfulEmoji} {NOTICE.playful} {NOTICE.playfulEmoji}
+      </p>
+      <p className="text-sm text-muted">{NOTICE.closer}</p>
     </div>
   );
 }

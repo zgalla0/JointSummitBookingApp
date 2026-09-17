@@ -24,9 +24,24 @@ function parseOverrideSince(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function parseRequiredString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const overrideSince = parseOverrideSince((body as { since?: unknown })?.since);
+
+  // The "Send to Hotel" export leaves the building, so - unlike "View All
+  // Data" - it requires a log entry before it will generate anything.
+  const pulledBy = parseRequiredString((body as { pulledBy?: unknown })?.pulledBy);
+  const purpose = parseRequiredString((body as { purpose?: unknown })?.purpose);
+  if (!pulledBy || !purpose) {
+    return NextResponse.json(
+      { error: { formErrors: ["Who is pulling this and why are both required."] } },
+      { status: 400 },
+    );
+  }
 
   const [bookings, lastExport, snapshotRows] = await Promise.all([
     prisma.booking.findMany({ include: { guests: true } }),
@@ -51,6 +66,7 @@ export async function POST(request: NextRequest) {
   const cancelled = bookings.filter((b) => b.status === "CANCELLED");
 
   await prisma.$transaction([
+    prisma.hotelExportLog.create({ data: { pulledBy, purpose, createdAt: now } }),
     prisma.staticContent.upsert({
       where: { key: LAST_HOTEL_EXPORT_PULLED_AT_KEY },
       create: { key: LAST_HOTEL_EXPORT_PULLED_AT_KEY, body: now.toISOString() },

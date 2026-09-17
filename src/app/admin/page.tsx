@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { computeAdminStats, computePtoCoverage, type PtoBucketStats } from "@/lib/admin-stats";
 import { DIETARY_OPTIONS } from "@/lib/dietary-options";
@@ -146,13 +147,30 @@ export default async function AdminDashboardPage() {
         </Card>
 
         <Card eyebrow="Actions" title="Export">
-          <div className="flex flex-wrap items-start gap-6">
-            <a
-              href="/api/admin/export"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-accent-dark hover:scale-[1.02] active:scale-[0.98]"
-            >
-              Export bookings (.xlsx)
-            </a>
+          <div className="space-y-4">
+            <div>
+              <a
+                href="/api/admin/export"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-accent-dark hover:scale-[1.02] active:scale-[0.98]"
+              >
+                View All Data (.xlsx)
+              </a>
+              <p className="mt-2 text-sm text-muted">
+                The full dataset, no filtering or highlighting - for internal reference and
+                troubleshooting, not for the hotel.
+              </p>
+            </div>
+            <div>
+              <Link
+                href="/admin/hotel-export"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-soft px-4 py-2.5 text-sm font-semibold text-accent-dark shadow-sm transition-all duration-200 ease-out hover:bg-accent-soft/70 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Send to Hotel →
+              </Link>
+              <p className="mt-2 text-sm text-muted">
+                The diff-aware export that actually goes to the hotel - logs who pulled it and why.
+              </p>
+            </div>
           </div>
         </Card>
       </div>

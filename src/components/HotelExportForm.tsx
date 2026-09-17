@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { formatShortDate } from "@/lib/format";
+import {
+  HOTEL_EXPORT_PULLER_OPTIONS,
+  HOTEL_EXPORT_PURPOSE_DEFAULT,
+  HOTEL_EXPORT_PURPOSE_OPTIONS,
+} from "@/lib/hotel-export-log-options";
 import Button from "./ui/Button";
 import Card from "./ui/Card";
 
@@ -33,6 +38,10 @@ export default function HotelExportForm() {
   const [lastExportAt, setLastExportAt] = useState<string | null>(null);
   const [loadingLast, setLoadingLast] = useState(true);
   const [sinceOverride, setSinceOverride] = useState("");
+  const [pulledBy, setPulledBy] = useState("");
+  const [pulledByOther, setPulledByOther] = useState("");
+  const [purpose, setPurpose] = useState(HOTEL_EXPORT_PURPOSE_DEFAULT);
+  const [purposeOther, setPurposeOther] = useState("");
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ExportResult | null>(null);
@@ -47,6 +56,17 @@ export default function HotelExportForm() {
   }, []);
 
   async function generate() {
+    const resolvedPulledBy = pulledBy === "Other" ? pulledByOther.trim() : pulledBy;
+    const resolvedPurpose = purpose === "Other" ? purposeOther.trim() : purpose;
+    if (!resolvedPulledBy) {
+      setError("Please say who's pulling this export.");
+      return;
+    }
+    if (!resolvedPurpose) {
+      setError("Please say what this export is for.");
+      return;
+    }
+
     setGenerating(true);
     setError(null);
     setResult(null);
@@ -55,10 +75,16 @@ export default function HotelExportForm() {
       const res = await fetch("/api/admin/hotel-export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ since: sinceOverride || undefined }),
+        body: JSON.stringify({
+          since: sinceOverride || undefined,
+          pulledBy: resolvedPulledBy,
+          purpose: resolvedPurpose,
+        }),
       });
-      if (!res.ok) throw new Error("Something went wrong, please try again.");
-      const data: ExportResult = await res.json();
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error?.formErrors?.[0] ?? "Something went wrong, please try again.");
+      }
       setResult(data);
       setLastExportAt(data.generatedAt);
       downloadBase64File(data.fileBase64, data.filename);
@@ -83,7 +109,7 @@ export default function HotelExportForm() {
 
   return (
     <div className="space-y-6">
-      <Card eyebrow="Pull" title="Generate the hotel export">
+      <Card eyebrow="Pull" title="Send to Hotel">
         <div className="space-y-4">
           <p className="text-sm text-muted">
             {loadingLast
@@ -106,8 +132,64 @@ export default function HotelExportForm() {
             />
           </div>
 
+          <div className="space-y-3 rounded-xl border border-hairline p-3">
+            <p className="field-label">Log this pull</p>
+
+            <div>
+              <label className="field-label" htmlFor="pulled-by">
+                Who is pulling this?
+              </label>
+              <select
+                id="pulled-by"
+                className="field"
+                value={pulledBy}
+                onChange={(e) => setPulledBy(e.target.value)}
+              >
+                <option value="">Select a name</option>
+                {HOTEL_EXPORT_PULLER_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              {pulledBy === "Other" && (
+                <input
+                  className="field mt-2"
+                  placeholder="Enter name"
+                  value={pulledByOther}
+                  onChange={(e) => setPulledByOther(e.target.value)}
+                />
+              )}
+            </div>
+
+            <div>
+              <label className="field-label" htmlFor="purpose">
+                Purpose
+              </label>
+              <select id="purpose" className="field" value={purpose} onChange={(e) => setPurpose(e.target.value)}>
+                {HOTEL_EXPORT_PURPOSE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              {purpose === "Other" && (
+                <input
+                  className="field mt-2"
+                  placeholder="What is this export for?"
+                  value={purposeOther}
+                  onChange={(e) => setPurposeOther(e.target.value)}
+                />
+              )}
+              <p className="mt-1.5 text-xs text-muted">
+                If you need this information for something other than the hotel roster, use the &quot;View
+                All Data&quot; export on the Dashboard instead.
+              </p>
+            </div>
+          </div>
+
           <Button onClick={generate} disabled={generating}>
-            {generating ? "Generating..." : "Generate hotel export"}
+            {generating ? "Generating..." : "Send to Hotel"}
           </Button>
         </div>
       </Card>
