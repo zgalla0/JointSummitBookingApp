@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { computeAdminStats, computePtoCoverage, type PtoBucketStats } from "@/lib/admin-stats";
+import {
+  computeAdminStats,
+  computePtoCoverage,
+  computeFlightDetailsCoverage,
+  type PtoBucketStats,
+} from "@/lib/admin-stats";
 import { DIETARY_OPTIONS } from "@/lib/dietary-options";
 import { ROOM_TYPES } from "@/lib/room-types";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
@@ -53,6 +58,7 @@ export default async function AdminDashboardPage() {
   const bookings = await prisma.booking.findMany({ include: { guests: true } });
   const stats = computeAdminStats(bookings);
   const pto = computePtoCoverage(bookings);
+  const flightCoverage = computeFlightDetailsCoverage(bookings);
   const pivotLabel = formatMonthDay(pto.pivotIso);
 
   return (
@@ -139,10 +145,30 @@ export default async function AdminDashboardPage() {
           </div>
         </Card>
 
-        <Card eyebrow="Travel" title="Missing flight details">
-          <div className="flex flex-wrap items-center justify-between gap-6">
-            <Stat label="Bookings missing flight details" value={stats.missingFlightDetails} />
-            <FlightReminderButton missingCount={stats.missingFlightDetails} />
+        <Card eyebrow="Travel" title="Flight details">
+          <div className="flex flex-wrap gap-4">
+            <StatGroup>
+              <Stat label="Have flight details" value={flightCoverage.have} />
+              <Stat label="Missing flight details" value={flightCoverage.missing} />
+              <Stat label="% missing" value={`${flightCoverage.missingPercent}%`} />
+            </StatGroup>
+            <StatGroup>
+              <p className="mb-1 text-xs font-semibold tracking-wide text-muted uppercase">
+                Of those missing, by location
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                {LOCATION_OPTIONS.map((loc) => (
+                  <Stat
+                    key={loc.key}
+                    label={loc.label}
+                    value={`${flightCoverage.byLocation[loc.key].missing} (${flightCoverage.byLocation[loc.key].missingShare}%)`}
+                  />
+                ))}
+              </div>
+            </StatGroup>
+          </div>
+          <div className="mt-4 flex items-center justify-end border-t border-hairline pt-4">
+            <FlightReminderButton missingCount={flightCoverage.missing} />
           </div>
         </Card>
 

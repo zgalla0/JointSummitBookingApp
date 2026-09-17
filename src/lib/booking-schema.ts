@@ -109,6 +109,16 @@ export const bookingFormSchema = z
     additionalNotes: z.string().trim().max(2000),
   })
   .superRefine((data, ctx) => {
+    // Applies regardless of attendance - if both legs are filled in, the
+    // return leg can't be scheduled before the outbound one.
+    if (data.flightArrival && data.flightDeparture && data.flightDeparture < data.flightArrival) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Departure can't be before arrival",
+        path: ["flightDeparture"],
+      });
+    }
+
     // Not attending: none of the requirements below apply.
     if (!data.isAttending) return;
 

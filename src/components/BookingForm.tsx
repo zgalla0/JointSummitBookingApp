@@ -271,6 +271,7 @@ export default function BookingForm({
             <Card
               eyebrow="Get started"
               title="Start the form here, or get your magic link again to edit your form"
+              className="border-2 border-accent-dark"
             >
               <form
                 onSubmit={identityForm.handleSubmit(onIdentitySubmit)}

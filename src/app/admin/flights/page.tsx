@@ -15,16 +15,25 @@ export default async function AdminFlightsPage() {
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
       <AdminNav />
       <div className="space-y-6">
-        <div className="animate-in space-y-1">
-          <p className="eyebrow">Admin</p>
-          <h1 className="text-3xl font-bold tracking-tight">Flights</h1>
+        <div className="animate-in flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1">
+            <p className="eyebrow">Admin</p>
+            <h1 className="text-3xl font-bold tracking-tight">Flights</h1>
+          </div>
+          <a
+            href="/api/admin/flights/export"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-accent-dark hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Export (.xlsx)
+          </a>
         </div>
 
         <Card eyebrow="Legend" title="How these are grouped" className="text-sm text-muted">
           <p>
             Attending, active bookings only, split into arrivals and departures. Within each, grouped
             by date and terminal so flights that land or leave around the same time and place are easy
-            to compare - the exact carpool groups are still up to you to work out from here.
+            to compare - the exact carpool groups are still up to you to work out from here. The
+            export above is grouped the exact same way.
           </p>
         </Card>
 

@@ -388,7 +388,10 @@ export default function BookingFields({
                               {...mainForm.register("flightDepartureNumber")}
                             />
                           </Field>
-                          <Field label="Departure date/time">
+                          <Field
+                            label="Departure date/time"
+                            error={mainForm.formState.errors.flightDeparture?.message}
+                          >
                             <input
                               type="datetime-local"
                               className="field"
@@ -398,7 +401,12 @@ export default function BookingFields({
                         </div>
                       </div>
                       <Field label="Other flight notes">
-                        <textarea className="field" rows={2} {...mainForm.register("flightNotes")} />
+                        <textarea
+                          className="field"
+                          rows={2}
+                          placeholder="Optional"
+                          {...mainForm.register("flightNotes")}
+                        />
                       </Field>
                     </div>
                   </Card>

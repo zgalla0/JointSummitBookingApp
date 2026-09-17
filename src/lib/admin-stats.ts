@@ -48,7 +48,6 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
   let discountWindowNights = 0;
   let outsideDiscountWindowNights = 0;
   let flaggedForReview = 0;
-  let missingFlightDetails = 0;
   const roomTypeCounts: Record<RoomTypeKey, number> = { DELUXE: 0, BRISAS: 0 };
   const dietaryCounts = Object.fromEntries(
     DIETARY_OPTION_KEYS.map((key) => [key, 0]),
@@ -86,15 +85,6 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
       roomTypeCounts[b.extraNightsRoomType as RoomTypeKey]++;
     }
 
-    if (
-      !b.flightArrivalAirline &&
-      !b.flightArrivalNumber &&
-      !b.flightDepartureAirline &&
-      !b.flightDepartureNumber
-    ) {
-      missingFlightDetails++;
-    }
-
     for (const key of parseJsonArray(b.dietaryOptions)) {
       if ((DIETARY_OPTION_KEYS as readonly string[]).includes(key)) {
         dietaryCounts[key as DietaryOptionKey]++;
@@ -120,7 +110,61 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
     roomTypeCounts,
     dietaryCounts,
     flaggedForReview,
-    missingFlightDetails,
+  };
+}
+
+function roundPercent(numerator: number, denominator: number): number {
+  return denominator > 0 ? Math.round((numerator / denominator) * 100) : 0;
+}
+
+export type FlightDetailsCoverage = {
+  total: number;
+  have: number;
+  missing: number;
+  missingPercent: number; // % of `total` that's missing, rounded
+  byLocation: Record<LocationKey, { missing: number; missingShare: number }>; // missingShare = % of `missing` from this location
+};
+
+/** Whether an attending, active booking has anything flight-related on
+ *  file at all - a person who filled in an airline or flight number for
+ *  either leg but not the other still counts as "have" here, since
+ *  they've at least started; the admin's own judgement (via the Flights
+ *  page) is what decides if a follow-up is actually needed. */
+export function computeFlightDetailsCoverage(allBookings: BookingWithGuests[]): FlightDetailsCoverage {
+  const active = allBookings.filter((b) => b.status === "ACTIVE" && b.isAttending);
+
+  let have = 0;
+  let missing = 0;
+  const missingByLocation = Object.fromEntries(LOCATION_KEYS.map((key) => [key, 0])) as Record<
+    LocationKey,
+    number
+  >;
+
+  for (const b of active) {
+    const hasDetails = Boolean(
+      b.flightArrivalAirline || b.flightArrivalNumber || b.flightDepartureAirline || b.flightDepartureNumber,
+    );
+    if (hasDetails) {
+      have++;
+    } else {
+      missing++;
+      if ((LOCATION_KEYS as readonly string[]).includes(b.location)) {
+        missingByLocation[b.location as LocationKey]++;
+      }
+    }
+  }
+
+  return {
+    total: active.length,
+    have,
+    missing,
+    missingPercent: roundPercent(missing, active.length),
+    byLocation: Object.fromEntries(
+      LOCATION_KEYS.map((key) => [
+        key,
+        { missing: missingByLocation[key], missingShare: roundPercent(missingByLocation[key], missing) },
+      ]),
+    ) as Record<LocationKey, { missing: number; missingShare: number }>,
   };
 }
 
