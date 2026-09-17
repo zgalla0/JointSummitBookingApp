@@ -1,4 +1,4 @@
-export type FaqListItem = string | { text: string; emphasize: true };
+export type FaqListItem = string | { text: string; emphasize: true } | { text: string; sublist: string[] };
 
 export type FaqBlock = { type: "p"; text: string } | { type: "ul"; items: FaqListItem[] };
 
@@ -30,10 +30,15 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
           ]),
           p("A few things to keep in mind:"),
           ul([
-            "Minibar snacks, in-room movies, and spa treatments are on you",
-            "Sightseeing and side trips are on you too",
-            "If you bring a partner, friend, or family member, their costs are yours to cover",
-            "Book economy for flights, check with us first before upgrading",
+            {
+              text: "Expenses on you:",
+              sublist: [
+                "Minibar snacks, in-room movies, and spa treatments",
+                "Sightseeing and side trips",
+                "If you bring a partner, friend, or family member, their costs (unless specifically stated otherwise)",
+              ],
+            },
+            "Book economy for flights, check with your manager first before upgrading",
           ]),
           p("Have a question that's not covered here? Ask your manager."),
         ],

@@ -5,9 +5,21 @@ import Card from "./ui/Card";
 import { FAQ_CATEGORIES, type FaqBlock, type FaqListItem } from "@/lib/faq-data";
 
 function FaqListItemView({ item }: { item: FaqListItem }) {
-  const emphasize = typeof item === "object" && item.emphasize;
   const text = typeof item === "string" ? item : item.text;
-  return <li className={emphasize ? "font-bold text-foreground" : ""}>{text}</li>;
+  const emphasize = typeof item === "object" && "emphasize" in item;
+  const sublist = typeof item === "object" && "sublist" in item ? item.sublist : null;
+  return (
+    <li className={emphasize ? "font-bold text-foreground" : ""}>
+      {text}
+      {sublist && (
+        <ul className="mt-1 list-disc space-y-1 pl-5">
+          {sublist.map((subItem, i) => (
+            <li key={i}>{subItem}</li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
 }
 
 function FaqBlockView({ block }: { block: FaqBlock }) {
