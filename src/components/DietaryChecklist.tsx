@@ -27,6 +27,8 @@ export default function DietaryChecklist({
     }
   }
 
+  const noneSelected = selected.includes("NONE");
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-y-2.5 sm:grid-cols-3">
@@ -35,6 +37,7 @@ export default function DietaryChecklist({
             key={option.key}
             label={option.label}
             checked={selected.includes(option.key)}
+            disabled={noneSelected && option.key !== "NONE"}
             onChange={() => toggle(option.key)}
           />
         ))}

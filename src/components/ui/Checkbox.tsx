@@ -5,7 +5,9 @@ const Checkbox = forwardRef<
   InputHTMLAttributes<HTMLInputElement> & { label: ReactNode }
 >(function Checkbox({ label, className = "", ...props }, ref) {
   return (
-    <label className={`flex cursor-pointer items-start gap-2.5 text-sm select-none ${className}`}>
+    <label
+      className={`flex items-start gap-2.5 text-sm select-none ${props.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"} ${className}`}
+    >
       <span className="relative mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center">
         <input ref={ref} type="checkbox" className="peer absolute inset-0 opacity-0" {...props} />
         <span className="pointer-events-none absolute inset-0 rounded-md border-2 border-hairline bg-surface transition-colors peer-checked:border-accent peer-checked:bg-accent peer-focus-visible:ring-2 peer-focus-visible:ring-accent-soft" />
