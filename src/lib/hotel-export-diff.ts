@@ -4,7 +4,12 @@ import { ROOM_TYPES } from "./room-types";
 
 export type BookingWithGuests = Booking & { guests: BookingGuest[] };
 
-export type ClassifiedRow = { booking: BookingWithGuests; whatChanged?: string };
+export type ClassifiedRow = { booking: BookingWithGuests; whatChanged?: string; changedFields?: string[] };
+
+/** A single detected change: `fields` are the Hotel Export row's column
+ *  keys (from hotel-export-workbook.ts's row shape) that it affects, used
+ *  to highlight only those cells instead of the whole row. */
+export type FieldChange = { fields: string[]; description: string };
 
 export type HotelExportClassification = {
   newRows: ClassifiedRow[];
@@ -51,48 +56,56 @@ function roomTypeLabel(key: string): string {
 }
 
 /** Describes what changed between a prior snapshot and the booking's
- *  current hotel-relevant fields, in plain language for the "What changed"
- *  export column. Returns [] when nothing hotel-relevant actually changed
- *  (e.g. the booking's `updatedAt` moved because of a dietary edit). `prev`
- *  is null when no snapshot was ever taken for this booking (it predates
- *  this feature, or this is the very first pull) - in that case we can't
- *  say what changed, only that something did. */
-export function diffHotelSnapshot(prev: SnapshotFields | null, curr: SnapshotFields): string[] {
-  if (!prev) return ["Updated (no prior snapshot on record to compare against)"];
+ *  current hotel-relevant fields, both in plain language for the "What
+ *  changed" export column and as the specific row columns it affects (so
+ *  only those cells get highlighted, not the whole row). Returns [] when
+ *  nothing hotel-relevant actually changed (e.g. the booking's `updatedAt`
+ *  moved because of a dietary edit). `prev` is null when no snapshot was
+ *  ever taken for this booking (it predates this feature, or this is the
+ *  very first pull) - in that case we can't say what changed, only that
+ *  something did, so `fields` comes back empty (the caller falls back to
+ *  highlighting the whole row when nothing more specific is known). */
+export function diffHotelSnapshot(prev: SnapshotFields | null, curr: SnapshotFields): FieldChange[] {
+  if (!prev) return [{ fields: [], description: "Updated (no prior snapshot on record to compare against)" }];
 
-  const changes: string[] = [];
+  const changes: FieldChange[] = [];
 
   if (+prev.stayStart !== +curr.stayStart || +prev.stayEnd !== +curr.stayEnd) {
-    changes.push(
-      `Stay dates updated (was ${toISODate(prev.stayStart)}–${toISODate(prev.stayEnd)}, now ${toISODate(curr.stayStart)}–${toISODate(curr.stayEnd)})`,
-    );
+    changes.push({
+      fields: ["checkIn", "checkOut", "nights"],
+      description: `Stay dates updated (was ${toISODate(prev.stayStart)}–${toISODate(prev.stayEnd)}, now ${toISODate(curr.stayStart)}–${toISODate(curr.stayEnd)})`,
+    });
   }
 
   if ((prev.companyPaidNights ?? "") !== (curr.companyPaidNights ?? "")) {
-    changes.push("Company-paid/self-paid night split changed");
+    changes.push({ fields: ["nightsCompanyPaid", "nightsSelfPaid"], description: "Company-paid/self-paid night split changed" });
   }
 
   if ((prev.extraNightsRoomType ?? "") !== (curr.extraNightsRoomType ?? "")) {
-    changes.push(
-      curr.extraNightsRoomType
+    changes.push({
+      fields: ["roomType"],
+      description: curr.extraNightsRoomType
         ? `Room type changed to ${roomTypeLabel(curr.extraNightsRoomType)}`
         : "Extra-night room type removed",
-    );
+    });
   }
 
   if (prev.guestCount !== curr.guestCount) {
     const diff = curr.guestCount - prev.guestCount;
-    changes.push(diff > 0 ? `Added ${diff} guest${diff === 1 ? "" : "s"}` : `Removed ${-diff} guest${-diff === 1 ? "" : "s"}`);
+    changes.push({
+      fields: ["totalOccupants", "additionalGuestNames"],
+      description: diff > 0 ? `Added ${diff} guest${diff === 1 ? "" : "s"}` : `Removed ${-diff} guest${-diff === 1 ? "" : "s"}`,
+    });
   } else if (prev.guestNames !== curr.guestNames) {
-    changes.push("Guest list updated");
+    changes.push({ fields: ["additionalGuestNames"], description: "Guest list updated" });
   }
 
   if (prev.reservationFirstName !== curr.reservationFirstName || prev.reservationLastName !== curr.reservationLastName) {
-    changes.push("Reservation name updated");
+    changes.push({ fields: ["reservationFirstName", "reservationLastName"], description: "Reservation name updated" });
   }
 
   if ((prev.nameTag ?? "") !== (curr.nameTag ?? "")) {
-    changes.push("Name tag updated");
+    changes.push({ fields: ["nameTag"], description: "Name tag updated" });
   }
 
   return changes;
@@ -132,7 +145,11 @@ export function classifyForHotelExport(
       const snapshot = snapshots.get(b.id) ?? null;
       const changes = diffHotelSnapshot(snapshot, currentHotelSnapshotFields(b));
       if (changes.length > 0) {
-        editedRows.push({ booking: b, whatChanged: changes.join("; ") });
+        editedRows.push({
+          booking: b,
+          whatChanged: changes.map((c) => c.description).join("; "),
+          changedFields: [...new Set(changes.flatMap((c) => c.fields))],
+        });
       }
     }
   }

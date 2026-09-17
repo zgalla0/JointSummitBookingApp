@@ -46,7 +46,10 @@ function hotelRow(row: ClassifiedRow, category: Category) {
 /** Builds the Hotel Export workbook: a single sheet listing only the
  *  bookings the hotel actually needs to hear about (new, edited, or
  *  cancelled since the last pull), color-coded per category, with a "What
- *  changed" column for edited rows - never a full re-dump of every booking. */
+ *  changed" column for edited rows - never a full re-dump of every booking.
+ *  New/Cancelled rows highlight in full (the whole booking is what's new or
+ *  gone); Edited rows highlight only the specific cell(s) that changed, so
+ *  e.g. a single updated stay date doesn't paint the whole row. */
 export function buildHotelExportWorkbook(
   newRows: ClassifiedRow[],
   editedRows: ClassifiedRow[],
@@ -64,9 +67,22 @@ export function buildHotelExportWorkbook(
   const legendRow = sheet.addRow([legendText]);
   legendRow.font = { italic: true, size: 9, color: { argb: "FF6B7280" } };
 
-  const rows: Array<{ category: Category; row: ReturnType<typeof hotelRow> }> = [
+  const rows: Array<{
+    category: Category;
+    row: ReturnType<typeof hotelRow>;
+    /** Only these column keys get filled, instead of the whole row -
+     *  undefined means "highlight the whole row" (New/Cancelled rows, and
+     *  Edited rows where the specific changed field(s) couldn't be
+     *  determined). */
+    highlightFields?: Set<string>;
+  }> = [
     ...newRows.map((r) => ({ category: "New" as const, row: hotelRow(r, "New") })),
-    ...editedRows.map((r) => ({ category: "Edited" as const, row: hotelRow(r, "Edited") })),
+    ...editedRows.map((r) => ({
+      category: "Edited" as const,
+      row: hotelRow(r, "Edited"),
+      highlightFields:
+        r.changedFields && r.changedFields.length > 0 ? new Set([...r.changedFields, "whatChanged"]) : undefined,
+    })),
     ...cancelledRows.map((r) => ({ category: "Cancelled" as const, row: hotelRow(r, "Cancelled") })),
   ];
 
@@ -86,10 +102,18 @@ export function buildHotelExportWorkbook(
     cell.fill = HEADER_FILL;
   });
 
-  rows.forEach(({ category, row }) => {
+  rows.forEach(({ category, row, highlightFields }) => {
     const excelRow = sheet.addRow(headers.map((h) => row[h as keyof typeof row] as ExcelJS.CellValue));
     const fill = fillFor(category);
-    excelRow.eachCell((cell) => (cell.fill = fill));
+    if (!highlightFields) {
+      excelRow.eachCell((cell) => (cell.fill = fill));
+    } else {
+      headers.forEach((header, i) => {
+        if (highlightFields.has(header)) {
+          excelRow.getCell(i + 1).fill = fill;
+        }
+      });
+    }
   });
 
   sheet.columns.forEach((col) => {
