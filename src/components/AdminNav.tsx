@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/admin/calendar", label: "Calendar" },
   { href: "/admin/flights", label: "Flights" },
   { href: "/admin/roster", label: "Roster check" },
+  { href: "/admin/hotel-export", label: "Hotel export" },
   { href: "/admin/static-content", label: "Static content" },
 ];
 

@@ -189,7 +189,7 @@ export default function BookingForm({
         </h1>
       </div>
 
-      <p className="animate-in rounded-2xl bg-warning-soft px-5 py-4 text-lg font-bold text-warning sm:text-xl">
+      <p className="animate-in rounded-2xl bg-notice-bg px-5 py-4 text-lg font-bold text-foreground sm:text-xl">
         {NO_ROOM_WARNING}
       </p>
 

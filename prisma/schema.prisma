@@ -137,6 +137,28 @@ model BookingGuest {
   @@index([bookingId])
 }
 
+// One row per Booking, holding the hotel-relevant field values as of the
+// last Hotel Export pull. Booking itself only tracks `updatedAt`, not which
+// fields changed or what they changed from, so this is the only place that
+// makes the "What changed" column on that export possible. Refreshed after
+// every Hotel Export pull; deleted once a booking is cancelled (nothing
+// left to diff going forward).
+model HotelExportSnapshot {
+  bookingId String @id
+
+  reservationFirstName String
+  reservationLastName  String
+  nameTag              String?
+  stayStart            DateTime
+  stayEnd              DateTime
+  companyPaidNights    String?
+  extraNightsRoomType  String?
+  guestCount           Int
+  guestNames           String // "First Last; First Last", sorted - for detecting added/removed/renamed guests
+
+  updatedAt DateTime @updatedAt
+}
+
 // Simple key/value store for admin-editable static content (event info,
 // Q&A, links) shown on the public form page. Populated/edited in Stage 3.
 model StaticContent {
