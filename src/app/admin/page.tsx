@@ -114,7 +114,7 @@ export default async function AdminDashboardPage() {
               href="/api/admin/export"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-accent-dark hover:scale-[1.02] active:scale-[0.98]"
             >
-              Export bookings (CSV)
+              Export bookings (.xlsx)
             </a>
           </div>
         </Card>
