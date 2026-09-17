@@ -150,7 +150,11 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     questions: [
       {
         question: "How should I balance in-person time with client commitments?",
-        blocks: [p("Try to shift your meetings around if you can, but clients come first.")],
+        blocks: [
+          p(
+            "We would love full participation in summit events but recognize that they may conflict with client commitments. It is common for Cuestans to come in and out of sessions to participate in client meetings.",
+          ),
+        ],
       },
       {
         question: "What if my schedule changes, or I get sick?",
@@ -164,7 +168,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: "What should I expect if I can't go?",
         blocks: [
           p(
-            "We'll try to set up a Teams meeting during the session so you can join remotely, but that doesn't always work out. If you're able to attend the session in person, that's still the best option.",
+            "We'll try to set up a Teams meeting during the session so you can join remotely, but that doesn't always work out so please bear with us.",
           ),
         ],
       },
