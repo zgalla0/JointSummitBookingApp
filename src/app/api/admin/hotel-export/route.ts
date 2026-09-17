@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     since: since ? since.toISOString() : null,
     generatedAt: now.toISOString(),
     counts,
-    draftEmail: buildHotelExportDraftEmail(rows),
+    draftEmail: buildHotelExportDraftEmail(counts),
     filename: `hotel-export-${toISODate(now)}.xlsx`,
     fileBase64: Buffer.from(buffer).toString("base64"),
   });

@@ -16,7 +16,7 @@ function ul(items: FaqListItem[]): FaqBlock {
 
 export const FAQ_CATEGORIES: FaqCategory[] = [
   {
-    title: "Expenses",
+    title: "Expenses & Timekeeping",
     questions: [
       {
         question: "What can I expense?",
@@ -40,7 +40,33 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
             },
             "Book economy for flights, check with your manager first before upgrading",
           ]),
+          p("In Expensify, use the following:"),
+          ul([
+            'Expense category: "Internal Travel - (meals, ground transportation etc)"',
+            'Customer/Project: "Internal:2026 Q3 All Hands"',
+            'Uncheck "Billable," leave "Reimbursable" checked',
+            "Anything over $75 needs a receipt",
+            "If you shared a ride or split any costs with someone else, note that in the expense description",
+          ]),
           p("Have a question that's not covered here? Ask your manager."),
+        ],
+      },
+      {
+        question: "How should I log my time in Kantata for the Summit?",
+        blocks: [
+          p(
+            'Use the Mavenlink project "Internal - Q3 2026 Summit North America" and log your hours there for any time you\'re at the Summit, including your travel time to and from the event.',
+          ),
+          p("If you don't see the project:"),
+          ul([
+            'Click "Projects" on the left-hand side',
+            'Set the filter to "Joinable Projects"',
+            'Search "Q3"',
+            'Click the blue "Join" button',
+          ]),
+          p(
+            "(The project name follows the same pattern for each summit, so check for the matching quarter and year if this changes in the future.)",
+          ),
         ],
       },
     ],
@@ -177,14 +203,6 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         blocks: [
           p(
             "We'll try to set up a Teams meeting during the session so you can join remotely, but that doesn't always work out so please bear with us.",
-          ),
-        ],
-      },
-      {
-        question: "How should I log my time in Kantata for the Summit?",
-        blocks: [
-          p(
-            "Search Kantata (Mavenlink) for the Summit project associated with the current quarter and year, join that project, and log your hours there for any time you're at the Summit, including your travel time to and from the event.",
           ),
         ],
       },
