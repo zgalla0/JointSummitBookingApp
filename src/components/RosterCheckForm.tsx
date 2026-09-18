@@ -53,13 +53,17 @@ export default function RosterCheckForm() {
     <div className="space-y-6">
       <Card eyebrow="Upload" title="Compare against the HR roster">
         <div className="space-y-4">
-          <p className="text-sm text-muted">
-            {loading
-              ? "Loading the roster on file..."
-              : result
-                ? `Roster on file: ${result.roster.fileName}, uploaded ${formatShortDate(result.roster.uploadedAt)}. Every admin sees this same roster until someone uploads a new one - results below are always compared against today's bookings.`
-                : "No roster on file yet - upload one below."}
-          </p>
+          {loading && <p className="text-sm text-muted">Loading the roster on file...</p>}
+          {!loading && result && (
+            <div className="rounded-xl border-2 border-accent bg-accent-soft p-3 text-sm font-semibold text-accent-dark">
+              Roster on file: {result.roster.fileName}, uploaded {formatShortDate(result.roster.uploadedAt)}.
+              Every admin sees this same roster until someone uploads a new one - results below are
+              always compared against today&apos;s bookings.
+            </div>
+          )}
+          {!loading && !result && (
+            <p className="text-sm text-muted">No roster on file yet - upload one below.</p>
+          )}
           <form onSubmit={onSubmit} className="space-y-4">
             <p className="text-sm text-muted">
               Upload the roster export (.xlsx, .csv, or .tsv) with columns for the employee&apos;s
@@ -116,7 +120,6 @@ export default function RosterCheckForm() {
                         <th className="px-3 py-2 font-semibold">Title</th>
                         <th className="px-3 py-2 font-semibold">Employment type</th>
                         <th className="px-3 py-2 font-semibold">Work email</th>
-                        <th className="px-3 py-2 font-semibold">Location</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -126,9 +129,6 @@ export default function RosterCheckForm() {
                           <td className="px-3 py-2">{r.title}</td>
                           <td className="px-3 py-2">{r.employmentType}</td>
                           <td className="px-3 py-2">{r.cuestaEmail}</td>
-                          <td className="px-3 py-2">
-                            {[r.state, r.country].filter(Boolean).join(", ")}
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -189,7 +189,6 @@ export default function RosterCheckForm() {
                       <th className="px-3 py-2 font-semibold">Title</th>
                       <th className="px-3 py-2 font-semibold">Employment type</th>
                       <th className="px-3 py-2 font-semibold">Work email</th>
-                      <th className="px-3 py-2 font-semibold">Location</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -199,9 +198,6 @@ export default function RosterCheckForm() {
                         <td className="px-3 py-2">{r.title}</td>
                         <td className="px-3 py-2">{r.employmentType}</td>
                         <td className="px-3 py-2">{r.cuestaEmail}</td>
-                        <td className="px-3 py-2">
-                          {[r.state, r.country].filter(Boolean).join(", ")}
-                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -1,7 +1,19 @@
 import ExcelJS from "exceljs";
-import type { RosterComparison } from "./roster-compare";
+import type { RosterComparison, RosterRow } from "./roster-compare";
 
 const HEADER_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5E7EB" } };
+
+// Mirrors exactly the columns shown on the Roster check page for these two
+// tables (no start date, no location) - so the export never shows more
+// than what's already visible on screen.
+function rosterRowForExport(r: RosterRow) {
+  return {
+    name: r.employeeName,
+    title: r.title,
+    employmentType: r.employmentType,
+    workEmail: r.cuestaEmail,
+  };
+}
 
 function addSheet(workbook: ExcelJS.Workbook, name: string, rows: Record<string, unknown>[]) {
   const sheet = workbook.addWorksheet(name);
@@ -35,8 +47,8 @@ export function buildRosterComparisonWorkbook(comparison: RosterComparison): Exc
   const workbook = new ExcelJS.Workbook();
   workbook.created = new Date();
 
-  addSheet(workbook, "Havent Submitted", comparison.missingFromForm);
-  addSheet(workbook, "Has Submitted", comparison.hasSubmittedForm);
+  addSheet(workbook, "Havent Submitted", comparison.missingFromForm.map(rosterRowForExport));
+  addSheet(workbook, "Has Submitted", comparison.hasSubmittedForm.map(rosterRowForExport));
   addSheet(workbook, "Not On Roster", comparison.submittedNotOnRoster);
 
   return workbook;

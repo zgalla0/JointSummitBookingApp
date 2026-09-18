@@ -52,6 +52,14 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         ],
       },
       {
+        question: "Can I buy flights from a different beginning or final destination?",
+        blocks: [
+          p(
+            "Yes. Your flight can start and end in two different locations if you're traveling from somewhere other than home before or after the summit, and it can be on different dates too if you want to arrive or leave earlier or later, **as long as the cost is comparable**. For example, if you live in NYC but happen to be in Denver beforehand and need to visit family in Tampa afterward, flying Denver to Mexico City to Tampa is fine.",
+          ),
+        ],
+      },
+      {
         question: "How should I log my time in Kantata for the Summit?",
         blocks: [
           p(
@@ -108,14 +116,6 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
   {
     title: "Managing Your Booking",
     questions: [
-      {
-        question: "Can my flight be to/from a different airport, or on different dates than the group?",
-        blocks: [
-          p(
-            "Yes - your flight doesn't have to match everyone else's. You can fly into or out of a different airport, or arrive or leave on different dates, as long as the total cost is comparable to a standard round-trip flight for the group's dates.",
-          ),
-        ],
-      },
       {
         question: "What if I need to change my flight or room after I submit?",
         blocks: [

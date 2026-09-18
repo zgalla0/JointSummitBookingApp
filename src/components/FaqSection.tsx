@@ -22,9 +22,25 @@ function FaqListItemView({ item }: { item: FaqListItem }) {
   );
 }
 
+// Supports simple **bold** spans within a paragraph's text, since FaqBlock's
+// "p" type is otherwise a plain string - matches the markdown-style
+// emphasis authors already write in faq-data.ts source text.
+function renderInlineMarkdown(text: string) {
+  const parts = text.split(/(\*\*.+?\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={i} className="font-bold text-foreground">
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
+
 function FaqBlockView({ block }: { block: FaqBlock }) {
   if (block.type === "p") {
-    return <p className="text-sm text-muted">{block.text}</p>;
+    return <p className="text-sm text-muted">{renderInlineMarkdown(block.text)}</p>;
   }
   return (
     <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
