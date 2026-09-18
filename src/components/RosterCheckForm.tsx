@@ -40,8 +40,8 @@ export default function RosterCheckForm() {
         <form onSubmit={onSubmit} className="space-y-4">
           <p className="text-sm text-muted">
             Upload the roster export (.xlsx, .csv, or .tsv) with columns for the employee&apos;s name,
-            title, employment type, Cuesta email, and location. Only the email column is matched -
-            column order doesn&apos;t matter.
+            title, employment type, work email, and location. The &quot;Work email&quot; column is
+            matched against each booking&apos;s Cuesta email - column order doesn&apos;t matter.
           </p>
           <input
             type="file"
@@ -82,7 +82,7 @@ export default function RosterCheckForm() {
                         <th className="px-3 py-2 font-semibold">Name</th>
                         <th className="px-3 py-2 font-semibold">Title</th>
                         <th className="px-3 py-2 font-semibold">Employment type</th>
-                        <th className="px-3 py-2 font-semibold">Cuesta email</th>
+                        <th className="px-3 py-2 font-semibold">Work email</th>
                         <th className="px-3 py-2 font-semibold">Location</th>
                       </tr>
                     </thead>
