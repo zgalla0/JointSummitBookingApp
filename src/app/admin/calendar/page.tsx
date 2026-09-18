@@ -3,11 +3,22 @@ import { config } from "@/lib/config";
 import { toISODate } from "@/lib/format";
 import { computeCalendarStats, type CalendarDayStats } from "@/lib/admin-stats";
 import { buildCalendarGrid, WEEKDAY_HEADER_SUN_FIRST } from "@/lib/stay-tiles-client";
-import { LOCATION_OPTIONS } from "@/lib/location-options";
+import { LOCATION_OPTIONS, type LocationKey } from "@/lib/location-options";
 import AdminNav from "@/components/AdminNav";
 import Card from "@/components/ui/Card";
 
 export const dynamic = "force-dynamic";
+
+// Reuses the app's own warm "pay-self" orange (see --pay-self-text in
+// globals.css) rather than an off-palette green, so the second block reads
+// as part of this app's theme instead of a color invented just for this
+// page. Set inline since Tailwind's generated color utilities only cover
+// the paired classes already registered in the design system.
+const PEOPLE_COLOR = "#7c3a12";
+
+function ptoBreakdownText(ptoByLocation: Record<LocationKey, number>): string {
+  return LOCATION_OPTIONS.map((o) => `${o.label.split(" ")[0]}: ${ptoByLocation[o.key] ?? 0}`).join(" · ");
+}
 
 export default async function AdminCalendarPage() {
   const bookings = await prisma.booking.findMany({ include: { guests: true } });
@@ -42,22 +53,30 @@ export default async function AdminCalendarPage() {
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
             <ul className="list-disc space-y-2 pl-5 text-sm text-muted">
               <li>
-                The <span className="font-bold text-accent-dark">blue number</span> is rooms booked
+                The <span className="font-bold text-accent-dark">blue block</span> is rooms booked
                 that night (one per booking, regardless of guests)
               </li>
               <li>
-                The <span className="font-bold text-emerald-700">green number</span> is total people
-                staying that night (attendee + guests)
+                The <span className="font-bold" style={{ color: PEOPLE_COLOR }}>orange block</span> is
+                total people staying that night (attendee + guests)
               </li>
               <li>
                 PTO = attendees marked PTO that day, broken down by location (
                 {LOCATION_OPTIONS.map((o) => o.label).join(" / ")})
               </li>
-              <li>A light-blue box marks a summit event day (Happy Hour, All Hands, or Dinner).</li>
+              <li>A light-blue day number marks a summit event day (Happy Hour, All Hands, or Dinner).</li>
             </ul>
             <div className="flex flex-shrink-0 flex-col items-center gap-1.5">
               <p className="text-xs font-semibold tracking-wide text-muted uppercase">Example</p>
-              <LegendExampleTile />
+              <SplitStatTile
+                day="22"
+                rooms={4}
+                people={7}
+                ptoTotal={2}
+                ptoBreakdown={ptoBreakdownText({ US_CAN_IRE: 1, LATAM: 1 })}
+                isSummitDay
+                size="lg"
+              />
             </div>
           </div>
         </Card>
@@ -93,49 +112,83 @@ export default async function AdminCalendarPage() {
 }
 
 function CalendarDayTile({ stats, eventLabels }: { stats: CalendarDayStats; eventLabels?: string[] }) {
-  const day = stats.date.slice(-2);
-  const isSummitDay = Boolean(eventLabels);
   return (
-    <div
-      title={eventLabels?.join(" · ")}
-      className={`flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-center ${
-        isSummitDay ? "border-accent bg-accent-soft" : "border-hairline bg-surface"
-      }`}
-    >
-      <span className="font-mono text-sm font-semibold">{day}</span>
-      <div className="flex items-baseline gap-3">
-        <span className="text-sm font-bold text-accent-dark">{stats.rooms}</span>
-        <span className="text-sm font-bold text-emerald-700">{stats.people}</span>
-      </div>
-      <span className="text-[10px] font-semibold text-warning">PTO {stats.ptoTotal}</span>
-      {stats.ptoTotal > 0 && (
-        <span className="text-[9px] leading-tight text-muted">
-          {LOCATION_OPTIONS.map((o) => `${o.label.split(" ")[0]}: ${stats.ptoByLocation[o.key] ?? 0}`).join(
-            " · ",
-          )}
-        </span>
-      )}
+    <div title={eventLabels?.join(" · ")}>
+      <SplitStatTile
+        day={stats.date.slice(-2)}
+        rooms={stats.rooms}
+        people={stats.people}
+        ptoTotal={stats.ptoTotal}
+        ptoBreakdown={stats.ptoTotal > 0 ? ptoBreakdownText(stats.ptoByLocation) : undefined}
+        isSummitDay={Boolean(eventLabels)}
+      />
     </div>
   );
 }
 
-/** A larger, static stand-in for a real day tile, shown next to the
- *  legend's bullet list with made-up numbers - so what each part of a
- *  tile means is obvious at a glance, not just described in text. Bigger
- *  than the actual calendar tiles on purpose, so it reads as a labeled
- *  example rather than blending into the grid below. */
-function LegendExampleTile() {
+/** Rooms and people each get their own solid block instead of a colored
+ *  number, so which is which never depends on remembering a color - the
+ *  block itself is captioned at the larger ("lg") size used for the
+ *  legend's example. The day number's strip picks up the app's existing
+ *  "light-blue = summit day" marking; the two stat blocks underneath stay
+ *  the same color either way, since that distinction already lives in the
+ *  day strip and doesn't need repeating. */
+function SplitStatTile({
+  day,
+  rooms,
+  people,
+  ptoTotal,
+  ptoBreakdown,
+  isSummitDay,
+  size = "sm",
+}: {
+  day: string;
+  rooms: number;
+  people: number;
+  ptoTotal: number;
+  ptoBreakdown?: string;
+  isSummitDay: boolean;
+  size?: "sm" | "lg";
+}) {
+  const big = size === "lg";
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-accent bg-accent-soft px-6 py-5 text-center shadow-sm">
-      <span className="font-mono text-lg font-semibold">22</span>
-      <div className="flex items-baseline gap-5">
-        <span className="text-2xl font-bold text-accent-dark">4</span>
-        <span className="text-2xl font-bold text-emerald-700">7</span>
+    <div
+      className={`overflow-hidden rounded-xl border ${big ? "shadow-sm" : ""} ${
+        isSummitDay ? "border-accent" : "border-hairline"
+      }`}
+    >
+      <div
+        className={`text-center font-mono font-semibold ${big ? "py-2 text-lg" : "py-1 text-xs"} ${
+          isSummitDay ? "bg-accent-soft text-accent-dark" : "bg-background text-muted"
+        }`}
+      >
+        {day}
       </div>
-      <span className="text-xs font-semibold text-warning">PTO 2</span>
-      <span className="text-[11px] leading-tight text-muted">
-        {LOCATION_OPTIONS.map((o) => `${o.label.split(" ")[0]}: 1`).join(" · ")}
-      </span>
+      <div className="flex">
+        <div className={`flex-1 bg-accent-dark text-center text-white ${big ? "py-3" : "py-1.5"}`}>
+          <span className={`block font-mono leading-none font-bold ${big ? "text-2xl" : "text-sm"}`}>
+            {rooms}
+          </span>
+          {big && <span className="mt-1 block text-[10px] tracking-wide uppercase opacity-80">rooms</span>}
+        </div>
+        <div
+          className={`flex-1 text-center text-white ${big ? "py-3" : "py-1.5"}`}
+          style={{ background: PEOPLE_COLOR }}
+        >
+          <span className={`block font-mono leading-none font-bold ${big ? "text-2xl" : "text-sm"}`}>
+            {people}
+          </span>
+          {big && <span className="mt-1 block text-[10px] tracking-wide uppercase opacity-80">people</span>}
+        </div>
+      </div>
+      <div className={`bg-warning-soft text-center font-bold text-warning ${big ? "py-1.5 text-xs" : "py-0.5 text-[9px]"}`}>
+        PTO {ptoTotal}
+      </div>
+      {ptoBreakdown && (
+        <div className={`text-center leading-tight text-muted ${big ? "py-1.5 text-[11px]" : "py-0.5 text-[7px]"}`}>
+          {ptoBreakdown}
+        </div>
+      )}
     </div>
   );
 }
