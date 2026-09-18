@@ -55,7 +55,7 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         question: "Can I buy flights from a different beginning or final destination?",
         blocks: [
           p(
-            "Yes. Your flight can start and end in two different locations if you're traveling from somewhere other than home before or after the summit, and it can be on different dates too if you want to arrive or leave earlier or later, **as long as the cost is comparable**. For example, if you live in NYC but happen to be in Denver beforehand and need to visit family in Tampa afterward, flying Denver to Mexico City to Tampa is fine.",
+            "Yes. Your flight can start and end in two different locations if you're traveling from somewhere other than home before or after the summit, and it can be on different dates too if you want to arrive or leave earlier or later, **as long as the cost is comparable**. For example, if you live in NYC but happen to be in Denver beforehand and need to visit family in Tampa afterward, flying Denver to Mexico City to Tampa is fine depending on costs.",
           ),
         ],
       },
