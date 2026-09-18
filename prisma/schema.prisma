@@ -189,3 +189,14 @@ model StaticContent {
   body      String? // markdown / plain text
   updatedAt DateTime @updatedAt
 }
+
+// The single, currently-on-file HR roster used by the Roster check page -
+// a new upload replaces this row wholesale (there's no history of past
+// uploads), so every admin who visits sees the same roster and can compare
+// against it without re-uploading, until someone uploads a new one.
+model RosterUpload {
+  id         String   @id @default("current")
+  fileName   String
+  rows       String // JSON-encoded RosterRow[]
+  uploadedAt DateTime @default(now())
+}

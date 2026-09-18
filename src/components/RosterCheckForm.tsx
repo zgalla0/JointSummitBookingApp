@@ -1,23 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { guessFirstName, type RosterComparison } from "@/lib/roster-compare";
+import { formatShortDate } from "@/lib/format";
 import Button from "./ui/Button";
 import Card from "./ui/Card";
 import RosterReminderButton from "./RosterReminderButton";
 
+type RosterMeta = { fileName: string; uploadedAt: string };
+type RosterCheckResult = RosterComparison & { roster: RosterMeta };
+
 export default function RosterCheckForm() {
   const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<RosterComparison | null>(null);
+  const [result, setResult] = useState<RosterCheckResult | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/roster-check")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.roster) setResult(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) return;
     setChecking(true);
     setError(null);
-    setResult(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -27,6 +41,7 @@ export default function RosterCheckForm() {
         throw new Error(data?.error?.formErrors?.[0] ?? "Something went wrong, please try again.");
       }
       setResult(data);
+      setFile(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -37,22 +52,32 @@ export default function RosterCheckForm() {
   return (
     <div className="space-y-6">
       <Card eyebrow="Upload" title="Compare against the HR roster">
-        <form onSubmit={onSubmit} className="space-y-4">
+        <div className="space-y-4">
           <p className="text-sm text-muted">
-            Upload the roster export (.xlsx, .csv, or .tsv) with columns for the employee&apos;s name,
-            title, employment type, work email, and location. The &quot;Work email&quot; column is
-            matched against each booking&apos;s Cuesta email - column order doesn&apos;t matter.
+            {loading
+              ? "Loading the roster on file..."
+              : result
+                ? `Roster on file: ${result.roster.fileName}, uploaded ${formatShortDate(result.roster.uploadedAt)}. Every admin sees this same roster until someone uploads a new one - results below are always compared against today's bookings.`
+                : "No roster on file yet - upload one below."}
           </p>
-          <input
-            type="file"
-            accept=".xlsx,.csv,.tsv"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="field"
-          />
-          <Button type="submit" disabled={!file || checking}>
-            {checking ? "Comparing..." : "Compare"}
-          </Button>
-        </form>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <p className="text-sm text-muted">
+              Upload the roster export (.xlsx, .csv, or .tsv) with columns for the employee&apos;s
+              name, title, employment type, work email, and location. The &quot;Work email&quot;
+              column is matched against each booking&apos;s Cuesta email - column order doesn&apos;t
+              matter. Uploading replaces the roster on file for everyone.
+            </p>
+            <input
+              type="file"
+              accept=".xlsx,.csv,.tsv"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="field"
+            />
+            <Button type="submit" disabled={!file || checking}>
+              {checking ? "Comparing..." : result ? "Replace roster" : "Compare"}
+            </Button>
+          </form>
+        </div>
       </Card>
 
       {error && <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</div>}

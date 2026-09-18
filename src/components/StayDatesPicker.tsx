@@ -149,12 +149,19 @@ export default function StayDatesPicker({
     onChange({ ptoDates: [...next] });
   }
 
-  // Hotel-style check-in/check-out picking: the first tile you click is
-  // check-in, the next one you click is check-out - and check-out itself is
-  // never a paid night, matching how every hotel site works. Re-clicking
-  // either end shrinks the stay from that end; clicking an interior night
-  // restarts the selection there; clicking outside the current range
-  // extends whichever end is closer.
+  // Google Flights/Hotels-style range picking:
+  //  1. Nothing selected (or a fresh restart) -> the click sets check-in;
+  //     no check-out yet.
+  //  2. Click on/after the current check-out, or no check-out exists yet ->
+  //     check-in stays put, check-out is set/extended to the clicked day.
+  //  3. Click before the current check-in -> check-out stays put, check-in
+  //     moves back to the clicked day.
+  //  4. Click on the current check-in, or strictly inside the current
+  //     range -> starts a brand new selection at that day (check-out
+  //     cleared), rather than silently redefining an end of the existing
+  //     range.
+  // Check-out itself is never a paid night, matching how every hotel site
+  // works - it's the day you leave, not a night you stayed.
   function toggleNight(day: string) {
     const clearSelection = () =>
       onChange({
@@ -165,75 +172,75 @@ export default function StayDatesPicker({
         extraNightsRoomType: "",
       });
 
-    const startFreshNight = (newDay: string) =>
+    // Rule 1, and the "clicked the current check-in / inside the range"
+    // half of rule 4: only a check-in is set after this, no check-out.
+    const startNewSelection = (newDay: string) =>
       onChange({
         stayStart: newDay,
-        stayEnd: addIsoDays(newDay, 1),
+        stayEnd: "",
         companyPaidNights: isForcedCompanyPaid(newDay) || isCompanyToggleable(newDay) ? [newDay] : [],
         ptoDates: value.ptoDates.filter((d) => d === newDay),
+        extraNightsRoomType: "",
       });
 
-    if (!value.stayStart || !value.stayEnd) {
-      startFreshNight(day);
+    // Rule 2: check-in stays at `checkIn`, check-out is set/extended to
+    // `newCheckOut` (the clicked day itself, excluded from the nights).
+    const setCheckOut = (checkIn: string, newCheckOut: string) => {
+      const seededCompanyPaid = new Set(value.companyPaidNights);
+      const filled = isoDateRange(checkIn, addIsoDays(newCheckOut, -1));
+      for (const d of filled) {
+        if (isForcedCompanyPaid(d)) seededCompanyPaid.add(d);
+      }
+      onChange({
+        stayStart: checkIn,
+        stayEnd: newCheckOut,
+        companyPaidNights: [...seededCompanyPaid].filter((d) => filled.includes(d)),
+      });
+    };
+
+    // Rule 3: check-out stays at `checkOut`, check-in moves back to
+    // `newCheckIn`.
+    const setCheckIn = (newCheckIn: string, checkOut: string) => {
+      const seededCompanyPaid = new Set(value.companyPaidNights);
+      const filled = isoDateRange(newCheckIn, addIsoDays(checkOut, -1));
+      for (const d of filled) {
+        if (isForcedCompanyPaid(d)) seededCompanyPaid.add(d);
+      }
+      onChange({
+        stayStart: newCheckIn,
+        stayEnd: checkOut,
+        companyPaidNights: [...seededCompanyPaid].filter((d) => filled.includes(d)),
+      });
+    };
+
+    if (!value.stayStart) {
+      startNewSelection(day);
+      return;
+    }
+
+    if (!value.stayEnd) {
+      // Only a check-in so far - no committed range to fall "inside" of yet.
+      if (day > value.stayStart) {
+        setCheckOut(value.stayStart, day);
+      } else if (day < value.stayStart) {
+        startNewSelection(day);
+      } else {
+        // Re-clicked the lone check-in day: cancel it.
+        clearSelection();
+      }
       return;
     }
 
     const checkIn = value.stayStart;
     const checkOut = value.stayEnd;
-    const lastNight = addIsoDays(checkOut, -1);
-    const onlyOneNight = checkIn === lastNight;
 
-    if (day === checkIn) {
-      // Re-clicking check-in: shrink the stay by one night from the start.
-      if (onlyOneNight) {
-        clearSelection();
-      } else {
-        const newCheckIn = addIsoDays(day, 1);
-        onChange({
-          stayStart: newCheckIn,
-          companyPaidNights: value.companyPaidNights.filter((d) => d !== day),
-          ptoDates: value.ptoDates.filter((d) => d !== day),
-        });
-      }
-      return;
-    }
-
-    if (day === checkOut) {
-      // Re-clicking check-out: pull it back by one night.
-      if (onlyOneNight) {
-        clearSelection();
-      } else {
-        onChange({
-          stayEnd: lastNight,
-          companyPaidNights: value.companyPaidNights.filter((d) => d !== lastNight),
-          ptoDates: value.ptoDates.filter((d) => d !== lastNight),
-        });
-      }
-      return;
-    }
-
-    if (day > checkIn && day < checkOut) {
-      // Interior night: restart the selection at just that day.
-      startFreshNight(day);
-      return;
-    }
-
-    const seededCompanyPaid = new Set(value.companyPaidNights);
-    if (day < checkIn) {
-      // Extend check-in earlier; check-out is unaffected.
-      const filled = isoDateRange(day, lastNight);
-      for (const d of filled) {
-        if (isForcedCompanyPaid(d)) seededCompanyPaid.add(d);
-      }
-      onChange({ stayStart: day, companyPaidNights: [...seededCompanyPaid].filter((d) => filled.includes(d)) });
+    if (day >= checkOut) {
+      setCheckOut(checkIn, day);
+    } else if (day < checkIn) {
+      setCheckIn(day, checkOut);
     } else {
-      // day > checkOut: extend check-out later - the clicked day itself
-      // becomes the new check-out, excluded from nights.
-      const filled = isoDateRange(checkIn, addIsoDays(day, -1));
-      for (const d of filled) {
-        if (isForcedCompanyPaid(d)) seededCompanyPaid.add(d);
-      }
-      onChange({ stayEnd: day, companyPaidNights: [...seededCompanyPaid].filter((d) => filled.includes(d)) });
+      // day === checkIn, or strictly between check-in and check-out.
+      startNewSelection(day);
     }
   }
 
@@ -433,13 +440,13 @@ function DayTile({
       type="button"
       data-date={day}
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${tileBorderClasses(selected, companyPaid, outsideDiscountWindow)}`}
+      className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${tileBorderClasses(selected || isCheckIn, companyPaid, outsideDiscountWindow)}`}
     >
       <span className="text-[10px] font-semibold tracking-wide text-muted uppercase">
         {isoWeekdayLabel(day)}
       </span>
       <span className="font-mono text-base font-semibold">{day.slice(-2)}</span>
-      {selected && isCheckIn && (
+      {isCheckIn && (
         <span className="rounded-full bg-slate-700 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-white uppercase">
           Check in
         </span>
