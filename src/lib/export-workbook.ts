@@ -125,8 +125,8 @@ export function buildExportWorkbook(bookings: BookingWithGuests[]): ExcelJS.Work
   const attending = bookings.filter((b) => b.isAttending && b.status === "ACTIVE");
   const notAttending = bookings.filter((b) => !b.isAttending);
 
-  addSheet(workbook, "Attending Summary", attending.map(attendingSummaryRow));
   addSheet(workbook, "All Bookings", bookings.map(fullRow));
+  addSheet(workbook, "Attending Summary", attending.map(attendingSummaryRow));
   addSheet(workbook, "Not Attending", notAttending.map(fullRow));
 
   return workbook;
