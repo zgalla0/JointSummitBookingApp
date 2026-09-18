@@ -1,26 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { parseRosterFile, compareRosterToBookings, type RosterRow } from "@/lib/roster-compare";
-
-// Single row, replaced wholesale on every upload - see RosterUpload in
-// schema.prisma for why there's no history of past uploads.
-const ROSTER_UPLOAD_ID = "current";
-
-async function compareAgainstCurrentBookings(roster: RosterRow[]) {
-  const bookings = await prisma.booking.findMany({
-    where: { status: "ACTIVE" },
-    select: { id: true, cuestaEmail: true, firstName: true, lastName: true, isAttending: true },
-  });
-
-  return compareRosterToBookings(
-    roster,
-    bookings.map((b) => ({
-      bookingId: b.id,
-      name: `${b.firstName} ${b.lastName}${b.isAttending ? "" : " (not attending)"}`,
-      cuestaEmail: b.cuestaEmail,
-    })),
-  );
-}
+import { parseRosterFile, type RosterRow } from "@/lib/roster-compare";
+import { compareAgainstCurrentBookings, ROSTER_UPLOAD_ID } from "@/lib/roster-check-service";
 
 // Whatever roster is currently on file (if any), compared fresh against
 // today's bookings - so any admin can load this page and see up-to-date

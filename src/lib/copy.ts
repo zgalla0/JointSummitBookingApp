@@ -9,7 +9,7 @@ export const NOTICE = {
   playfulEmoji: "✨",
   playful: "Don't slack/email the planning committee!",
   summitDetails:
-    "Need details on how the summits work? Ask your manager, buddy, or someone in your project who has gone to one.",
+    "Need details on how the summits work? Check the FAQ below, and if that doesn't answer your question, ask your manager, buddy, or someone in your project who has gone to one.",
   closer:
     "Run into something the page can't handle? That's the only time to reach out directly. Due to how many " +
     "people are attending the event, we cannot field all questions.",

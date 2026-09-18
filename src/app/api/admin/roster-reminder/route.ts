@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendFormReminderEmail } from "@/lib/email";
+import { defaultRosterReminderTemplate, renderRosterReminder } from "@/lib/roster-reminder-email";
 
 type Recipient = { email: string; firstName: string };
 
@@ -25,9 +26,11 @@ function parseRecipients(value: unknown): Recipient[] {
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const recipients = parseRecipients((body as { recipients?: unknown })?.recipients);
+  const rawTemplate = (body as { template?: unknown })?.template;
+  const template = typeof rawTemplate === "string" && rawTemplate.trim() ? rawTemplate : defaultRosterReminderTemplate();
 
   for (const r of recipients) {
-    await sendFormReminderEmail({ to: r.email, firstName: r.firstName || "there" });
+    await sendFormReminderEmail({ to: r.email, body: renderRosterReminder(template, r.firstName || "there") });
   }
 
   return NextResponse.json({ sent: recipients.length });

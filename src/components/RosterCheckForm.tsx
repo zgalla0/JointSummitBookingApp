@@ -85,11 +85,19 @@ export default function RosterCheckForm() {
       {result && (
         <>
           <Card eyebrow="Results" title="Summary" className="text-sm text-muted">
-            <p>
-              {result.rosterRowCount} people on the roster · {result.missingFromForm.length} haven&apos;t
-              submitted the form · {result.submittedNotOnRoster.length} submitted with an email not on
-              the roster.
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <p>
+                {result.rosterRowCount} people on the roster · {result.missingFromForm.length} haven&apos;t
+                submitted the form · {result.hasSubmittedForm.length} have · {result.submittedNotOnRoster.length}{" "}
+                submitted with an email not on the roster.
+              </p>
+              <a
+                href="/api/admin/roster-check/export"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-accent-soft px-4 py-2.5 text-sm font-semibold text-accent-dark shadow-sm transition-all duration-200 ease-out hover:bg-accent-soft/70 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Export tables (.xlsx)
+              </a>
+            </div>
           </Card>
 
           <Card
@@ -158,6 +166,42 @@ export default function RosterCheckForm() {
                       <tr key={b.bookingId} className="border-b border-hairline last:border-0">
                         <td className="px-3 py-2 font-medium">{b.name}</td>
                         <td className="px-3 py-2">{b.cuestaEmail}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+
+          <Card
+            eyebrow="On roster"
+            title={`Has submitted the form (${result.hasSubmittedForm.length})`}
+          >
+            {result.hasSubmittedForm.length === 0 ? (
+              <p className="text-sm text-muted">Nobody on the roster has submitted yet.</p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-hairline">
+                <table className="w-full min-w-[600px] text-sm">
+                  <thead>
+                    <tr className="border-b border-hairline bg-background text-left text-xs text-muted uppercase">
+                      <th className="px-3 py-2 font-semibold">Name</th>
+                      <th className="px-3 py-2 font-semibold">Title</th>
+                      <th className="px-3 py-2 font-semibold">Employment type</th>
+                      <th className="px-3 py-2 font-semibold">Work email</th>
+                      <th className="px-3 py-2 font-semibold">Location</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.hasSubmittedForm.map((r, i) => (
+                      <tr key={`${r.cuestaEmail}-${i}`} className="border-b border-hairline last:border-0">
+                        <td className="px-3 py-2 font-medium">{r.employeeName}</td>
+                        <td className="px-3 py-2">{r.title}</td>
+                        <td className="px-3 py-2">{r.employmentType}</td>
+                        <td className="px-3 py-2">{r.cuestaEmail}</td>
+                        <td className="px-3 py-2">
+                          {[r.state, r.country].filter(Boolean).join(", ")}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

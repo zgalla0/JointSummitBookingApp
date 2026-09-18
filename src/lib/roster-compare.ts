@@ -19,6 +19,8 @@ export type BookingEmailEntry = {
 export type RosterComparison = {
   /** On the roster, but no active booking uses that email. */
   missingFromForm: RosterRow[];
+  /** On the roster, and an active booking already uses that email. */
+  hasSubmittedForm: RosterRow[];
   /** Has an active booking, but that email isn't on the roster. */
   submittedNotOnRoster: BookingEmailEntry[];
   rosterRowCount: number;
@@ -162,9 +164,12 @@ export function compareRosterToBookings(
   const missingFromForm = roster.filter(
     (r) => r.cuestaEmail !== "" && !bookingEmails.has(normalizeEmail(r.cuestaEmail)),
   );
+  const hasSubmittedForm = roster.filter(
+    (r) => r.cuestaEmail !== "" && bookingEmails.has(normalizeEmail(r.cuestaEmail)),
+  );
   const submittedNotOnRoster = bookings.filter(
     (b) => b.cuestaEmail !== "" && !rosterEmails.has(normalizeEmail(b.cuestaEmail)),
   );
 
-  return { missingFromForm, submittedNotOnRoster, rosterRowCount: roster.length };
+  return { missingFromForm, hasSubmittedForm, submittedNotOnRoster, rosterRowCount: roster.length };
 }

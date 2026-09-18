@@ -211,7 +211,8 @@ export default function BookingForm({
           >
             <ul className="list-disc space-y-3 pl-5 text-sm text-muted">
               <li>
-                This form is the attendance and hotel form.
+                This form lets the planning team know who&apos;s coming to each event, and helps us
+                book the right hotel dates for you.
                 <ul className="mt-1 list-disc space-y-1 pl-5">
                   <li>
                     <span className="rounded bg-warning-soft px-1.5 py-0.5 font-bold text-warning">
@@ -223,12 +224,6 @@ export default function BookingForm({
               <li>
                 Make sure to buy your flight as soon as you can
                 <ul className="mt-1 list-disc space-y-1 pl-5">
-                  <li>
-                    Your flight can be to two separate locations if you&apos;re
-                    starting/ending somewhere different, and can be on different
-                    dates if you want to arrive or leave at different times so
-                    long as the cost is comparable.
-                  </li>
                   <li>
                     The flight should be expensed however you expense your
                     expenses (differs by country and FTE/1099).
