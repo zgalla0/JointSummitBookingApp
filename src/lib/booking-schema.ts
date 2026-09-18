@@ -28,11 +28,19 @@ export const guestSchema = z
     }
   });
 
-// Step 0: duplicate check, collected before the rest of the form.
+// Step 0: duplicate check, collected before the rest of the form. This
+// email carries through as the one Cuesta email used for the whole
+// booking (see BookingFields.tsx) - hence the same domain requirement.
 export const identitySchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
-  email: z.string().trim().email("Enter a valid email"),
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email")
+    .refine((v) => v.toLowerCase().endsWith("@cuestapartners.com"), {
+      message: "Cuesta email must be a @cuestapartners.com address",
+    }),
 });
 
 export const bookingFormSchema = z

@@ -59,12 +59,6 @@ export default function BookingFields({
    *  defeat the point of gating them. */
   onGateDoneChange?: (done: boolean) => void;
 }) {
-  const [sameEmail, setSameEmail] = useState(
-    mainForm.getValues("hotelEmail") === mainForm.getValues("detailsEmail"),
-  );
-  const [sameCuestaEmail, setSameCuestaEmail] = useState(
-    mainForm.getValues("detailsEmail") === mainForm.getValues("cuestaEmail"),
-  );
   const [miniStep, setMiniStepState] = useState<MiniStep>(gateEvents ? "about" : "done");
 
   function setMiniStep(next: MiniStep) {
@@ -78,8 +72,6 @@ export default function BookingFields({
     const valid = await mainForm.trigger([
       "reservationFirstName",
       "reservationLastName",
-      "hotelEmail",
-      "detailsEmail",
       "cuestaEmail",
       "location",
     ]);
@@ -94,8 +86,7 @@ export default function BookingFields({
   const companyPaidNights = mainForm.watch("companyPaidNights");
   const ptoDates = mainForm.watch("ptoDates");
   const extraNightsRoomType = mainForm.watch("extraNightsRoomType");
-  const hotelEmail = mainForm.watch("hotelEmail");
-  const detailsEmail = mainForm.watch("detailsEmail");
+  const cuestaEmail = mainForm.watch("cuestaEmail");
   const attendingHappyHour = mainForm.watch("attendingHappyHour");
   const attendingDinner = mainForm.watch("attendingDinner");
   const dietaryOptions = mainForm.watch("dietaryOptions");
@@ -108,6 +99,16 @@ export default function BookingFields({
   // than leaving it at `errors.guests.message` directly.
   const guestsListError =
     mainForm.formState.errors.guests?.root?.message ?? mainForm.formState.errors.guests?.message;
+
+  // There's only one email on this form now (the Cuesta email) - it's
+  // written into hotelEmail/detailsEmail too so the rest of the app (which
+  // still has separate columns for "email used for the hotel booking" and
+  // "email for transportation/schedule details") keeps working unchanged.
+  function setCuestaEmail(value: string) {
+    mainForm.setValue("cuestaEmail", value, { shouldValidate: true, shouldDirty: true });
+    mainForm.setValue("hotelEmail", value, { shouldValidate: true, shouldDirty: true });
+    mainForm.setValue("detailsEmail", value, { shouldValidate: true, shouldDirty: true });
+  }
 
   return (
     <>
@@ -137,36 +138,14 @@ export default function BookingFields({
               {...mainForm.register("nameTag")}
             />
           </Field>
-          <Field label="Email for hotel booking" error={mainForm.formState.errors.hotelEmail?.message}>
-            <input className="field" {...mainForm.register("hotelEmail")} />
-          </Field>
-          <Field label="Email for summit details" error={mainForm.formState.errors.detailsEmail?.message}>
-            <input className="field" disabled={sameEmail} {...mainForm.register("detailsEmail")} />
-          </Field>
-          <Checkbox
-            label="Use the same email for summit details"
-            checked={sameEmail}
-            onChange={(e) => {
-              setSameEmail(e.target.checked);
-              if (e.target.checked) mainForm.setValue("detailsEmail", hotelEmail);
-            }}
-          />
           <Field label="Cuesta email" error={mainForm.formState.errors.cuestaEmail?.message}>
             <input
               className="field"
               placeholder="you@cuestapartners.com"
-              disabled={sameCuestaEmail}
-              {...mainForm.register("cuestaEmail")}
+              value={cuestaEmail}
+              onChange={(e) => setCuestaEmail(e.target.value)}
             />
           </Field>
-          <Checkbox
-            label="Use the same email as summit details"
-            checked={sameCuestaEmail}
-            onChange={(e) => {
-              setSameCuestaEmail(e.target.checked);
-              if (e.target.checked) mainForm.setValue("cuestaEmail", detailsEmail);
-            }}
-          />
           <Field label="Location" error={mainForm.formState.errors.location?.message}>
             <div
               className={`space-y-2 pt-1 ${

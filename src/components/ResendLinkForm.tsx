@@ -55,8 +55,8 @@ export default function ResendLinkForm() {
             <input className="field" {...form.register("lastName")} />
           </Field>
         </div>
-        <Field label="Email" error={form.formState.errors.email?.message}>
-          <input className="field" {...form.register("email")} />
+        <Field label="Cuesta email" error={form.formState.errors.email?.message}>
+          <input className="field" placeholder="you@cuestapartners.com" {...form.register("email")} />
         </Field>
         <Button type="submit" disabled={submitting}>
           {submitting ? "Sending..." : "Send my link"}

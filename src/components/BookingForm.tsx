@@ -298,11 +298,12 @@ export default function BookingForm({
                   </Field>
                 </div>
                 <Field
-                  label="Email"
+                  label="Cuesta email"
                   error={identityForm.formState.errors.email?.message}
                 >
                   <input
                     className="field"
+                    placeholder="you@cuestapartners.com"
                     {...identityForm.register("email")}
                   />
                 </Field>
