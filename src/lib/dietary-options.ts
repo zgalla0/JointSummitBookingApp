@@ -1,14 +1,15 @@
 export const DIETARY_OPTIONS = [
-  { key: "NONE", label: "None" },
   { key: "VEGETARIAN", label: "Vegetarian" },
   { key: "VEGAN", label: "Vegan" },
+  { key: "HALAL", label: "Halal" },
+  { key: "KOSHER", label: "Kosher" },
+  { key: "PEANUTS", label: "Peanuts" },
+  { key: "TREE_NUTS", label: "Tree nuts" },
+  { key: "DAIRY", label: "Milk and dairy" },
+  { key: "EGGS", label: "Eggs" },
   { key: "GLUTEN_FREE", label: "Gluten Free" },
   { key: "SHELLFISH", label: "Shellfish" },
-  { key: "KOSHER", label: "Kosher" },
-  { key: "HALAL", label: "Halal" },
-  { key: "NO_PEANUTS", label: "No Peanuts" },
-  { key: "NO_NUTS", label: "No Nuts (Peanuts ok)" },
-  { key: "PESCATARIAN", label: "Pescatarian" },
+  { key: "SESAME", label: "Sesame" },
   { key: "OTHER", label: "Other" },
 ] as const;
 

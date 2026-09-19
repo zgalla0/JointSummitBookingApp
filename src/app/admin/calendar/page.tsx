@@ -9,13 +9,6 @@ import Card from "@/components/ui/Card";
 
 export const dynamic = "force-dynamic";
 
-// Reuses the app's own warm "pay-self" orange (see --pay-self-text in
-// globals.css) rather than an off-palette green, so the second block reads
-// as part of this app's theme instead of a color invented just for this
-// page. Set inline since Tailwind's generated color utilities only cover
-// the paired classes already registered in the design system.
-const PEOPLE_COLOR = "#7c3a12";
-
 function ptoBreakdownText(ptoByLocation: Record<LocationKey, number>): string {
   return LOCATION_OPTIONS.map((o) => `${o.label.split(" ")[0]}: ${ptoByLocation[o.key] ?? 0}`).join(" · ");
 }
@@ -53,12 +46,12 @@ export default async function AdminCalendarPage() {
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
             <ul className="list-disc space-y-2 pl-5 text-sm text-muted">
               <li>
-                The <span className="font-bold text-accent-dark">blue block</span> is rooms booked
-                that night (one per booking, regardless of guests)
+                The <span className="font-bold text-accent-dark">darker blue block</span> is rooms
+                booked that night (one per booking, regardless of guests)
               </li>
               <li>
-                The <span className="font-bold" style={{ color: PEOPLE_COLOR }}>orange block</span> is
-                total people staying that night (attendee + guests)
+                The <span className="font-bold text-accent-dark">lighter blue block</span> is total people
+                staying that night (attendee + guests)
               </li>
               <li>
                 PTO = attendees marked PTO that day, broken down by location (
@@ -153,7 +146,7 @@ function SplitStatTile({
   const big = size === "lg";
   return (
     <div
-      className={`overflow-hidden rounded-xl border ${big ? "shadow-sm" : ""} ${
+      className={`overflow-hidden rounded-xl border ${big ? "w-64 shadow-sm" : ""} ${
         isSummitDay ? "border-accent" : "border-hairline"
       }`}
     >
@@ -171,10 +164,7 @@ function SplitStatTile({
           </span>
           {big && <span className="mt-1 block text-[10px] tracking-wide uppercase opacity-80">rooms</span>}
         </div>
-        <div
-          className={`flex-1 text-center text-white ${big ? "py-3" : "py-1.5"}`}
-          style={{ background: PEOPLE_COLOR }}
-        >
+        <div className={`flex-1 bg-accent text-center text-foreground ${big ? "py-3" : "py-1.5"}`}>
           <span className={`block font-mono leading-none font-bold ${big ? "text-2xl" : "text-sm"}`}>
             {people}
           </span>

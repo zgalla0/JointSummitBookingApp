@@ -50,17 +50,22 @@ export async function POST(request: NextRequest) {
 
   const workbook = buildHotelExportWorkbook(rows, since);
   const buffer = await workbook.xlsx.writeBuffer();
+  const counts = { newCount: newRows.length, editedCount: editedRows.length, cancelledCount: cancelledRows.length };
+  const draftEmail = buildHotelExportDraftEmail(counts);
 
   // Every send re-bases the snapshot table against current data (so future
   // diffs stay accurate, even for bookings not included in this pull) and
   // advances the tracked "last export" timestamp - regardless of whether
   // this particular pull used a manual override for its comparison window.
   const now = new Date();
+  const filename = `hotel-export-${toISODate(now)}.xlsx`;
   const activeAttending = bookings.filter((b) => b.status === "ACTIVE" && b.isAttending);
   const cancelled = bookings.filter((b) => b.status === "CANCELLED");
 
   await prisma.$transaction([
-    prisma.hotelExportLog.create({ data: { pulledBy, purpose, createdAt: now } }),
+    prisma.hotelExportLog.create({
+      data: { pulledBy, purpose, createdAt: now, filename, fileData: Buffer.from(buffer), draftEmail },
+    }),
     prisma.staticContent.upsert({
       where: { key: LAST_HOTEL_EXPORT_PULLED_AT_KEY },
       create: { key: LAST_HOTEL_EXPORT_PULLED_AT_KEY, body: now.toISOString() },
@@ -77,14 +82,12 @@ export async function POST(request: NextRequest) {
     ...cancelled.map((b) => prisma.hotelExportSnapshot.deleteMany({ where: { bookingId: b.id } })),
   ]);
 
-  const counts = { newCount: newRows.length, editedCount: editedRows.length, cancelledCount: cancelledRows.length };
-
   return NextResponse.json({
     since: since ? since.toISOString() : null,
     generatedAt: now.toISOString(),
     counts,
-    draftEmail: buildHotelExportDraftEmail(counts),
-    filename: `hotel-export-${toISODate(now)}.xlsx`,
+    draftEmail,
+    filename,
     fileBase64: Buffer.from(buffer).toString("base64"),
   });
 }

@@ -5,9 +5,10 @@ import {
   computeAdminStats,
   computePtoCoverage,
   computeFlightDetailsCoverage,
+  computeDietaryByEvent,
   type PtoBucketStats,
 } from "@/lib/admin-stats";
-import { DIETARY_OPTIONS } from "@/lib/dietary-options";
+import { DIETARY_OPTIONS, type DietaryOptionKey } from "@/lib/dietary-options";
 import { ROOM_TYPES } from "@/lib/room-types";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
 import { formatMonthDay } from "@/lib/format";
@@ -40,6 +41,35 @@ function StatGroup({ children }: { children: ReactNode }) {
   );
 }
 
+/** Collapsed by default (native <details>, no client JS needed) since three
+ *  events' worth of dietary options is a lot to show all at once, and most
+ *  visits only need one event at a time. */
+function DietaryEventSection({
+  label,
+  counts,
+}: {
+  label: string;
+  counts: Record<DietaryOptionKey, number>;
+}) {
+  const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+  return (
+    <details className="group rounded-xl border border-hairline">
+      <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+        <span>{label}</span>
+        <span className="flex items-center gap-2 text-xs font-medium text-muted">
+          {total} response{total === 1 ? "" : "s"}
+          <span className="transition-transform group-open:rotate-180">▾</span>
+        </span>
+      </summary>
+      <div className="grid grid-cols-2 gap-4 border-t border-hairline px-4 py-4 sm:grid-cols-3">
+        {DIETARY_OPTIONS.map((option) => (
+          <Stat key={option.key} label={option.label} value={counts[option.key]} />
+        ))}
+      </div>
+    </details>
+  );
+}
+
 function PtoBucketRow({ heading, bucket }: { heading: string; bucket: PtoBucketStats }) {
   return (
     <div>
@@ -59,6 +89,7 @@ export default async function AdminDashboardPage() {
   const stats = computeAdminStats(bookings);
   const pto = computePtoCoverage(bookings);
   const flightCoverage = computeFlightDetailsCoverage(bookings);
+  const dietaryByEvent = computeDietaryByEvent(bookings);
   const pivotLabel = formatMonthDay(pto.pivotIso);
 
   return (
@@ -121,10 +152,13 @@ export default async function AdminDashboardPage() {
         </Card>
 
         <Card eyebrow="Food" title="Dietary breakdown">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {DIETARY_OPTIONS.map((option) => (
-              <Stat key={option.key} label={option.label} value={stats.dietaryCounts[option.key]} />
-            ))}
+          <div className="space-y-3">
+            <p className="text-sm text-muted">
+              By event, since not everyone attending the Summit joins every event.
+            </p>
+            <DietaryEventSection label="Happy Hour" counts={dietaryByEvent.happyHour} />
+            <DietaryEventSection label="All Hands" counts={dietaryByEvent.allHands} />
+            <DietaryEventSection label="Dinner" counts={dietaryByEvent.dinner} />
           </div>
         </Card>
 

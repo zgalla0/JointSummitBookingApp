@@ -49,9 +49,6 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
   let outsideDiscountWindowNights = 0;
   let flaggedForReview = 0;
   const roomTypeCounts: Record<RoomTypeKey, number> = { DELUXE: 0, BRISAS: 0 };
-  const dietaryCounts = Object.fromEntries(
-    DIETARY_OPTION_KEYS.map((key) => [key, 0]),
-  ) as Record<DietaryOptionKey, number>;
 
   const notAttending = active.filter((b) => !b.isAttending).length;
 
@@ -85,11 +82,6 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
       roomTypeCounts[b.extraNightsRoomType as RoomTypeKey]++;
     }
 
-    for (const key of parseJsonArray(b.dietaryOptions)) {
-      if ((DIETARY_OPTION_KEYS as readonly string[]).includes(key)) {
-        dietaryCounts[key as DietaryOptionKey]++;
-      }
-    }
   }
 
   return {
@@ -108,9 +100,50 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
     discountWindowNights,
     outsideDiscountWindowNights,
     roomTypeCounts,
-    dietaryCounts,
     flaggedForReview,
   };
+}
+
+export type EventKey = "happyHour" | "allHands" | "dinner";
+
+export type DietaryByEventStats = Record<EventKey, Record<DietaryOptionKey, number>>;
+
+function emptyDietaryCounts(): Record<DietaryOptionKey, number> {
+  return Object.fromEntries(DIETARY_OPTION_KEYS.map((key) => [key, 0])) as Record<DietaryOptionKey, number>;
+}
+
+function addDietaryCounts(bucket: Record<DietaryOptionKey, number>, raw: string | null) {
+  for (const key of parseJsonArray(raw)) {
+    if ((DIETARY_OPTION_KEYS as readonly string[]).includes(key)) {
+      bucket[key as DietaryOptionKey]++;
+    }
+  }
+}
+
+/** Dietary counts split per event, since attendance varies by event (not
+ *  everyone attending the Summit joins Happy Hour or Dinner, and guests -
+ *  who eat too - only ever join those two, never All Hands). Includes
+ *  guest dietary needs alongside the attendee's own, for whichever events
+ *  each person is actually down for. */
+export function computeDietaryByEvent(allBookings: BookingWithGuests[]): DietaryByEventStats {
+  const result: DietaryByEventStats = {
+    happyHour: emptyDietaryCounts(),
+    allHands: emptyDietaryCounts(),
+    dinner: emptyDietaryCounts(),
+  };
+
+  const active = allBookings.filter((b) => b.status === "ACTIVE" && b.isAttending);
+  for (const b of active) {
+    if (b.attendingHappyHour) addDietaryCounts(result.happyHour, b.dietaryOptions);
+    if (b.attendingAllHands) addDietaryCounts(result.allHands, b.dietaryOptions);
+    if (b.attendingDinner) addDietaryCounts(result.dinner, b.dietaryOptions);
+    for (const g of b.guests) {
+      if (g.attendingHappyHour) addDietaryCounts(result.happyHour, g.dietaryOptions);
+      if (g.attendingDinner) addDietaryCounts(result.dinner, g.dietaryOptions);
+    }
+  }
+
+  return result;
 }
 
 function roundPercent(numerator: number, denominator: number): number {

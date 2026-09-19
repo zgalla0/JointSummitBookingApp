@@ -173,12 +173,19 @@ model HotelExportSnapshot {
 
 // Audit trail for the "Send to Hotel" export - who pulled hotel data and
 // why, since that export leaves the building. The "View All Data" export
-// is internal-only and never writes here.
+// is internal-only and never writes here. filename/fileData/draftEmail are
+// a snapshot of exactly what was generated at pull time, so a past pull can
+// be re-downloaded/re-viewed later without recomputing a diff against data
+// that has since changed. Entries logged before this snapshot existed have
+// these as null.
 model HotelExportLog {
-  id        String   @id @default(cuid())
-  pulledBy  String
-  purpose   String
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  pulledBy   String
+  purpose    String
+  createdAt  DateTime @default(now())
+  filename   String?
+  fileData   Bytes?
+  draftEmail String?
 }
 
 // Simple key/value store for admin-editable static content (event info,
