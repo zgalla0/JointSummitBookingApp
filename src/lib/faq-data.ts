@@ -178,10 +178,10 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
     title: "Family & Guests",
     questions: [
       {
-        question: "Can I bring my kids/family, and are they included in any events?",
+        question: "Can I bring my partner/kids, and are they included in any events?",
         blocks: [
           p(
-            "You're welcome to bring family along and add them as a guest in your room (see the additional guest details above for costs). For the Mexico City summit, family members are able to join the Happy Hour and Dinner.",
+            "You're welcome to bring partners/family along and add them as a guest in your room (see the additional guest details above for costs). For the Mexico City summit, a partner/adult family member is able to join the Happy Hour and Dinner.",
           ),
         ],
       },
