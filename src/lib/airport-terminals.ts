@@ -1,7 +1,7 @@
 // Which terminal at Mexico City International Airport (MEX) each airline
 // uses, so the admin flights page can group arrivals/departures by terminal
 // as a starting point for building carpool groups.
-export const TERMINAL_1_AIRLINES = [
+const TERMINAL_1_AIRLINES = [
   "Volaris",
   "Viva Aerobus",
   "Magnicharters",
@@ -22,12 +22,12 @@ export const TERMINAL_1_AIRLINES = [
   "China Southern Airlines",
 ] as const;
 
-export const TERMINAL_2_AIRLINES = ["Aeroméxico", "Aeroméxico Connect", "Delta Air Lines"] as const;
+const TERMINAL_2_AIRLINES = ["Aeroméxico", "Aeroméxico Connect", "Delta Air Lines"] as const;
 
 // Reported inconsistently across sources (sometimes T1, sometimes T2,
 // possibly seasonal/gate-dependent) - flagged separately rather than
 // guessed, since carpool planning depends on getting this right.
-export const AMBIGUOUS_TERMINAL_AIRLINES = ["Copa Airlines"] as const;
+const AMBIGUOUS_TERMINAL_AIRLINES = ["Copa Airlines"] as const;
 
 export type Terminal = "1" | "2" | "ambiguous" | "unknown";
 

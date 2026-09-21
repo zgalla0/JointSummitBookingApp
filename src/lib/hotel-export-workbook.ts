@@ -1,10 +1,10 @@
 import ExcelJS from "exceljs";
 import type { HotelExportPreviewRow } from "./hotel-export-rows";
+import { WORKBOOK_HEADER_FILL } from "./workbook-helpers";
 
 const NEW_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9F2D9" } };
 const CANCELLED_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF8D7D7" } };
 const EDITED_CELL_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDF3C7" } };
-const HEADER_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5E7EB" } };
 
 /** Builds the Hotel Export workbook from the same row list shown in the
  *  "Pull" preview - the full current roster (every active, attending
@@ -44,7 +44,7 @@ export function buildHotelExportWorkbook(rows: HotelExportPreviewRow[], since: D
   const headerRow = sheet.addRow(headers);
   headerRow.font = { bold: true };
   headerRow.eachCell((cell) => {
-    cell.fill = HEADER_FILL;
+    cell.fill = WORKBOOK_HEADER_FILL;
   });
 
   rows.forEach(({ category, data, highlightFields }) => {

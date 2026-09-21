@@ -2,7 +2,7 @@ import type { Booking } from "@prisma/client";
 import { toISODate } from "./format";
 import { terminalForAirline, type Terminal } from "./airport-terminals";
 
-export type FlightEntry = {
+type FlightEntry = {
   bookingId: string;
   name: string;
   airline: string;

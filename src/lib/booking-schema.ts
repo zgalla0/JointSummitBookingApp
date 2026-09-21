@@ -5,10 +5,20 @@ import { LOCATION_KEYS } from "./location-options";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
 
+// Shared by identitySchema and bookingFormSchema, which both require a real
+// Cuesta email, so the domain check and its message can't drift apart.
+const cuestaEmailSchema = z
+  .string()
+  .trim()
+  .email("Enter a valid email")
+  .refine((v) => v.toLowerCase().endsWith("@cuestapartners.com"), {
+    message: "Cuesta email must be a @cuestapartners.com address",
+  });
+
 // A row added via "+ Add guest" (blank or partially filled) is required to
 // be completed, not silently dropped - the array-level refine below rejects
 // it, telling the attendee to fill it in or remove that guest.
-export const guestSchema = z
+const guestSchema = z
   .object({
     firstName: z.string().trim(),
     lastName: z.string().trim(),
@@ -34,13 +44,7 @@ export const guestSchema = z
 export const identitySchema = z.object({
   firstName: z.string().trim().min(1, "First name is required"),
   lastName: z.string().trim().min(1, "Last name is required"),
-  email: z
-    .string()
-    .trim()
-    .email("Enter a valid email")
-    .refine((v) => v.toLowerCase().endsWith("@cuestapartners.com"), {
-      message: "Cuesta email must be a @cuestapartners.com address",
-    }),
+  email: cuestaEmailSchema,
 });
 
 export const bookingFormSchema = z
@@ -59,13 +63,7 @@ export const bookingFormSchema = z
     nameTag: z.string().trim().max(200),
     hotelEmail: z.string().trim().email("Enter a valid email"),
     detailsEmail: z.string().trim().email("Enter a valid email"),
-    cuestaEmail: z
-      .string()
-      .trim()
-      .email("Enter a valid email")
-      .refine((v) => v.toLowerCase().endsWith("@cuestapartners.com"), {
-        message: "Cuesta email must be a @cuestapartners.com address",
-      }),
+    cuestaEmail: cuestaEmailSchema,
 
     // "" is only a valid form-default (nothing chosen yet); the refine
     // below rejects it at submit time so this is effectively mandatory.

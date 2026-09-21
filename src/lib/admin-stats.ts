@@ -28,8 +28,6 @@ export function bookingNights(b: Pick<Booking, "stayStart" | "stayEnd">): string
   return isoDateRange(stayStartIso, lastNightIso);
 }
 
-export type AdminStats = ReturnType<typeof computeAdminStats>;
-
 /** Aggregates the dashboard's summary numbers from every booking (active +
  *  cancelled), so the page component just formats already-computed values. */
 export function computeAdminStats(allBookings: BookingWithGuests[]) {
@@ -104,7 +102,7 @@ export function computeAdminStats(allBookings: BookingWithGuests[]) {
   };
 }
 
-export type EventKey = "happyHour" | "allHands" | "dinner";
+type EventKey = "happyHour" | "allHands" | "dinner";
 
 export type DietaryByEventStats = Record<EventKey, Record<DietaryOptionKey, number>>;
 

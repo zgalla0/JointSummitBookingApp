@@ -1,8 +1,8 @@
 import { computeHotelExportFields, type ClassifiedRow } from "./hotel-export-diff";
 
-export type HotelExportCategory = "New" | "Edited" | "Unchanged" | "Cancelled";
+type HotelExportCategory = "New" | "Edited" | "Unchanged" | "Cancelled";
 
-export type HotelExportRowData = ReturnType<typeof computeHotelExportFields> & {
+type HotelExportRowData = ReturnType<typeof computeHotelExportFields> & {
   status: HotelExportCategory;
   whatChanged: string;
 };

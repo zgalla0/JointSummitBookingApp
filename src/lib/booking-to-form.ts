@@ -1,17 +1,8 @@
 import type { Booking, BookingGuest } from "@prisma/client";
 import type { BookingFormInput } from "./booking-schema";
 import { toISODate } from "./format";
+import { parseJsonArray } from "./admin-stats";
 import type { RoomTypeKey } from "./room-types";
-
-function parseJsonArray(value: string | null): string[] {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
 
 function toDatetimeLocal(date: Date | null): string {
   if (!date) return "";

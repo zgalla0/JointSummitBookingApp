@@ -35,14 +35,14 @@ export function hasNightOutsideRange(
   return isoDateRange(stayStart, lastNight).some((night) => night < rangeStart || night > rangeEnd);
 }
 
-const WEEKDAY = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+export const WEEKDAY_HEADER_SUN_FIRST = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export function isoWeekday(iso: string): number {
+function isoWeekday(iso: string): number {
   return new Date(`${iso}T00:00:00.000Z`).getUTCDay();
 }
 
 export function isoWeekdayLabel(iso: string): string {
-  return WEEKDAY[isoWeekday(iso)];
+  return WEEKDAY_HEADER_SUN_FIRST[isoWeekday(iso)];
 }
 
 /** Mon-Fri tiles get a "PTO" checkbox, except whichever specific dates are
@@ -53,14 +53,6 @@ export function isWeekdayIso(iso: string): boolean {
   const day = isoWeekday(iso);
   return day >= 1 && day <= 5;
 }
-
-export function isoMonthDay(iso: string): string {
-  const d = new Date(`${iso}T00:00:00.000Z`);
-  const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${MONTH[d.getUTCMonth()]} ${d.getUTCDate()}`;
-}
-
-export const WEEKDAY_HEADER_SUN_FIRST = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /**
  * Lays out [startIso, endIso] as a real Sun-Sat calendar grid: each row is one

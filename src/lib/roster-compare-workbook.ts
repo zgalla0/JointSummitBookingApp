@@ -1,7 +1,6 @@
 import ExcelJS from "exceljs";
 import type { RosterComparison, RosterRow } from "./roster-compare";
-
-const HEADER_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5E7EB" } };
+import { addSimpleSheet } from "./workbook-helpers";
 
 // Mirrors exactly the columns shown on the Roster check page for these two
 // tables (no start date, no location) - so the export never shows more
@@ -15,31 +14,6 @@ function rosterRowForExport(r: RosterRow) {
   };
 }
 
-function addSheet(workbook: ExcelJS.Workbook, name: string, rows: Record<string, unknown>[]) {
-  const sheet = workbook.addWorksheet(name);
-
-  if (rows.length === 0) {
-    sheet.addRow(["Nobody in this category."]);
-    return;
-  }
-
-  const headers = Object.keys(rows[0]);
-  const headerRow = sheet.addRow(headers);
-  headerRow.font = { bold: true };
-  headerRow.eachCell((cell) => {
-    cell.fill = HEADER_FILL;
-  });
-
-  rows.forEach((row) => {
-    sheet.addRow(headers.map((h) => row[h] as ExcelJS.CellValue));
-  });
-
-  sheet.columns.forEach((col) => {
-    col.width = 22;
-  });
-  sheet.views = [{ state: "frozen", ySplit: 1 }];
-}
-
 /** The three tables shown on the Roster check page, each as its own
  *  sheet - the same split the page itself computes, so the export always
  *  matches what's on screen. */
@@ -47,9 +21,10 @@ export function buildRosterComparisonWorkbook(comparison: RosterComparison): Exc
   const workbook = new ExcelJS.Workbook();
   workbook.created = new Date();
 
-  addSheet(workbook, "Havent Submitted", comparison.missingFromForm.map(rosterRowForExport));
-  addSheet(workbook, "Has Submitted", comparison.hasSubmittedForm.map(rosterRowForExport));
-  addSheet(workbook, "Not On Roster", comparison.submittedNotOnRoster);
+  const options = { emptyMessage: "Nobody in this category.", columnWidth: 22 };
+  addSimpleSheet(workbook, "Havent Submitted", comparison.missingFromForm.map(rosterRowForExport), options);
+  addSimpleSheet(workbook, "Has Submitted", comparison.hasSubmittedForm.map(rosterRowForExport), options);
+  addSimpleSheet(workbook, "Not On Roster", comparison.submittedNotOnRoster, options);
 
   return workbook;
 }

@@ -10,7 +10,7 @@ export type ClassifiedRow = { booking: BookingWithGuests; whatChanged?: string; 
 /** A single detected change: `fields` are the Hotel Export row's column
  *  keys it affects, used to highlight only those cells instead of the
  *  whole row. */
-export type FieldChange = { fields: string[]; description: string };
+type FieldChange = { fields: string[]; description: string };
 
 export type HotelExportClassification = {
   newRows: ClassifiedRow[];
@@ -102,7 +102,7 @@ function displayValue(value: string | number): string {
  *  was just reshaped) - in that case every column counts as "changed" so
  *  each cell (never the whole row) still gets highlighted, rather than
  *  silently treating an unknown prior state as "nothing changed". */
-export function diffHotelSnapshot(prev: HotelExportFields | null, curr: HotelExportFields): FieldChange[] {
+function diffHotelSnapshot(prev: HotelExportFields | null, curr: HotelExportFields): FieldChange[] {
   if (!prev) {
     return (Object.keys(curr) as (keyof HotelExportFields)[]).map((key) => ({
       fields: [key],

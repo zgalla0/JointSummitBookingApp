@@ -1,5 +1,9 @@
 import { prisma } from "./prisma";
 
+function normalize(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 /**
  * Exact (non-fuzzy) match on first name + last name only, case-insensitive.
  * The attendee list for one event has no two people sharing a name, so name
@@ -11,8 +15,8 @@ import { prisma } from "./prisma";
  * weaken anything.
  */
 export async function findBookingByName(firstName: string, lastName: string, excludeId?: string) {
-  const fn = firstName.trim().toLowerCase();
-  const ln = lastName.trim().toLowerCase();
+  const fn = normalize(firstName);
+  const ln = normalize(lastName);
 
   // SQLite compares TEXT case-sensitively by default, so narrowing by an
   // exact-case DB filter could miss a same-name-different-case match. The
@@ -22,10 +26,7 @@ export async function findBookingByName(firstName: string, lastName: string, exc
 
   return (
     candidates.find(
-      (b) =>
-        b.id !== excludeId &&
-        b.firstName.trim().toLowerCase() === fn &&
-        b.lastName.trim().toLowerCase() === ln,
+      (b) => b.id !== excludeId && normalize(b.firstName) === fn && normalize(b.lastName) === ln,
     ) ?? null
   );
 }
@@ -42,9 +43,9 @@ export async function findDuplicateBooking(
   email: string,
   excludeId?: string,
 ) {
-  const fn = firstName.trim().toLowerCase();
-  const ln = lastName.trim().toLowerCase();
-  const em = email.trim().toLowerCase();
+  const fn = normalize(firstName);
+  const ln = normalize(lastName);
+  const em = normalize(email);
 
   const candidates = await prisma.booking.findMany();
 
@@ -52,9 +53,9 @@ export async function findDuplicateBooking(
     candidates.find(
       (b) =>
         b.id !== excludeId &&
-        b.firstName.trim().toLowerCase() === fn &&
-        b.lastName.trim().toLowerCase() === ln &&
-        (b.hotelEmail.trim().toLowerCase() === em || b.detailsEmail.trim().toLowerCase() === em),
+        normalize(b.firstName) === fn &&
+        normalize(b.lastName) === ln &&
+        (normalize(b.hotelEmail) === em || normalize(b.detailsEmail) === em),
     ) ?? null
   );
 }

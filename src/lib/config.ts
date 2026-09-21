@@ -85,5 +85,3 @@ export function daysBetween(a: Date, b: Date): number {
   const ms = a.getTime() - b.getTime();
   return Math.round(ms / (1000 * 60 * 60 * 24));
 }
-
-export { addDays };

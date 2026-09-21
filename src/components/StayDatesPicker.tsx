@@ -5,11 +5,11 @@ import {
   addIsoDays,
   buildCalendarGrid,
   isoDateRange,
-  isoMonthDay,
   isoWeekdayLabel,
   isWeekdayIso,
   WEEKDAY_HEADER_SUN_FIRST,
 } from "@/lib/stay-tiles-client";
+import { formatMonthDay } from "@/lib/format";
 import { ROOM_TYPES, type RoomTypeKey } from "@/lib/room-types";
 import { HOTEL_NAME, HOTEL_URL, HOTEL_ROOMS_URL, HOTEL_ADDRESS } from "@/lib/hotel-info";
 
@@ -282,8 +282,8 @@ export default function StayDatesPicker({
 
       {selectedNights.length > 0 && (
         <p className="rounded-xl border border-hairline bg-surface p-3 text-center text-sm text-muted">
-          Checking in <strong className="text-foreground">{isoMonthDay(value.stayStart)}</strong>,
-          checking out <strong className="text-foreground">{isoMonthDay(value.stayEnd)}</strong> (
+          Checking in <strong className="text-foreground">{formatMonthDay(value.stayStart)}</strong>,
+          checking out <strong className="text-foreground">{formatMonthDay(value.stayEnd)}</strong> (
           {selectedNights.length} night{selectedNights.length === 1 ? "" : "s"})
         </p>
       )}

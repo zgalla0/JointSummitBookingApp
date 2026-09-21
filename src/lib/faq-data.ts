@@ -2,7 +2,7 @@ export type FaqListItem = string | { text: string; emphasize: true } | { text: s
 
 export type FaqBlock = { type: "p"; text: string } | { type: "ul"; items: FaqListItem[] };
 
-export type FaqQuestion = { question: string; blocks: FaqBlock[] };
+type FaqQuestion = { question: string; blocks: FaqBlock[] };
 
 export type FaqCategory = { title: string; questions: FaqQuestion[] };
 

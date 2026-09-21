@@ -3,10 +3,9 @@ import type { Booking, BookingGuest } from "@prisma/client";
 import { toISODate } from "./format";
 import { parseJsonArray, bookingNights } from "./admin-stats";
 import { ROOM_TYPES } from "./room-types";
+import { addSimpleSheet } from "./workbook-helpers";
 
 type BookingWithGuests = Booking & { guests: BookingGuest[] };
-
-const HEADER_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5E7EB" } };
 
 function fullRow(b: BookingWithGuests) {
   const companyPaid = new Set(parseJsonArray(b.companyPaidNights));
@@ -87,32 +86,6 @@ function attendingSummaryRow(b: BookingWithGuests) {
   };
 }
 
-function addSheet(workbook: ExcelJS.Workbook, name: string, rows: Record<string, unknown>[]) {
-  const sheet = workbook.addWorksheet(name);
-
-  if (rows.length === 0) {
-    sheet.addRow(["No bookings in this category."]);
-    return;
-  }
-
-  const headers = Object.keys(rows[0]);
-
-  const headerRow = sheet.addRow(headers);
-  headerRow.font = { bold: true };
-  headerRow.eachCell((cell) => {
-    cell.fill = HEADER_FILL;
-  });
-
-  rows.forEach((row) => {
-    sheet.addRow(headers.map((h) => row[h] as ExcelJS.CellValue));
-  });
-
-  sheet.columns.forEach((col) => {
-    col.width = 16;
-  });
-  sheet.views = [{ state: "frozen", ySplit: 1 }];
-}
-
 /** Builds the "View All Data" workbook: the complete, unfiltered dataset
  *  (a reservation-focused summary of attendees, every booking in full
  *  detail, and everyone not attending) for internal reference and
@@ -125,9 +98,13 @@ export function buildExportWorkbook(bookings: BookingWithGuests[]): ExcelJS.Work
   const attending = bookings.filter((b) => b.isAttending && b.status === "ACTIVE");
   const notAttending = bookings.filter((b) => !b.isAttending);
 
-  addSheet(workbook, "All Bookings", bookings.map(fullRow));
-  addSheet(workbook, "Attending Summary", attending.map(attendingSummaryRow));
-  addSheet(workbook, "Not Attending", notAttending.map(fullRow));
+  const emptyMessage = "No bookings in this category.";
+  addSimpleSheet(workbook, "All Bookings", bookings.map(fullRow), { emptyMessage, columnWidth: 16 });
+  addSimpleSheet(workbook, "Attending Summary", attending.map(attendingSummaryRow), {
+    emptyMessage,
+    columnWidth: 16,
+  });
+  addSimpleSheet(workbook, "Not Attending", notAttending.map(fullRow), { emptyMessage, columnWidth: 16 });
 
   return workbook;
 }
