@@ -5,8 +5,10 @@ import {
   addIsoDays,
   buildCalendarGrid,
   isoDateRange,
+  isoMonthYearLabel,
   isoWeekdayLabel,
   isWeekdayIso,
+  needsRoomTypeChoice,
   WEEKDAY_HEADER_SUN_FIRST,
 } from "@/lib/stay-tiles-client";
 import { formatMonthDay } from "@/lib/format";
@@ -45,6 +47,8 @@ export type StayDatesValue = {
 export default function StayDatesPicker({
   bookableStart,
   bookableEnd,
+  blockStart,
+  blockEnd,
   discountStart,
   discountEnd,
   defaultCompanyPaidNights,
@@ -54,6 +58,8 @@ export default function StayDatesPicker({
 }: {
   bookableStart: string;
   bookableEnd: string;
+  blockStart: string;
+  blockEnd: string;
   discountStart: string;
   discountEnd: string;
   defaultCompanyPaidNights: string[];
@@ -96,6 +102,28 @@ export default function StayDatesPicker({
     [bookableStart, bookableEnd],
   );
 
+  // Groups the plain week rows with a labeled divider inserted right before
+  // the first row that introduces a new month - including the very first
+  // row, so the calendar always opens with its starting month named. A row
+  // that itself contains the transition (e.g. Jan 31 next to Feb 1) still
+  // gets the divider placed above the whole row, rather than splitting it.
+  const calendarItems = useMemo(() => {
+    const items: ({ kind: "banner"; label: string } | { kind: "week"; cells: (string | null)[] })[] = [];
+    let currentMonth: string | null = null;
+    for (const row of calendarRows) {
+      for (const day of row) {
+        if (!day) continue;
+        const month = day.slice(0, 7);
+        if (month !== currentMonth) {
+          items.push({ kind: "banner", label: isoMonthYearLabel(day) });
+          currentMonth = month;
+        }
+      }
+      items.push({ kind: "week", cells: row });
+    }
+    return items;
+  }, [calendarRows]);
+
   const hasNightsOutsideDiscountWindow = useMemo(
     () => selectedNights.some((d) => d < discountStart || d > discountEnd),
     [selectedNights, discountStart, discountEnd],
@@ -134,12 +162,23 @@ export default function StayDatesPicker({
     [selectedNights, companyPaidSet, optionalCompanyPaidNights],
   );
 
-  // Shown as a standing price reference for any self-paid stay, not just
-  // nights that actually require a room-type choice - hidden only when
-  // nothing but the two locked, forced-company-paid nights is selected.
-  const hasAnySelfPaidStay = useMemo(
-    () => selectedNights.some((d) => !defaultCompanyPaidNights.includes(d)),
-    [selectedNights, defaultCompanyPaidNights],
+  // Only actually shown when a room type choice is required - a night
+  // that's outside the block/discount window but still covered by Cuesta
+  // (the optional-approval nights, or any other night marked company-paid)
+  // never needs one, since the room type only changes what the attendee
+  // themselves owes.
+  const needsRoomType = useMemo(
+    () =>
+      needsRoomTypeChoice(
+        value.stayStart,
+        value.stayEnd,
+        value.companyPaidNights,
+        blockStart,
+        blockEnd,
+        discountStart,
+        discountEnd,
+      ),
+    [value.stayStart, value.stayEnd, value.companyPaidNights, blockStart, blockEnd, discountStart, discountEnd],
   );
 
   function togglePto(day: string) {
@@ -296,32 +335,42 @@ export default function StayDatesPicker({
             </div>
           ))}
         </div>
-        {calendarRows.map((row, i) => (
-          <div key={i} className="grid grid-cols-7 gap-2">
-            {row.map((day, j) =>
-              day ? (
-                <DayTile
-                  key={day}
-                  day={day}
-                  selected={selectedSet.has(day)}
-                  isCheckIn={day === value.stayStart}
-                  isCheckOut={day === value.stayEnd}
-                  companyPaid={companyPaidSet.has(day)}
-                  toggleable={isCompanyToggleable(day)}
-                  forcedCompanyPaid={isForcedCompanyPaid(day)}
-                  showPto={showsPtoCheckbox(day)}
-                  ptoChecked={ptoSet.has(day)}
-                  outsideDiscountWindow={isOutsideDiscountWindow(day)}
-                  onClick={() => toggleNight(day)}
-                  onSetCompanyPaid={(paid) => setCompanyPaid(day, paid)}
-                  onPtoToggle={() => togglePto(day)}
-                />
-              ) : (
-                <div key={j} />
-              ),
-            )}
-          </div>
-        ))}
+        {calendarItems.map((item, i) =>
+          item.kind === "banner" ? (
+            <div key={`banner-${i}`} className="flex items-center gap-3 py-1">
+              <span className="h-px flex-1 bg-hairline" />
+              <span className="font-display text-xs tracking-[0.12em] text-accent-dark uppercase">
+                {item.label}
+              </span>
+              <span className="h-px flex-1 bg-hairline" />
+            </div>
+          ) : (
+            <div key={`week-${i}`} className="grid grid-cols-7 gap-2">
+              {item.cells.map((day, j) =>
+                day ? (
+                  <DayTile
+                    key={day}
+                    day={day}
+                    selected={selectedSet.has(day)}
+                    isCheckIn={day === value.stayStart}
+                    isCheckOut={day === value.stayEnd}
+                    companyPaid={companyPaidSet.has(day)}
+                    toggleable={isCompanyToggleable(day)}
+                    forcedCompanyPaid={isForcedCompanyPaid(day)}
+                    showPto={showsPtoCheckbox(day)}
+                    ptoChecked={ptoSet.has(day)}
+                    outsideDiscountWindow={isOutsideDiscountWindow(day)}
+                    onClick={() => toggleNight(day)}
+                    onSetCompanyPaid={(paid) => setCompanyPaid(day, paid)}
+                    onPtoToggle={() => togglePto(day)}
+                  />
+                ) : (
+                  <div key={j} />
+                ),
+              )}
+            </div>
+          ),
+        )}
       </div>
 
       {hasOptionalCompanyPaid && (
@@ -349,7 +398,7 @@ export default function StayDatesPicker({
         Google for the current rate.
       </p>
 
-      {hasAnySelfPaidStay && (
+      {needsRoomType && (
         <div className="space-y-2 rounded-xl border-2 border-warning bg-warning-soft p-3">
           <p className="field-label text-warning">Room type for the night(s) outside the standard rate</p>
           {ROOM_TYPES.map((rt) => (

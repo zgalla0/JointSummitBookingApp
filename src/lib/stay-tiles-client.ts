@@ -49,6 +49,16 @@ export function needsRoomTypeChoice(
 
 export const WEEKDAY_HEADER_SUN_FIRST = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+export function isoMonthYearLabel(iso: string): string {
+  const d = new Date(`${iso}T00:00:00.000Z`);
+  return `${MONTH_NAMES[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
 function isoWeekday(iso: string): number {
   return new Date(`${iso}T00:00:00.000Z`).getUTCDay();
 }

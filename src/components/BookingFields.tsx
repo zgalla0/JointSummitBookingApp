@@ -302,6 +302,8 @@ export default function BookingFields({
                     <StayDatesPicker
                       bookableStart={formConfig.bookableStart}
                       bookableEnd={formConfig.bookableEnd}
+                      blockStart={formConfig.blockStart}
+                      blockEnd={formConfig.blockEnd}
                       discountStart={formConfig.discountStart}
                       discountEnd={formConfig.discountEnd}
                       defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
