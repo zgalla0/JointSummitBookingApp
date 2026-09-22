@@ -14,4 +14,9 @@ export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Q1 Summit <on
 // sends are skipped (logged, not thrown) rather than failing the booking/
 // cancellation flow they're attached to.
 export const HOTEL_CONTACT_EMAIL = process.env.HOTEL_CONTACT_EMAIL;
-export const ADMIN_NOTIFICATION_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL;
+
+// Comma-separated list - the planning team notices go to everyone on it.
+export const ADMIN_NOTIFICATION_EMAILS = (process.env.ADMIN_NOTIFICATION_EMAIL ?? "")
+  .split(",")
+  .map((email) => email.trim())
+  .filter((email) => email.length > 0);

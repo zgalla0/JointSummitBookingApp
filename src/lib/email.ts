@@ -2,7 +2,7 @@ import { Resend } from "resend";
 import type { Booking, BookingGuest } from "@prisma/client";
 import { buildBookingReceiptText } from "./booking-receipt";
 import { formatMonthDay } from "./format";
-import { RESEND_API_KEY, RESEND_FROM_EMAIL, HOTEL_CONTACT_EMAIL, ADMIN_NOTIFICATION_EMAIL } from "./email-config";
+import { RESEND_API_KEY, RESEND_FROM_EMAIL, HOTEL_CONTACT_EMAIL, ADMIN_NOTIFICATION_EMAILS } from "./email-config";
 
 type BookingWithGuests = Booking & { guests?: BookingGuest[] };
 
@@ -24,7 +24,7 @@ const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
  *  or without real sending wired up. A Resend-side failure is logged, not
  *  thrown - a notification email failing to send should never break the
  *  booking/cancel/edit flow it's attached to. */
-async function sendEmail({ to, subject, text }: { to: string; subject: string; text: string }) {
+async function sendEmail({ to, subject, text }: { to: string | string[]; subject: string; text: string }) {
   if (!resend) {
     console.log(`[email stub - no RESEND_API_KEY set] would send "${subject}" to ${to}`);
     return;
@@ -37,18 +37,19 @@ async function sendEmail({ to, subject, text }: { to: string; subject: string; t
 }
 
 /** Like sendEmail, but for the two admin-facing notices whose destination
- *  address comes from env config that may not be set yet - skips (with a
- *  warning) instead of sending to "undefined". */
+ *  address(es) come from env config that may not be set yet - skips (with a
+ *  warning) instead of sending to an empty recipient list. */
 async function sendToConfiguredAddress(
-  address: string | undefined,
+  addresses: string | string[] | undefined,
   envVarName: string,
   { subject, text }: { subject: string; text: string },
 ) {
-  if (!address) {
+  const to = Array.isArray(addresses) ? addresses : addresses ? [addresses] : [];
+  if (to.length === 0) {
     console.warn(`[email] ${envVarName} is not set - skipping "${subject}"`);
     return;
   }
-  await sendEmail({ to: address, subject, text });
+  await sendEmail({ to, subject, text });
 }
 
 export async function sendConfirmationEmail(data: BookingEmailData) {
@@ -180,7 +181,7 @@ type AdminCancellationNotice = {
 };
 
 export async function sendAdminCancellationNotice(data: AdminCancellationNotice) {
-  await sendToConfiguredAddress(ADMIN_NOTIFICATION_EMAIL, "ADMIN_NOTIFICATION_EMAIL", {
+  await sendToConfiguredAddress(ADMIN_NOTIFICATION_EMAILS, "ADMIN_NOTIFICATION_EMAIL", {
     subject: `Cancellation: ${data.fullName}`,
     text: [
       `${data.fullName} has cancelled their Q1 Summit booking (${data.byAdmin ? "cancelled by an admin" : "self-cancelled"}).`,
@@ -229,7 +230,7 @@ export async function sendFormReminderEmail(data: { to: string; body: string }) 
 // "anything else" note on submit or edit - not sent when that field is
 // left blank.
 export async function sendPlanningTeamNotesEmail(data: { fromName: string; notes: string; magicLink: string }) {
-  await sendToConfiguredAddress(ADMIN_NOTIFICATION_EMAIL, "ADMIN_NOTIFICATION_EMAIL", {
+  await sendToConfiguredAddress(ADMIN_NOTIFICATION_EMAILS, "ADMIN_NOTIFICATION_EMAIL", {
     subject: `Note from ${data.fromName} - Q1 Summit form`,
     text: [
       `${data.fromName} added a note on their Q1 Summit booking form:`,
