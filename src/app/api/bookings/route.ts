@@ -4,12 +4,8 @@ import { findDuplicateBooking } from "@/lib/duplicate-check";
 import { prisma } from "@/lib/prisma";
 import { generateMagicLinkToken, magicLinkExpiry, magicLinkUrl } from "@/lib/magic-link";
 import { sendConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
-import {
-  bookingWriteData,
-  guestWriteData,
-  bookingNeedsRoomType,
-  isValidRoomType,
-} from "@/lib/booking-write";
+import { bookingWriteData, guestWriteData, isValidRoomType } from "@/lib/booking-write";
+import { needsRoomTypeChoice } from "@/lib/stay-tiles-client";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -30,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const needsRoomType = data.isAttending
-    ? bookingNeedsRoomType(data.stayStart, data.stayEnd, data.companyPaidNights)
+    ? needsRoomTypeChoice(data.stayStart, data.stayEnd, data.companyPaidNights)
     : false;
   if (needsRoomType && !isValidRoomType(data.extraNightsRoomType)) {
     return NextResponse.json(

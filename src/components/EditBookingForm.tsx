@@ -37,7 +37,7 @@ export default function EditBookingForm({
   });
 
   async function onSave(values: BookingFormInput) {
-    if (values.extraNightsRoomType === "" && needsRoomTypeChoice(values, formConfig)) {
+    if (values.extraNightsRoomType === "" && needsRoomTypeChoice(values)) {
       form.setError("extraNightsRoomType", {
         type: "manual",
         message: "Please choose a room type for the night(s) outside the standard rate",

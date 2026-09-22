@@ -17,8 +17,6 @@ import StayDatesPicker from "./StayDatesPicker";
 export type FormConfig = {
   bookableStart: string;
   bookableEnd: string;
-  blockStart: string;
-  blockEnd: string;
   discountStart: string;
   discountEnd: string;
   happyHourDate: string;
@@ -30,27 +28,17 @@ export type FormConfig = {
 
 export type StaticContentItem = { key: string; title: string | null; body: string | null };
 
-/** True when at least one selected night both falls outside the standard
- *  block or the guaranteed group-rate window AND isn't already covered by
- *  Cuesta - meaning a room type choice is required, since that choice only
- *  affects what the attendee themselves pays. The block/discount
- *  boundaries only matter once stay dates are picked, so this can't be a
- *  plain zod refine on the schema (which has no access to formConfig) -
- *  both the new-booking and edit-booking forms call this after the rest of
- *  the form has already validated, right before the request goes out. */
-export function needsRoomTypeChoice(values: BookingFormInput, formConfig: FormConfig): boolean {
-  return (
-    values.isAttending &&
-    nightsNeedRoomTypeChoice(
-      values.stayStart,
-      values.stayEnd,
-      values.companyPaidNights,
-      formConfig.blockStart,
-      formConfig.blockEnd,
-      formConfig.discountStart,
-      formConfig.discountEnd,
-    )
-  );
+/** True when at least one selected night isn't already covered by Cuesta -
+ *  meaning a room type choice is required, since that choice only affects
+ *  what the attendee themselves pays. This doesn't depend on the block/
+ *  discount window at all: most self-paid nights fall inside it too (only
+ *  the two forced and two optional company-paid nights are ever exempt).
+ *  Stay dates need to be picked first, so this can't be a plain zod refine
+ *  on the schema - both the new-booking and edit-booking forms call this
+ *  after the rest of the form has already validated, right before the
+ *  request goes out. */
+export function needsRoomTypeChoice(values: BookingFormInput): boolean {
+  return values.isAttending && nightsNeedRoomTypeChoice(values.stayStart, values.stayEnd, values.companyPaidNights);
 }
 
 /**
@@ -302,8 +290,6 @@ export default function BookingFields({
                     <StayDatesPicker
                       bookableStart={formConfig.bookableStart}
                       bookableEnd={formConfig.bookableEnd}
-                      blockStart={formConfig.blockStart}
-                      blockEnd={formConfig.blockEnd}
                       discountStart={formConfig.discountStart}
                       discountEnd={formConfig.discountEnd}
                       defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}

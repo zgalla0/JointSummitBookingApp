@@ -47,8 +47,6 @@ export type StayDatesValue = {
 export default function StayDatesPicker({
   bookableStart,
   bookableEnd,
-  blockStart,
-  blockEnd,
   discountStart,
   discountEnd,
   defaultCompanyPaidNights,
@@ -58,8 +56,6 @@ export default function StayDatesPicker({
 }: {
   bookableStart: string;
   bookableEnd: string;
-  blockStart: string;
-  blockEnd: string;
   discountStart: string;
   discountEnd: string;
   defaultCompanyPaidNights: string[];
@@ -106,9 +102,15 @@ export default function StayDatesPicker({
   // the first row that introduces a new month - including the very first
   // row, so the calendar always opens with its starting month named. A row
   // that itself contains the transition (e.g. Jan 31 next to Feb 1) still
-  // gets the divider placed above the whole row, rather than splitting it.
+  // gets the divider placed above the whole row, rather than splitting it -
+  // so each such row also carries the month that divider just announced
+  // (bannerMonth), letting the render mark any tile in that row whose own
+  // month doesn't match (Jan 31 under a "February" divider) with a small
+  // tag naming its real month, so it never reads as belonging to the month
+  // just announced above it.
   const calendarItems = useMemo(() => {
-    const items: ({ kind: "banner"; label: string } | { kind: "week"; cells: (string | null)[] })[] = [];
+    const items: ({ kind: "banner"; label: string } | { kind: "week"; cells: (string | null)[]; bannerMonth: string })[] =
+      [];
     let currentMonth: string | null = null;
     for (const row of calendarRows) {
       for (const day of row) {
@@ -119,7 +121,7 @@ export default function StayDatesPicker({
           currentMonth = month;
         }
       }
-      items.push({ kind: "week", cells: row });
+      items.push({ kind: "week", cells: row, bannerMonth: currentMonth ?? "" });
     }
     return items;
   }, [calendarRows]);
@@ -168,17 +170,8 @@ export default function StayDatesPicker({
   // never needs one, since the room type only changes what the attendee
   // themselves owes.
   const needsRoomType = useMemo(
-    () =>
-      needsRoomTypeChoice(
-        value.stayStart,
-        value.stayEnd,
-        value.companyPaidNights,
-        blockStart,
-        blockEnd,
-        discountStart,
-        discountEnd,
-      ),
-    [value.stayStart, value.stayEnd, value.companyPaidNights, blockStart, blockEnd, discountStart, discountEnd],
+    () => needsRoomTypeChoice(value.stayStart, value.stayEnd, value.companyPaidNights),
+    [value.stayStart, value.stayEnd, value.companyPaidNights],
   );
 
   function togglePto(day: string) {
@@ -360,6 +353,14 @@ export default function StayDatesPicker({
                     showPto={showsPtoCheckbox(day)}
                     ptoChecked={ptoSet.has(day)}
                     outsideDiscountWindow={isOutsideDiscountWindow(day)}
+                    // A day whose own month doesn't match the divider just
+                    // shown above this row (e.g. Jan 31 sharing a row with
+                    // Feb 1-5, right under a "February" divider) gets its
+                    // real month tagged directly on the tile so it's never
+                    // misread as belonging to the announced month.
+                    trailingMonthTag={
+                      day.slice(0, 7) !== item.bannerMonth ? isoMonthYearLabel(day).slice(0, 3).toUpperCase() : undefined
+                    }
                     onClick={() => toggleNight(day)}
                     onSetCompanyPaid={(paid) => setCompanyPaid(day, paid)}
                     onPtoToggle={() => togglePto(day)}
@@ -443,6 +444,7 @@ function DayTile({
   showPto,
   ptoChecked,
   outsideDiscountWindow,
+  trailingMonthTag,
   onClick,
   onSetCompanyPaid,
   onPtoToggle,
@@ -457,6 +459,11 @@ function DayTile({
   showPto: boolean;
   ptoChecked: boolean;
   outsideDiscountWindow: boolean;
+  /** Set only when this tile's own month differs from the month divider
+   *  just shown above its row (e.g. Jan 31 sharing a row with Feb 1-5) -
+   *  a small corner tag naming its real month so it doesn't read as
+   *  belonging to whichever month was just announced. */
+  trailingMonthTag?: string;
   onClick: () => void;
   onSetCompanyPaid: (paid: boolean) => void;
   onPtoToggle: () => void;
@@ -473,6 +480,11 @@ function DayTile({
         onClick={onClick}
         className="relative flex flex-col items-center gap-0.5 rounded-xl border-2 border-slate-700 bg-slate-700 px-1 py-2 text-center text-white shadow-md transition-all duration-200 ease-out hover:scale-[1.04]"
       >
+        {trailingMonthTag && (
+          <span className="absolute -top-2 left-1 rounded-full bg-accent-dark px-1.5 py-0.5 text-[8px] font-bold tracking-wide text-white">
+            {trailingMonthTag}
+          </span>
+        )}
         <span className="text-[10px] font-semibold tracking-wide uppercase opacity-80">
           {isoWeekdayLabel(day)}
         </span>
@@ -491,6 +503,11 @@ function DayTile({
       onClick={onClick}
       className={`relative flex flex-col items-center gap-0.5 rounded-xl border-2 px-1 py-2 text-center transition-all duration-200 ease-out hover:scale-[1.04] ${tileBorderClasses(selected || isCheckIn, companyPaid, outsideDiscountWindow)}`}
     >
+      {trailingMonthTag && (
+        <span className="absolute -top-2 left-1 rounded-full bg-accent-dark px-1.5 py-0.5 text-[8px] font-bold tracking-wide text-white">
+          {trailingMonthTag}
+        </span>
+      )}
       <span className="text-[10px] font-semibold tracking-wide text-muted uppercase">
         {isoWeekdayLabel(day)}
       </span>

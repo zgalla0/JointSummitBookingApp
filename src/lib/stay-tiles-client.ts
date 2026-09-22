@@ -19,32 +19,24 @@ export function isoDateRange(startIso: string, endIso: string): string[] {
   return dates;
 }
 
-/** True when at least one night of [stayStart, checkout) both (a) falls
- *  outside the negotiated block or the discounted-rate window and (b)
- *  isn't one of the nights Cuesta is paying for regardless - a room-type
- *  choice only changes what the *attendee* owes, so it's never needed for
- *  a night Cuesta covers either way. Used client-side (form validation)
- *  against boundaries the server has already resolved into plain ISO
- *  strings and sent down as form config, so this needs no server-only
- *  config of its own; the server (booking-write.ts) mirrors this exact
- *  check against its own config. */
+/** True when at least one night of [stayStart, checkout) isn't one of the
+ *  nights Cuesta is paying for - a room type choice only changes what the
+ *  attendee themselves owes, so it's needed for any self-paid night,
+ *  regardless of whether that night happens to fall inside the negotiated
+ *  block or the discounted-rate window (most self-paid nights do - only
+ *  the two forced and two optional company-paid nights are ever exempt).
+ *  Used client-side (form validation); the server (booking-write.ts)
+ *  mirrors this exact check. */
 export function needsRoomTypeChoice(
   stayStart: string,
   stayEnd: string,
   companyPaidNights: string[],
-  blockStart: string,
-  blockEnd: string,
-  discountStart: string,
-  discountEnd: string,
 ): boolean {
   if (!stayStart || !stayEnd) return false;
   const lastNight = addIsoDays(stayEnd, -1);
   if (lastNight < stayStart) return false;
   const companyPaid = new Set(companyPaidNights);
-  return isoDateRange(stayStart, lastNight).some((night) => {
-    if (companyPaid.has(night)) return false;
-    return night < blockStart || night > blockEnd || night < discountStart || night > discountEnd;
-  });
+  return isoDateRange(stayStart, lastNight).some((night) => !companyPaid.has(night));
 }
 
 export const WEEKDAY_HEADER_SUN_FIRST = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

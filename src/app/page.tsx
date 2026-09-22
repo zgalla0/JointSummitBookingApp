@@ -15,8 +15,6 @@ export default async function Home() {
   const formConfig = {
     bookableStart: toISODate(config.bookableStart),
     bookableEnd: toISODate(config.bookableEnd),
-    blockStart: toISODate(config.blockStart),
-    blockEnd: toISODate(config.blockEnd),
     discountStart: toISODate(config.discountStart),
     discountEnd: toISODate(config.discountEnd),
     happyHourDate: toISODate(config.happyHourDate),

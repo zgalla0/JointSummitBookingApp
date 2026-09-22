@@ -118,7 +118,7 @@ export default function BookingForm({
   }
 
   async function onMainSubmit(values: BookingFormInput) {
-    if (values.extraNightsRoomType === "" && needsRoomTypeChoice(values, formConfig)) {
+    if (values.extraNightsRoomType === "" && needsRoomTypeChoice(values)) {
       mainForm.setError("extraNightsRoomType", {
         type: "manual",
         message:

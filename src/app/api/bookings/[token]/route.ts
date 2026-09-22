@@ -7,12 +7,8 @@ import { isLockedIn } from "@/lib/config";
 import { magicLinkUrl } from "@/lib/magic-link";
 import { sendEditConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
 import { cancelBooking } from "@/lib/cancel-booking";
-import {
-  bookingWriteData,
-  guestWriteData,
-  bookingNeedsRoomType,
-  isValidRoomType,
-} from "@/lib/booking-write";
+import { bookingWriteData, guestWriteData, isValidRoomType } from "@/lib/booking-write";
+import { needsRoomTypeChoice } from "@/lib/stay-tiles-client";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -62,7 +58,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
   }
 
   const needsRoomType = data.isAttending
-    ? bookingNeedsRoomType(data.stayStart, data.stayEnd, data.companyPaidNights)
+    ? needsRoomTypeChoice(data.stayStart, data.stayEnd, data.companyPaidNights)
     : false;
   if (needsRoomType && !isValidRoomType(data.extraNightsRoomType)) {
     return NextResponse.json(
