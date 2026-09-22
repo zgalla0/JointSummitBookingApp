@@ -26,10 +26,10 @@ export const config = {
   blockStart: envDate("EVENT_BLOCK_START", "2026-01-14"),
   blockEnd: envDate("EVENT_BLOCK_END", "2026-01-29"),
 
-  // $105/night group rate is only guaranteed inside this window.
+  // The group rate (see room-types.ts for the actual per-room-type prices)
+  // is only guaranteed inside this window.
   discountStart: envDate("EVENT_DISCOUNT_START", "2026-01-16"),
   discountEnd: envDate("EVENT_DISCOUNT_END", "2026-01-26"),
-  discountRateUsd: Number(process.env.EVENT_DISCOUNT_RATE_USD ?? "105"),
 
   // Event program dates.
   happyHourDate: envDate("EVENT_HAPPY_HOUR_DATE", "2026-01-22"), // Thurs

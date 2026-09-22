@@ -21,7 +21,6 @@ export type FormConfig = {
   blockEnd: string;
   discountStart: string;
   discountEnd: string;
-  discountRateUsd: number;
   happyHourDate: string;
   allHandsDate: string;
   dinnerDate: string;

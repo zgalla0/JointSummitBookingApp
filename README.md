@@ -46,9 +46,9 @@ for the full list and current defaults:
   nights outside this block are always self-paid (no company toggle) and
   trigger the room-type picker (Deluxe $105 / Brisas Business Club $145, see
   `src/lib/room-types.ts`) since they're outside the negotiated block.
-- `EVENT_DISCOUNT_START` / `EVENT_DISCOUNT_END` / `EVENT_DISCOUNT_RATE_USD` -
-  the $105/night group rate window. Not currently surfaced on the form
-  (superseded there by the room-type picker), kept for the admin export.
+- `EVENT_DISCOUNT_START` / `EVENT_DISCOUNT_END` - the group rate window (the
+  actual per-room-type rates live in `src/lib/room-types.ts`). Not currently
+  surfaced on the form (superseded there by the room-type picker).
 - `EVENT_HAPPY_HOUR_DATE` / `EVENT_ALL_HANDS_DATE` / `EVENT_DINNER_DATE` -
   program dates. The All Hands date and the night after are the default
   company-paid nights seeded on the stay-dates picker; attendees can toggle
