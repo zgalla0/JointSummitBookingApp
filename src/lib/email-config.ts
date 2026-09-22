@@ -7,7 +7,7 @@ export const RESEND_API_KEY = process.env.RESEND_API_KEY;
 // Needs a domain verified in the Resend account behind RESEND_API_KEY -
 // the shared onboarding@resend.dev address only delivers to that account's
 // own verified email, not to real attendees.
-export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "Q1 Summit <onboarding@resend.dev>";
+export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Q1 Summit <onboarding@resend.dev>";
 
 // Destination addresses for the two admin-facing notices (see email.ts).
 // Left unset in an environment that hasn't configured them yet - those
