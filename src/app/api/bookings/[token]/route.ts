@@ -10,8 +10,7 @@ import { cancelBooking } from "@/lib/cancel-booking";
 import {
   bookingWriteData,
   guestWriteData,
-  hasNightsOutsideBlock,
-  hasNightsOutsideDiscountWindow,
+  bookingNeedsRoomType,
   isValidRoomType,
 } from "@/lib/booking-write";
 
@@ -63,8 +62,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
   }
 
   const needsRoomType = data.isAttending
-    ? hasNightsOutsideBlock(data.stayStart, data.stayEnd) ||
-      hasNightsOutsideDiscountWindow(data.stayStart, data.stayEnd)
+    ? bookingNeedsRoomType(data.stayStart, data.stayEnd, data.companyPaidNights)
     : false;
   if (needsRoomType && !isValidRoomType(data.extraNightsRoomType)) {
     return NextResponse.json(

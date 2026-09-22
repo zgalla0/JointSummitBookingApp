@@ -1,30 +1,29 @@
 import type { Prisma } from "@prisma/client";
 import { config } from "./config";
 import { toISODate } from "./format";
-import { isoDateRange, addIsoDays } from "./stay-tiles-client";
+import { needsRoomTypeChoice } from "./stay-tiles-client";
 import { ROOM_TYPE_KEYS } from "./room-types";
 import type { BookingFormInput, GuestInput } from "./booking-schema";
 
-/** True when any selected night falls outside the standard block, meaning a
- *  room type choice is required (the block config only lives server-side,
- *  so this can't be a zod refine on the client). */
-export function hasNightsOutsideBlock(stayStart: string, stayEnd: string): boolean {
-  const blockStart = toISODate(config.blockStart);
-  const blockEnd = toISODate(config.blockEnd);
-  const lastNight = addIsoDays(stayEnd, -1);
-  return isoDateRange(stayStart, lastNight).some((night) => night < blockStart || night > blockEnd);
-}
-
-/** True when any selected night falls outside the guaranteed group rate
- *  window, even if still inside the standard block - the room-type choice
- *  is also required then, matching the client's "outside discount window"
- *  dashed-border highlighting. */
-export function hasNightsOutsideDiscountWindow(stayStart: string, stayEnd: string): boolean {
-  const discountStart = toISODate(config.discountStart);
-  const discountEnd = toISODate(config.discountEnd);
-  const lastNight = addIsoDays(stayEnd, -1);
-  return isoDateRange(stayStart, lastNight).some(
-    (night) => night < discountStart || night > discountEnd,
+/** Server-side mirror of BookingFields.tsx's client-side check (same
+ *  underlying logic, in stay-tiles-client.ts) - true when a room type
+ *  choice is required because at least one night falls outside the
+ *  standard block or the guaranteed group rate window and isn't already
+ *  covered by Cuesta. Needs to live server-side too since the block/
+ *  discount config itself is server-only. */
+export function bookingNeedsRoomType(
+  stayStart: string,
+  stayEnd: string,
+  companyPaidNights: string[],
+): boolean {
+  return needsRoomTypeChoice(
+    stayStart,
+    stayEnd,
+    companyPaidNights,
+    toISODate(config.blockStart),
+    toISODate(config.blockEnd),
+    toISODate(config.discountStart),
+    toISODate(config.discountEnd),
   );
 }
 

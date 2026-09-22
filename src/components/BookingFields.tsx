@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { BookingFormInput } from "@/lib/booking-schema";
 import { formatShortDate } from "@/lib/format";
-import { hasNightOutsideRange } from "@/lib/stay-tiles-client";
+import { needsRoomTypeChoice as nightsNeedRoomTypeChoice } from "@/lib/stay-tiles-client";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
 import { AIRLINE_OPTIONS } from "@/lib/airline-options";
 import Card from "./ui/Card";
@@ -30,23 +30,26 @@ export type FormConfig = {
 
 export type StaticContentItem = { key: string; title: string | null; body: string | null };
 
-/** True when any selected night falls outside the standard block or the
- *  guaranteed group-rate window, meaning a room type choice is required.
- *  The block/discount boundaries only matter once stay dates are picked, so
- *  this can't be a plain zod refine on the schema (which has no access to
- *  formConfig) - both the new-booking and edit-booking forms call this
- *  after the rest of the form has already validated, right before the
- *  request goes out. */
+/** True when at least one selected night both falls outside the standard
+ *  block or the guaranteed group-rate window AND isn't already covered by
+ *  Cuesta - meaning a room type choice is required, since that choice only
+ *  affects what the attendee themselves pays. The block/discount
+ *  boundaries only matter once stay dates are picked, so this can't be a
+ *  plain zod refine on the schema (which has no access to formConfig) -
+ *  both the new-booking and edit-booking forms call this after the rest of
+ *  the form has already validated, right before the request goes out. */
 export function needsRoomTypeChoice(values: BookingFormInput, formConfig: FormConfig): boolean {
   return (
     values.isAttending &&
-    (hasNightOutsideRange(values.stayStart, values.stayEnd, formConfig.blockStart, formConfig.blockEnd) ||
-      hasNightOutsideRange(
-        values.stayStart,
-        values.stayEnd,
-        formConfig.discountStart,
-        formConfig.discountEnd,
-      ))
+    nightsNeedRoomTypeChoice(
+      values.stayStart,
+      values.stayEnd,
+      values.companyPaidNights,
+      formConfig.blockStart,
+      formConfig.blockEnd,
+      formConfig.discountStart,
+      formConfig.discountEnd,
+    )
   );
 }
 
