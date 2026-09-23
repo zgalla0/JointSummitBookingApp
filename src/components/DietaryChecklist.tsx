@@ -15,12 +15,19 @@ export default function DietaryChecklist({
   onOtherChange: (value: string) => void;
 }) {
   function toggle(key: DietaryOptionKey) {
-    if (selected.includes(key)) {
-      onChange(selected.filter((k) => k !== key));
+    if (key === "NONE") {
+      onChange(selected.includes("NONE") ? [] : ["NONE"]);
+      return;
+    }
+    const withoutNone = selected.filter((k) => k !== "NONE");
+    if (withoutNone.includes(key)) {
+      onChange(withoutNone.filter((k) => k !== key));
     } else {
-      onChange([...selected, key]);
+      onChange([...withoutNone, key]);
     }
   }
+
+  const noneSelected = selected.includes("NONE");
 
   return (
     <div className="space-y-3">
@@ -30,6 +37,7 @@ export default function DietaryChecklist({
             key={option.key}
             label={option.label}
             checked={selected.includes(option.key)}
+            disabled={noneSelected && option.key !== "NONE"}
             onChange={() => toggle(option.key)}
           />
         ))}

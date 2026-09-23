@@ -81,7 +81,7 @@ export async function sendDuplicateWarningEmail(data: Omit<BookingEmailData, "bo
     text: [
       `Hi ${data.firstName},`,
       "",
-      "Looks like you've already submitted the Q1 Joint All Hands Summit attendance & hotel booking form. Here's your personal link to review or update it - no need to submit again:",
+      "Looks like you've already submitted the Q1 Joint All Hands Summit attendance & hotel booking form. Here's your personal link to review or update it:",
       data.magicLink,
       "",
       "If this wasn't you, or you think this is a mistake, reach out to the planning team directly.",

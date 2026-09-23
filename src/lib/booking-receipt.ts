@@ -1,5 +1,6 @@
 import type { Booking, BookingGuest } from "@prisma/client";
 import { parseJsonArray, bookingNights } from "./admin-stats";
+import { config } from "./config";
 import { formatMonthDay } from "./format";
 import { DIETARY_OPTIONS } from "./dietary-options";
 import { ROOM_TYPES } from "./room-types";
@@ -7,18 +8,25 @@ import { LOCATION_OPTIONS } from "./location-options";
 
 type BookingWithGuests = Booking & { guests?: BookingGuest[] };
 
-function dietaryLabel(keys: string[], other: string | null): string {
-  if (keys.length === 0) return "Not specified";
+function dietaryLabels(keys: string[], other: string | null): string[] {
   const labels = keys
     .filter((k) => k !== "OTHER")
     .map((k) => DIETARY_OPTIONS.find((o) => o.key === k)?.label ?? k);
   if (keys.includes("OTHER")) labels.push(other ? `Other (${other})` : "Other");
-  return labels.join(", ");
+  return labels;
+}
+
+// Used inline (guest lines, comma-joined) rather than as its own bulleted
+// list like the main dietary block below.
+function dietaryLabel(keys: string[], other: string | null): string {
+  const labels = dietaryLabels(keys, other);
+  return labels.length > 0 ? labels.join(", ") : "Not specified";
 }
 
 function formatFlightDateTime(date: Date | null): string {
   if (!date) return "";
-  return date.toISOString().slice(0, 16).replace("T", " ");
+  const [isoDate, isoTime] = date.toISOString().slice(0, 16).split("T");
+  return `${isoDate} / ${isoTime}`;
 }
 
 /** Plain-text receipt of everything the attendee submitted - included at
@@ -37,78 +45,101 @@ export function buildBookingReceiptText(booking: BookingWithGuests): string {
   const selfNights = nights.filter((n) => !companyPaid.has(n));
   const location = LOCATION_OPTIONS.find((o) => o.key === booking.location)?.label ?? booking.location;
 
-  lines.push(`Reservation name: ${booking.reservationFirstName} ${booking.reservationLastName}`);
-  if (booking.nameTag) lines.push(`Name tag: ${booking.nameTag}`);
-  lines.push(`Location: ${location}`);
+  const DIVIDER = "-".repeat(40);
+  const headerLabel = (s: string) => `${s} `;
+  const bulletLabel = (s: string) => `   • ${s} `;
+
+  lines.push(DIVIDER);
+  lines.push(`${headerLabel("Reservation name:")}${booking.reservationFirstName} ${booking.reservationLastName}`);
+  if (booking.nameTag) lines.push(`${headerLabel("Name tag:")}${booking.nameTag}`);
+  lines.push(`${headerLabel("Location:")}${location}`);
   lines.push("");
   lines.push(
-    `Stay: ${formatMonthDay(booking.stayStart)} - ${formatMonthDay(booking.stayEnd)} (${nights.length} night${nights.length === 1 ? "" : "s"})`,
+    `STAY:  ${formatMonthDay(booking.stayStart)} - ${formatMonthDay(booking.stayEnd)} (${nights.length} night${nights.length === 1 ? "" : "s"})`,
   );
   if (companyNights.length > 0) {
-    lines.push(`  Paid by Cuesta: ${companyNights.map((n) => formatMonthDay(n)).join(", ")}`);
+    lines.push(`${bulletLabel("Paid by Cuesta:")}${companyNights.map((n) => formatMonthDay(n)).join(", ")}`);
   }
   if (selfNights.length > 0) {
-    lines.push(`  Self-paid: ${selfNights.map((n) => formatMonthDay(n)).join(", ")}`);
+    lines.push(`${bulletLabel("Self-paid:")}${selfNights.map((n) => formatMonthDay(n)).join(", ")}`);
   }
   if (booking.extraNightsRoomType) {
     const roomLabel =
       ROOM_TYPES.find((rt) => rt.key === booking.extraNightsRoomType)?.label ?? booking.extraNightsRoomType;
-    lines.push(`  Room type for night(s) outside the standard rate: ${roomLabel}`);
+    lines.push(`${bulletLabel("Room type (self-paid nights):")}${roomLabel}`);
   }
 
   const events = [
-    booking.attendingHappyHour && "Happy Hour",
-    booking.attendingAllHands && "All Hands",
-    booking.attendingDinner && "Dinner",
-  ].filter(Boolean);
+    booking.attendingHappyHour && `Happy Hour (${formatMonthDay(config.happyHourDate)})`,
+    booking.attendingAllHands && `All Hands (${formatMonthDay(config.allHandsDate)})`,
+    booking.attendingDinner && `Dinner (${formatMonthDay(config.dinnerDate)})`,
+  ].filter((v): v is string => Boolean(v));
   lines.push("");
-  lines.push(`Events attending: ${events.length > 0 ? events.join(", ") : "None"}`);
-  lines.push(
-    `Dietary restrictions: ${dietaryLabel(parseJsonArray(booking.dietaryOptions), booking.dietaryOther)}`,
-  );
+  lines.push("Events:");
+  if (events.length > 0) {
+    for (const event of events) lines.push(`   • ${event}`);
+  } else {
+    lines.push("   • None");
+  }
+
+  lines.push("");
+  lines.push("Dietary:");
+  const dietary = dietaryLabels(parseJsonArray(booking.dietaryOptions), booking.dietaryOther);
+  if (dietary.length > 0) {
+    for (const item of dietary) lines.push(`   • ${item}`);
+  } else {
+    lines.push("   • Not specified");
+  }
 
   const ptoDates = parseJsonArray(booking.ptoDates);
   if (ptoDates.length > 0) {
-    lines.push(`PTO days: ${ptoDates.map((d) => formatMonthDay(d)).join(", ")}`);
+    lines.push("");
+    lines.push("PTO days:");
+    for (const d of ptoDates) lines.push(`   • ${formatMonthDay(d)}`);
   }
 
   if (booking.guests && booking.guests.length > 0) {
     lines.push("");
     lines.push("Additional guests:");
     for (const g of booking.guests) {
-      const guestEvents = [g.attendingHappyHour && "Happy Hour", g.attendingDinner && "Dinner"].filter(
-        Boolean,
-      );
+      const guestEvents = [
+        g.attendingHappyHour && `Happy Hour (${formatMonthDay(config.happyHourDate)})`,
+        g.attendingDinner && `Dinner (${formatMonthDay(config.dinnerDate)})`,
+      ].filter((v): v is string => Boolean(v));
       const guestDiet = dietaryLabel(parseJsonArray(g.dietaryOptions), g.dietaryOther);
-      const eventsNote = guestEvents.length > 0 ? `, joining: ${guestEvents.join(", ")}` : "";
-      lines.push(
-        `  - ${g.firstName} ${g.lastName} (${g.type === "CHILD" ? "Child" : "Adult"})${eventsNote}, dietary: ${guestDiet}`,
-      );
+      lines.push(`   • ${g.firstName} ${g.lastName} (${g.type === "CHILD" ? "Child" : "Adult"}):`);
+      if (guestEvents.length > 0) lines.push(`      • Joining: ${guestEvents.join(", ")}`);
+      lines.push(`      • Dietary: ${guestDiet}`);
     }
   }
 
   if (booking.flightArrivalAirline || booking.flightDepartureAirline) {
     lines.push("");
-    lines.push("Flight details:");
+    lines.push("Flights:");
     if (booking.flightArrivalAirline) {
+      lines.push("   • Arrival:");
+      lines.push(`      • ${booking.flightArrivalAirline}`);
+      if (booking.flightArrivalNumber) lines.push(`      • ${booking.flightArrivalNumber}`);
       const when = formatFlightDateTime(booking.flightArrival);
-      lines.push(
-        `  Arrival: ${booking.flightArrivalAirline} ${booking.flightArrivalNumber || ""}${when ? `, ${when}` : ""}`.trimEnd(),
-      );
+      if (when) lines.push(`      • ${when}`);
     }
     if (booking.flightDepartureAirline) {
+      lines.push("   • Departure:");
+      lines.push(`      • ${booking.flightDepartureAirline}`);
+      if (booking.flightDepartureNumber) lines.push(`      • ${booking.flightDepartureNumber}`);
       const when = formatFlightDateTime(booking.flightDeparture);
-      lines.push(
-        `  Departure: ${booking.flightDepartureAirline} ${booking.flightDepartureNumber || ""}${when ? `, ${when}` : ""}`.trimEnd(),
-      );
+      if (when) lines.push(`      • ${when}`);
     }
-    if (booking.flightNotes) lines.push(`  Flight notes: ${booking.flightNotes}`);
+    if (booking.flightNotes) lines.push(`${bulletLabel("Flight notes:")}${booking.flightNotes}`);
   }
 
   if (booking.additionalNotes) {
     lines.push("");
-    lines.push(`Additional notes: ${booking.additionalNotes}`);
+    lines.push("Additional notes:");
+    lines.push(`  ${booking.additionalNotes}`);
   }
+
+  lines.push(DIVIDER);
 
   return lines.join("\n");
 }

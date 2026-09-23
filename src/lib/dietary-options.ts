@@ -1,4 +1,5 @@
 export const DIETARY_OPTIONS = [
+  { key: "NONE", label: "None" },
   { key: "VEGETARIAN", label: "Vegetarian" },
   { key: "VEGAN", label: "Vegan" },
   { key: "HALAL", label: "Halal" },

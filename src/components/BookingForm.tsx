@@ -168,11 +168,15 @@ export default function BookingForm({
         </h1>
       </div>
 
-      <p className="animate-in rounded-2xl bg-notice-bg px-5 py-4 text-lg font-bold text-foreground sm:text-xl">
-        {NO_ROOM_WARNING}
-      </p>
+      {step !== "duplicate" && (
+        <>
+          <p className="animate-in rounded-2xl bg-notice-bg px-5 py-4 text-lg font-bold text-foreground sm:text-xl">
+            {NO_ROOM_WARNING}
+          </p>
 
-      <NoticeBannerFull />
+          <NoticeBannerFull />
+        </>
+      )}
 
       {step !== "form" && submitError && (
         <div className="animate-in rounded-2xl bg-red-50 p-4 text-sm text-red-700">
