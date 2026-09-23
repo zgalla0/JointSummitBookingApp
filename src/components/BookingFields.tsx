@@ -12,6 +12,7 @@ import Button from "./ui/Button";
 import Checkbox from "./ui/Checkbox";
 import GuestFields from "./GuestFields";
 import DietaryChecklist from "./DietaryChecklist";
+import ActivityChecklist from "./ActivityChecklist";
 import StayDatesPicker from "./StayDatesPicker";
 
 export type FormConfig = {
@@ -118,6 +119,8 @@ export default function BookingFields({
   const attendingDinner = mainForm.watch("attendingDinner");
   const dietaryOptions = mainForm.watch("dietaryOptions");
   const dietaryOther = mainForm.watch("dietaryOther");
+  const activityOptions = mainForm.watch("activityOptions");
+  const activityOther = mainForm.watch("activityOther");
   const flightArrivalAirline = mainForm.watch("flightArrivalAirline");
   const flightDepartureAirline = mainForm.watch("flightDepartureAirline");
 
@@ -285,6 +288,25 @@ export default function BookingFields({
                     {mainForm.formState.errors.attendingHappyHour.message}
                   </p>
                 )}
+              </Card>
+
+              <Card
+                eyebrow="Activity"
+                title="Which activities would you be interested in?"
+              >
+                <p className="mb-3 text-sm text-muted">
+                  Select all that apply -{" "}
+                  <strong className="font-bold text-foreground">
+                    this is just to help us gauge interest, not a final decision
+                  </strong>{" "}
+                  on what we&apos;ll do.
+                </p>
+                <ActivityChecklist
+                  selected={activityOptions}
+                  other={activityOther}
+                  onChange={(next) => mainForm.setValue("activityOptions", next)}
+                  onOtherChange={(val) => mainForm.setValue("activityOther", val)}
+                />
               </Card>
 
               {miniStep !== "events" && (

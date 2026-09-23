@@ -51,6 +51,8 @@ const emptyDefaults: BookingFormInput = {
   guests: [],
   dietaryOptions: [],
   dietaryOther: "",
+  activityOptions: [],
+  activityOther: "",
   flightArrivalAirline: "",
   flightArrivalNumber: "",
   flightArrival: "",

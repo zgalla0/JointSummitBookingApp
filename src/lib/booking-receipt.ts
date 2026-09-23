@@ -3,6 +3,7 @@ import { parseJsonArray, bookingNights } from "./admin-stats";
 import { config } from "./config";
 import { formatMonthDay } from "./format";
 import { DIETARY_OPTIONS } from "./dietary-options";
+import { ACTIVITY_OPTIONS } from "./activity-options";
 import { ROOM_TYPES } from "./room-types";
 import { LOCATION_OPTIONS } from "./location-options";
 
@@ -21,6 +22,14 @@ function dietaryLabels(keys: string[], other: string | null): string[] {
 function dietaryLabel(keys: string[], other: string | null): string {
   const labels = dietaryLabels(keys, other);
   return labels.length > 0 ? labels.join(", ") : "Not specified";
+}
+
+function activityLabels(keys: string[], other: string | null): string[] {
+  const labels = keys
+    .filter((k) => k !== "OTHER")
+    .map((k) => ACTIVITY_OPTIONS.find((o) => o.key === k)?.label ?? k);
+  if (keys.includes("OTHER")) labels.push(other ? `Other (${other})` : "Other");
+  return labels;
 }
 
 function formatFlightDateTime(date: Date | null): string {
@@ -89,6 +98,16 @@ export function buildBookingReceiptText(booking: BookingWithGuests): string {
     for (const item of dietary) lines.push(`   • ${item}`);
   } else {
     lines.push("   • Not specified");
+  }
+
+  // Interest poll, not a commitment - only shown when something was
+  // actually selected, unlike Dietary (which always shows, even as "Not
+  // specified", since it's effectively required whenever it matters).
+  const activities = activityLabels(parseJsonArray(booking.activityOptions), booking.activityOther);
+  if (activities.length > 0) {
+    lines.push("");
+    lines.push("Activities interested in:");
+    for (const item of activities) lines.push(`   • ${item}`);
   }
 
   const ptoDates = parseJsonArray(booking.ptoDates);

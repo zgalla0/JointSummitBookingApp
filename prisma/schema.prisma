@@ -84,6 +84,12 @@ model Booking {
   dietaryOptions String? // JSON-encoded string[] of option keys
   dietaryOther   String? // free text, used only when "Other" is selected
 
+  // Interest in optional group activities/excursions - a poll for gauging
+  // demand, not a commitment to run any of them. Attendee-only (no
+  // per-guest equivalent), same multi-select-plus-"Other" shape as dietary.
+  activityOptions String? // JSON-encoded string[] of option keys
+  activityOther   String? // free text, used only when "Other" is selected
+
   // Flight details, split into an arrival leg and a departure leg since
   // they may be different flights (different airline/number)
   flightArrivalAirline   String?

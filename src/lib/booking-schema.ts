@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DIETARY_OPTION_KEYS } from "./dietary-options";
+import { ACTIVITY_OPTION_KEYS } from "./activity-options";
 import { ROOM_TYPE_KEYS } from "./room-types";
 import { LOCATION_KEYS } from "./location-options";
 
@@ -103,6 +104,11 @@ export const bookingFormSchema = z
 
     dietaryOptions: z.array(z.enum(DIETARY_OPTION_KEYS)).max(DIETARY_OPTION_KEYS.length),
     dietaryOther: z.string().trim().max(500),
+
+    // Interest poll, not a commitment - optional, no minimum-selection
+    // requirement like dietaryOptions has.
+    activityOptions: z.array(z.enum(ACTIVITY_OPTION_KEYS)).max(ACTIVITY_OPTION_KEYS.length),
+    activityOther: z.string().trim().max(500),
 
     flightArrivalAirline: z.string().trim().max(200),
     flightArrivalNumber: z.string().trim().max(50),

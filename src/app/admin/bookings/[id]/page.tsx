@@ -115,6 +115,11 @@ export default async function AdminBookingDetailPage({
           <Row label="Other" value={booking.dietaryOther} />
         </Card>
 
+        <Card eyebrow="Activity" title="Activity interest">
+          <Row label="Options" value={parseJsonArray(booking.activityOptions).join(", ")} />
+          <Row label="Other" value={booking.activityOther} />
+        </Card>
+
         <Card eyebrow="Travel" title="Flight details">
           <Row label="Arrival airline" value={booking.flightArrivalAirline} />
           <Row label="Arrival flight #" value={booking.flightArrivalNumber} />

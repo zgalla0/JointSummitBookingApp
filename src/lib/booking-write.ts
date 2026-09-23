@@ -45,6 +45,8 @@ export function bookingWriteData(
     ptoDates: data.isAttending && data.ptoDates.length > 0 ? JSON.stringify(data.ptoDates) : null,
     dietaryOptions: JSON.stringify(data.isAttending ? data.dietaryOptions : []),
     dietaryOther: data.isAttending && data.dietaryOptions.includes("OTHER") ? data.dietaryOther || null : null,
+    activityOptions: JSON.stringify(data.isAttending ? data.activityOptions : []),
+    activityOther: data.isAttending && data.activityOptions.includes("OTHER") ? data.activityOther || null : null,
     flightArrivalAirline: data.isAttending ? data.flightArrivalAirline || null : null,
     flightArrivalNumber: data.isAttending ? data.flightArrivalNumber || null : null,
     flightArrival: data.isAttending && data.flightArrival ? new Date(data.flightArrival) : null,
