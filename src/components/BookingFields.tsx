@@ -299,7 +299,8 @@ export default function BookingFields({
                   <strong className="font-bold text-foreground">
                     this is just to help us gauge interest, not a final decision
                   </strong>{" "}
-                  on what we&apos;ll do.
+                  on what we&apos;ll do. Driving/walking times shown are approximate, from the
+                  hotel.
                 </p>
                 <ActivityChecklist
                   selected={activityOptions}
@@ -444,14 +445,6 @@ export default function BookingFields({
                           </Field>
                         </div>
                       </div>
-                      <Field label="Other flight notes">
-                        <textarea
-                          className="field"
-                          rows={2}
-                          placeholder="Optional"
-                          {...mainForm.register("flightNotes")}
-                        />
-                      </Field>
                     </div>
                   </Card>
                 </>

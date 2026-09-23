@@ -53,7 +53,6 @@ export function bookingWriteData(
     flightDepartureAirline: data.isAttending ? data.flightDepartureAirline || null : null,
     flightDepartureNumber: data.isAttending ? data.flightDepartureNumber || null : null,
     flightDeparture: data.isAttending && data.flightDeparture ? new Date(data.flightDeparture) : null,
-    flightNotes: data.isAttending ? data.flightNotes || null : null,
     additionalNotes: data.additionalNotes || null,
     flaggedForReview: data.isAttending && data.guests.length > 1,
     flagReason: data.isAttending && data.guests.length > 1 ? "More than 1 additional guest" : null,

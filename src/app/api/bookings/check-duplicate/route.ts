@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { identitySchema } from "@/lib/booking-schema";
-import { findBookingByName } from "@/lib/duplicate-check";
+import { findBookingByEmail } from "@/lib/duplicate-check";
 import { magicLinkUrl } from "@/lib/magic-link";
 import { sendDuplicateWarningEmail } from "@/lib/email";
 
@@ -11,11 +11,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  // Matched by name only (no two attendees share a name for this event) -
-  // the email typed here may not be the one on file, so the link goes to
-  // whichever email the original booking actually used.
-  const { firstName, lastName } = parsed.data;
-  const existing = await findBookingByName(firstName, lastName);
+  // Matched by email only - everyone is unique by email for this event.
+  const { firstName, email } = parsed.data;
+  const existing = await findBookingByEmail(email);
 
   if (!existing) {
     return NextResponse.json({ duplicate: false });

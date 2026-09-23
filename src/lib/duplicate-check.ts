@@ -5,57 +5,30 @@ function normalize(value: string): string {
 }
 
 /**
- * Exact (non-fuzzy) match on first name + last name only, case-insensitive.
- * The attendee list for one event has no two people sharing a name, so name
- * alone reliably answers "have I already submitted?" - the email typed at
- * that point may not be the one on file (e.g. someone types their Cuesta
- * email out of habit but originally booked with a personal one), so it's
- * deliberately not part of the match. Actually updating a booking still
- * requires the emailed magic link, so a name-only lookup here doesn't
- * weaken anything.
+ * Exact (non-fuzzy) match on email alone, case-insensitive - everyone is
+ * unique by email, so this is the one lookup used everywhere a booking
+ * needs to be found or a duplicate needs to be blocked: the Step 0 "have I
+ * already submitted?" check, the "resend my link" lookup, and create/edit
+ * enforcement that nobody submits twice under the same email. Matches
+ * against hotelEmail, detailsEmail, or cuestaEmail - in practice all three
+ * hold the same value (the form only collects one email now), but a
+ * booking created before that consolidation could still have them differ.
  */
-export async function findBookingByName(firstName: string, lastName: string, excludeId?: string) {
-  const fn = normalize(firstName);
-  const ln = normalize(lastName);
-
-  // SQLite compares TEXT case-sensitively by default, so narrowing by an
-  // exact-case DB filter could miss a same-name-different-case match. The
-  // attendee list for one event is small, so fetch everything and compare
-  // case-insensitively in JS instead.
-  const candidates = await prisma.booking.findMany();
-
-  return (
-    candidates.find(
-      (b) => b.id !== excludeId && normalize(b.firstName) === fn && normalize(b.lastName) === ln,
-    ) ?? null
-  );
-}
-
-/**
- * Match on first name + last name + email, case-insensitive. Email may
- * match either the hotel-booking email or the details email on file. Used
- * where a false-positive name-only match would be a real problem (creating
- * or editing a booking), unlike the "did I already submit?" lookup above.
- */
-export async function findDuplicateBooking(
-  firstName: string,
-  lastName: string,
-  email: string,
-  excludeId?: string,
-) {
-  const fn = normalize(firstName);
-  const ln = normalize(lastName);
+export async function findBookingByEmail(email: string, excludeId?: string) {
   const em = normalize(email);
 
+  // The attendee list for one event is small, so fetch everything and
+  // compare case-insensitively in JS rather than relying on the DB's
+  // (possibly case-sensitive) text comparison.
   const candidates = await prisma.booking.findMany();
 
   return (
     candidates.find(
       (b) =>
         b.id !== excludeId &&
-        normalize(b.firstName) === fn &&
-        normalize(b.lastName) === ln &&
-        (normalize(b.hotelEmail) === em || normalize(b.detailsEmail) === em),
+        (normalize(b.hotelEmail) === em ||
+          normalize(b.detailsEmail) === em ||
+          normalize(b.cuestaEmail) === em),
     ) ?? null
   );
 }

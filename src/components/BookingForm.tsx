@@ -59,7 +59,6 @@ const emptyDefaults: BookingFormInput = {
   flightDepartureAirline: "",
   flightDepartureNumber: "",
   flightDeparture: "",
-  flightNotes: "",
   additionalNotes: "",
 };
 
@@ -247,6 +246,42 @@ export default function BookingForm({
           </Card>
 
           <div className="space-y-6">
+            <Card eyebrow="TLDR" title="Summit info at a glance">
+              <ul className="space-y-2 text-sm text-muted">
+                <li>
+                  <strong className="text-foreground">Dates:</strong>{" "}
+                  {formatMonthDay(formConfig.happyHourDate)}–
+                  {formatMonthDay(formConfig.allHandsDate)}, 2026
+                </li>
+                <li>
+                  <strong className="text-foreground">Fly into:</strong> Mexico
+                  City International Airport (MEX)
+                </li>
+                <li>
+                  <strong className="text-foreground">Airport to hotel:</strong>{" "}
+                  About 30-60 minutes by car, depending on traffic
+                </li>
+                <li>
+                  <strong className="text-foreground">Hotel:</strong>{" "}
+                  <a
+                    href={HOTEL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-accent-dark hover:underline"
+                  >
+                    {HOTEL_NAME}
+                  </a>
+                  , {HOTEL_ADDRESS}
+                </li>
+                <li>
+                  <strong className="text-foreground">Schedule:</strong> Happy
+                  Hour ({formatShortDate(formConfig.happyHourDate)}), All Hands
+                  ({formatShortDate(formConfig.allHandsDate)}), Dinner (
+                  {formatShortDate(formConfig.dinnerDate)})
+                </li>
+              </ul>
+            </Card>
+
             <Card
               eyebrow="Get started"
               title="Start the form here, or get your magic link again to edit your form"
@@ -290,42 +325,6 @@ export default function BookingForm({
                   {checking ? "Checking..." : "Continue"}
                 </Button>
               </form>
-            </Card>
-
-            <Card eyebrow="TLDR" title="Summit info at a glance">
-              <ul className="space-y-2 text-sm text-muted">
-                <li>
-                  <strong className="text-foreground">Dates:</strong>{" "}
-                  {formatMonthDay(formConfig.happyHourDate)}–
-                  {formatMonthDay(formConfig.allHandsDate)}, 2026
-                </li>
-                <li>
-                  <strong className="text-foreground">Fly into:</strong> Mexico
-                  City International Airport (MEX)
-                </li>
-                <li>
-                  <strong className="text-foreground">Airport to hotel:</strong>{" "}
-                  About 30-60 minutes by car, depending on traffic
-                </li>
-                <li>
-                  <strong className="text-foreground">Hotel:</strong>{" "}
-                  <a
-                    href={HOTEL_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-accent-dark hover:underline"
-                  >
-                    {HOTEL_NAME}
-                  </a>
-                  , {HOTEL_ADDRESS}
-                </li>
-                <li>
-                  <strong className="text-foreground">Schedule:</strong> Happy
-                  Hour ({formatShortDate(formConfig.happyHourDate)}), All Hands
-                  ({formatShortDate(formConfig.allHandsDate)}), Dinner (
-                  {formatShortDate(formConfig.dinnerDate)})
-                </li>
-              </ul>
             </Card>
           </div>
 
@@ -391,8 +390,8 @@ export default function BookingForm({
                 </div>
               )}
 
-              <Button type="submit" disabled={submitting}>
-                {submitting ? "Submitting..." : "Submit booking"}
+              <Button type="submit" variant="dark" disabled={submitting}>
+                {submitting ? "Submitting..." : "Submit"}
               </Button>
             </>
           )}

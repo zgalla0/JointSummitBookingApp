@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { bookingFormSchema } from "@/lib/booking-schema";
-import { findDuplicateBooking } from "@/lib/duplicate-check";
+import { findBookingByEmail } from "@/lib/duplicate-check";
 import { prisma } from "@/lib/prisma";
 import { generateMagicLinkToken, magicLinkExpiry, magicLinkUrl } from "@/lib/magic-link";
 import { sendConfirmationEmail, sendPlanningTeamNotesEmail } from "@/lib/email";
@@ -16,11 +16,12 @@ export async function POST(req: Request) {
   const data = parsed.data;
 
   // Defense in depth: the client already ran the Step 0 duplicate check, but
-  // re-verify here in case of a race or a client that skipped it.
-  const existing = await findDuplicateBooking(data.firstName, data.lastName, data.hotelEmail);
+  // re-verify here in case of a race or a client that skipped it. Everyone
+  // is unique by email - no one submits twice under the same address.
+  const existing = await findBookingByEmail(data.cuestaEmail);
   if (existing) {
     return NextResponse.json(
-      { error: { formErrors: ["A booking already exists for this name and email."] } },
+      { error: { formErrors: ["A booking already exists for this email."] } },
       { status: 409 },
     );
   }

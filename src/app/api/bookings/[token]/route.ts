@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { bookingFormSchema } from "@/lib/booking-schema";
-import { findDuplicateBooking } from "@/lib/duplicate-check";
+import { findBookingByEmail } from "@/lib/duplicate-check";
 import { prisma } from "@/lib/prisma";
 import { getBookingByToken } from "@/lib/get-booking-by-token";
 import { isLockedIn } from "@/lib/config";
@@ -44,15 +44,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
   }
   const data = parsed.data;
 
-  const conflicting = await findDuplicateBooking(
-    data.firstName,
-    data.lastName,
-    data.hotelEmail,
-    booking.id,
-  );
+  const conflicting = await findBookingByEmail(data.cuestaEmail, booking.id);
   if (conflicting) {
     return NextResponse.json(
-      { error: { formErrors: ["Another booking already exists for this name and email."] } },
+      { error: { formErrors: ["Another booking already exists for this email."] } },
       { status: 409 },
     );
   }

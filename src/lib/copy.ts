@@ -5,7 +5,7 @@ export const NO_ROOM_WARNING =
 
 export const NOTICE = {
   opener: "Here's what you need to know before you get started.",
-  pill: "Make all changes through this app, follow links through your email or search your name to update the booking.",
+  pill: "Make all changes through this app, follow links through your email or look up your booking by email.",
   playfulEmoji: "✨",
   playful: "Don't slack/email the planning committee!",
   summitDetails:
@@ -17,7 +17,7 @@ export const NOTICE = {
 
 // Short version (with the sparkle line), reused on the lookup page only.
 export const NOTICE_SHORT =
-  "Make all changes through this app, follow links through your email or search your name to update the booking.";
+  "Make all changes through this app, follow links through your email or look up your booking by email.";
 
 // Plain reminder shown just above the submit button. Distinct from the
 // banner above: no sparkles, explains how the magic link actually works.

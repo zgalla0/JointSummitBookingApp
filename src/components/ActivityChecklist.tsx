@@ -28,7 +28,23 @@ export default function ActivityChecklist({
         {ACTIVITY_OPTIONS.map((option) => (
           <Checkbox
             key={option.key}
-            label={option.label}
+            label={
+              "url" in option ? (
+                <>
+                  <a
+                    href={option.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-accent-dark hover:underline"
+                  >
+                    {option.label}
+                  </a>{" "}
+                  - {option.drivingMin} min driving, {option.walkingMin} min walking
+                </>
+              ) : (
+                option.label
+              )
+            }
             checked={selected.includes(option.key)}
             onChange={() => toggle(option.key)}
           />

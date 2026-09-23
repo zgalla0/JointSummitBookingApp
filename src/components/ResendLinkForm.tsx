@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { identitySchema, type IdentityInput } from "@/lib/booking-schema";
+import { emailLookupSchema, type EmailLookupInput } from "@/lib/booking-schema";
 import { Field } from "./BookingFields";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
@@ -13,12 +13,12 @@ export default function ResendLinkForm() {
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 
-  const form = useForm<IdentityInput>({
-    resolver: zodResolver(identitySchema),
-    defaultValues: { firstName: "", lastName: "", email: "" },
+  const form = useForm<EmailLookupInput>({
+    resolver: zodResolver(emailLookupSchema),
+    defaultValues: { email: "" },
   });
 
-  async function onSubmit(values: IdentityInput) {
+  async function onSubmit(values: EmailLookupInput) {
     setSubmitting(true);
     try {
       await fetch("/api/bookings/resend-link", {
@@ -36,8 +36,8 @@ export default function ResendLinkForm() {
     return (
       <Card title="Check your email">
         <p className="text-muted">
-          If we found a booking under that name/email, we&apos;ve emailed a link to you to manage
-          your existing booking. Give it a minute to arrive.
+          If we found a booking under that email, we&apos;ve emailed a link to you to manage your
+          existing booking. Give it a minute to arrive.
         </p>
       </Card>
     );
@@ -46,14 +46,6 @@ export default function ResendLinkForm() {
   return (
     <Card eyebrow="Find your booking" title="Resend my link">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="First name" error={form.formState.errors.firstName?.message}>
-            <input className="field" {...form.register("firstName")} />
-          </Field>
-          <Field label="Last name" error={form.formState.errors.lastName?.message}>
-            <input className="field" {...form.register("lastName")} />
-          </Field>
-        </div>
         <Field label="Cuesta email" error={form.formState.errors.email?.message}>
           <input className="field" placeholder="you@cuestapartners.com" {...form.register("email")} />
         </Field>

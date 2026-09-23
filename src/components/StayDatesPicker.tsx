@@ -303,14 +303,22 @@ export default function StayDatesPicker({
         to your manager or Dani V.
       </p>
 
-      <p className="rounded-xl bg-background p-3 text-xs text-muted">
-        Check &quot;PTO&quot; on any weekday tile below to mark the day as PTO. This just helps us
-        track PTO across the company for coverage purposes.{" "}
-        <strong className="font-bold text-warning">
-          You still need to enter your PTO in Mavenlink separately,{" "}
-          <u>this does not submit it for you</u>.
-        </strong>
-      </p>
+      <ul className="list-disc space-y-2 rounded-xl bg-background p-3 pl-8 text-sm text-muted">
+        <li>
+          Click your check-in date, then click your check-out date. The default dates are the
+          regular summit dates of 21-23 Jan. For example, clicking Thursday then Saturday means
+          you&apos;re covering 2 nights: Thursday and Friday - Saturday itself is your check-out
+          day, not a paid night.
+        </li>
+        <li>
+          Check &quot;PTO&quot; on any weekday tile below to mark the day as PTO. This just helps us
+          track PTO across the company for coverage purposes.{" "}
+          <strong className="font-bold text-warning">
+            You still need to enter your PTO in Mavenlink separately,{" "}
+            <u>this does not submit it for you</u>.
+          </strong>
+        </li>
+      </ul>
 
       {selectedNights.length > 0 && (
         <p className="rounded-xl border border-hairline bg-surface p-3 text-center text-sm text-muted">
@@ -379,12 +387,6 @@ export default function StayDatesPicker({
           {CUESTA_APPROVAL_NOTE}
         </p>
       )}
-
-      <p className="rounded-xl bg-background p-3 text-xs text-muted">
-        Click your check-in date, then click your check-out date. For example, clicking Thursday then
-        Saturday means you&apos;re covering 2 nights: Thursday and Friday - Saturday itself is your
-        check-out day, not a paid night.
-      </p>
 
       <p
         className={`rounded-xl p-3 text-xs ${

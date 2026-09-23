@@ -48,6 +48,12 @@ export const identitySchema = z.object({
   email: cuestaEmailSchema,
 });
 
+// "Resend my link" lookup - everyone is unique by email, so this is the
+// only input the lookup needs (no name).
+export const emailLookupSchema = z.object({
+  email: cuestaEmailSchema,
+});
+
 export const bookingFormSchema = z
   .object({
     firstName: z.string().trim().min(1, "First name is required"),
@@ -116,7 +122,6 @@ export const bookingFormSchema = z
     flightDepartureAirline: z.string().trim().max(200),
     flightDepartureNumber: z.string().trim().max(50),
     flightDeparture: z.string().trim(),
-    flightNotes: z.string().trim().max(2000),
 
     additionalNotes: z.string().trim().max(2000),
   })
@@ -170,3 +175,4 @@ export const bookingFormSchema = z
 export type BookingFormInput = z.infer<typeof bookingFormSchema>;
 export type GuestInput = z.infer<typeof guestSchema>;
 export type IdentityInput = z.infer<typeof identitySchema>;
+export type EmailLookupInput = z.infer<typeof emailLookupSchema>;
