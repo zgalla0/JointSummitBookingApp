@@ -88,7 +88,7 @@ export default function EditBookingForm({
 
   const header = (
     <div className="animate-in space-y-1">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-3">
         <p className="eyebrow">Manage your booking</p>
         <Link
           href="/"

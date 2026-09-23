@@ -163,8 +163,10 @@ export default function BookingForm({
   return (
     <div className="space-y-6">
       <div className="animate-in space-y-1">
-        <div className="flex items-center justify-between gap-4">
-          <p className="eyebrow">Hotel Booking</p>
+        <div className="flex items-center gap-3">
+          <p className="eyebrow" style={{ fontSize: "1.3125rem" }}>
+            Hotel Booking
+          </p>
           {/* Once past the identity step, this page's own Reference/FAQ
               cards are no longer shown (they're only part of the identity
               screen) - opens a fresh copy of this page in a new tab so
