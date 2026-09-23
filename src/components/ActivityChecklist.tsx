@@ -29,16 +29,20 @@ export default function ActivityChecklist({
           <Checkbox
             key={option.key}
             label={
-              "url" in option ? (
+              "drivingMin" in option ? (
                 <>
-                  <a
-                    href={option.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold text-accent-dark hover:underline"
-                  >
-                    {option.label}
-                  </a>{" "}
+                  {"url" in option ? (
+                    <a
+                      href={option.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-accent-dark hover:underline"
+                    >
+                      {option.label}
+                    </a>
+                  ) : (
+                    option.label
+                  )}{" "}
                   - {option.drivingMin} min driving, {option.walkingMin} min walking
                 </>
               ) : (

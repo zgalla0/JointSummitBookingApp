@@ -31,6 +31,12 @@ export const ACTIVITY_OPTIONS = [
     drivingMin: 10,
     walkingMin: 35,
   },
+  {
+    key: "SOCCER_MATCH",
+    label: "US/Canada/Ireland vs. LATAM soccer/football match at local field",
+    drivingMin: 12,
+    walkingMin: 22,
+  },
   { key: "FREE_TIME", label: "I would rather have free time" },
   { key: "OTHER", label: "Other" },
 ] as const;
