@@ -163,7 +163,24 @@ export default function BookingForm({
   return (
     <div className="space-y-6">
       <div className="animate-in space-y-1">
-        <p className="eyebrow">Hotel Booking</p>
+        <div className="flex items-center justify-between gap-4">
+          <p className="eyebrow">Hotel Booking</p>
+          {/* Once past the identity step, this page's own Reference/FAQ
+              cards are no longer shown (they're only part of the identity
+              screen) - opens a fresh copy of this page in a new tab so
+              looking something up doesn't lose progress on the form
+              already filled out here. */}
+          {step !== "identity" && (
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-semibold text-accent-dark hover:underline"
+            >
+              Agenda &amp; FAQ →
+            </Link>
+          )}
+        </div>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           Q1 Joint All Hands Summit Attendance and Hotel Booking
         </h1>

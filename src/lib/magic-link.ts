@@ -12,7 +12,16 @@ export function magicLinkExpiry(from: Date = new Date()): Date {
   return expires;
 }
 
+function baseUrl(): string {
+  return process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+}
+
 export function magicLinkUrl(token: string): string {
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
-  return `${base}/my-booking/${token}`;
+  return `${baseUrl()}/my-booking/${token}`;
+}
+
+/** The main booking-form page - linked from emails so an attendee can look
+ *  up the Reference/FAQ info without needing their personal magic link. */
+export function appHomeUrl(): string {
+  return baseUrl();
 }

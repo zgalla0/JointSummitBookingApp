@@ -318,19 +318,19 @@ export default function StayDatesPicker({
           track PTO across the company for coverage purposes.
           <ul className="mt-1 list-disc space-y-1 pl-5">
             <li>
-              <strong className="font-bold text-warning">
+              <strong className="font-bold text-foreground">
                 US, Canada, Ireland: You still need to enter your PTO in Mavenlink and get
                 project manager approval separately, <u>this is not in place of that</u>.
               </strong>
             </li>
             <li>
-              <strong className="font-bold text-warning">
+              <strong className="font-bold text-foreground">
                 LATAM: You still need to{" "}
                 <a
                   href="https://cuestapartnersllc.sharepoint.com/:x:/r/sites/CuestaHQ-NEW01_People_/_layouts/15/Doc.aspx?sourcedoc=%7B1b71b5a0-587d-4ff9-896b-c03e7af61fa0%7D&action=edit&wdinitialsession=deff8942-c795-1a00-d19b-f33bc909c85f&wdrldsc=3&wdrldc=2&wdrldr=FileOpenUserUnauthorized%2CDeploymentInvalidEditSess"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline"
+                  className="text-accent-dark underline"
                 >
                   fill out the sheet
                 </a>{" "}

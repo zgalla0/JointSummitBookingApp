@@ -1,7 +1,10 @@
 import { Resend } from "resend";
 import type { Booking, BookingGuest } from "@prisma/client";
 import { buildBookingReceiptText } from "./booking-receipt";
-import { formatMonthDay } from "./format";
+import { formatMonthDay, formatShortDate } from "./format";
+import { config } from "./config";
+import { HOTEL_NAME, HOTEL_URL, HOTEL_ADDRESS } from "./hotel-info";
+import { appHomeUrl } from "./magic-link";
 import { RESEND_API_KEY, RESEND_FROM_EMAIL, HOTEL_CONTACT_EMAIL, ADMIN_NOTIFICATION_EMAILS } from "./email-config";
 
 type BookingWithGuests = Booking & { guests?: BookingGuest[] };
@@ -17,6 +20,23 @@ type BookingEmailData = {
 };
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+/** Short "at a glance" summary of the event itself (not this attendee's
+ *  booking) - prepended to the confirmation/edit emails so the key facts
+ *  (dates, hotel, schedule) are visible right away without needing to open
+ *  the app. The year is read from the actual configured date rather than
+ *  hardcoded, unlike the site's own TLDR card. */
+function summitInfoAtAGlanceText(): string {
+  const year = config.happyHourDate.getUTCFullYear();
+  return [
+    `Here's the summit information at a glance, if you need other information check out the main page of the app (${appHomeUrl()}).`,
+    "",
+    `   • Dates: ${formatMonthDay(config.happyHourDate)}–${formatMonthDay(config.allHandsDate)}, ${year}`,
+    `   • Hotel: ${HOTEL_NAME} (${HOTEL_URL}), ${HOTEL_ADDRESS}`,
+    "   • Airport to hotel: About 30-60 minutes by car, depending on traffic",
+    `   • Approximate schedule: Happy Hour (6/7-10pm, ${formatShortDate(config.happyHourDate)}), All Hands (8am-3pm, ${formatShortDate(config.allHandsDate)}), Dinner (6/7-10pm, ${formatShortDate(config.dinnerDate)})`,
+  ].join("\n");
+}
 
 /** Every outbound email goes through here. With no RESEND_API_KEY set (e.g.
  *  local dev without one configured), this falls back to logging exactly
@@ -64,6 +84,8 @@ export async function sendConfirmationEmail(data: BookingEmailData) {
       "Save this link to make any changes later (update your dates, flight info, room, or guests) - no need to fill out the form again:",
       data.magicLink,
       "",
+      summitInfoAtAGlanceText(),
+      "",
       "Here's what you submitted, for your records:",
       "",
       buildBookingReceiptText(data.booking),
@@ -99,7 +121,11 @@ export async function sendEditConfirmationEmail(data: BookingEmailData) {
     text: [
       `Hi ${data.firstName},`,
       "",
-      "Your Q1 Joint All Hands Summit booking has been updated. Here's what's on file now:",
+      "Your Q1 Joint All Hands Summit booking has been updated.",
+      "",
+      summitInfoAtAGlanceText(),
+      "",
+      "Here's what's on file now:",
       "",
       buildBookingReceiptText(data.booking),
       "",

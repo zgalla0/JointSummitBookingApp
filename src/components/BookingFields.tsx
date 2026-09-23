@@ -91,7 +91,7 @@ export default function BookingFields({
       return;
     }
     const ref = miniStep === "events" ? eventsSectionRef : miniStep === "done" ? doneSectionRef : null;
-    ref?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    ref?.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [miniStep]);
 
   const isAttending = mainForm.watch("isAttending");
