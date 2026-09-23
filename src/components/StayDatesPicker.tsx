@@ -305,18 +305,39 @@ export default function StayDatesPicker({
 
       <ul className="list-disc space-y-2 rounded-xl bg-background p-3 pl-8 text-sm text-muted">
         <li>
-          Click your check-in date, then click your check-out date. The default dates are the
-          regular summit dates of 21-23 Jan. For example, clicking Thursday then Saturday means
-          you&apos;re covering 2 nights: Thursday and Friday - Saturday itself is your check-out
-          day, not a paid night.
+          Click your check-in date, then click your check-out date.{" "}
+          <strong className="font-bold text-foreground">
+            The default dates are the regular summit dates of 21-23 Jan.
+          </strong>{" "}
+          If you are only staying these dates, no need to update this section. For example,
+          clicking Thursday then Saturday means you&apos;re covering 2 nights: Thursday and Friday
+          - Saturday itself is your check-out day, not a paid night.
         </li>
         <li>
-          Check &quot;PTO&quot; on any weekday tile below to mark the day as PTO. This just helps us
-          track PTO across the company for coverage purposes.{" "}
-          <strong className="font-bold text-warning">
-            You still need to enter your PTO in Mavenlink separately,{" "}
-            <u>this does not submit it for you</u>.
-          </strong>
+          Check &quot;PTO&quot; on any weekday tile below to mark the day as PTO. This helps us
+          track PTO across the company for coverage purposes.
+          <ul className="mt-1 list-disc space-y-1 pl-5">
+            <li>
+              <strong className="font-bold text-warning">
+                US, Canada, Ireland: You still need to enter your PTO in Mavenlink and get
+                project manager approval separately, <u>this is not in place of that</u>.
+              </strong>
+            </li>
+            <li>
+              <strong className="font-bold text-warning">
+                LATAM: You still need to{" "}
+                <a
+                  href="https://cuestapartnersllc.sharepoint.com/:x:/r/sites/CuestaHQ-NEW01_People_/_layouts/15/Doc.aspx?sourcedoc=%7B1b71b5a0-587d-4ff9-896b-c03e7af61fa0%7D&action=edit&wdinitialsession=deff8942-c795-1a00-d19b-f33bc909c85f&wdrldsc=3&wdrldc=2&wdrldr=FileOpenUserUnauthorized%2CDeploymentInvalidEditSess"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  fill out the sheet
+                </a>{" "}
+                Dani V created tracking PTO.
+              </strong>
+            </li>
+          </ul>
         </li>
       </ul>
 
