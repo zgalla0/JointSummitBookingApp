@@ -151,31 +151,31 @@ function SplitStatTile({
       }`}
     >
       <div
-        className={`text-center font-mono font-semibold ${big ? "py-2 text-lg" : "py-1 text-xs"} ${
+        className={`text-center font-mono font-semibold ${big ? "py-2 text-lg" : "py-2 text-xs"} ${
           isSummitDay ? "bg-accent-soft text-accent-dark" : "bg-background text-muted"
         }`}
       >
         {day}
       </div>
       <div className="flex">
-        <div className={`flex-1 bg-accent-dark text-center text-white ${big ? "py-3" : "py-1.5"}`}>
+        <div className={`flex-1 bg-accent-dark text-center text-white ${big ? "py-3" : "py-3"}`}>
           <span className={`block font-mono leading-none font-bold ${big ? "text-2xl" : "text-sm"}`}>
             {rooms}
           </span>
           {big && <span className="mt-1 block text-[10px] tracking-wide uppercase opacity-80">rooms</span>}
         </div>
-        <div className={`flex-1 bg-accent text-center text-foreground ${big ? "py-3" : "py-1.5"}`}>
+        <div className={`flex-1 bg-accent text-center text-foreground ${big ? "py-3" : "py-3"}`}>
           <span className={`block font-mono leading-none font-bold ${big ? "text-2xl" : "text-sm"}`}>
             {people}
           </span>
           {big && <span className="mt-1 block text-[10px] tracking-wide uppercase opacity-80">people</span>}
         </div>
       </div>
-      <div className={`bg-warning-soft text-center font-bold text-warning ${big ? "py-1.5 text-xs" : "py-0.5 text-[9px]"}`}>
+      <div className={`bg-warning-soft text-center font-bold text-warning ${big ? "py-1.5 text-xs" : "py-1.5 text-[9px]"}`}>
         PTO {ptoTotal}
       </div>
       {ptoBreakdown && (
-        <div className={`text-center leading-tight text-muted ${big ? "py-1.5 text-[11px]" : "py-0.5 text-[7px]"}`}>
+        <div className={`text-center leading-tight text-muted ${big ? "py-1.5 text-[11px]" : "py-1.5 text-[7px]"}`}>
           {ptoBreakdown}
         </div>
       )}

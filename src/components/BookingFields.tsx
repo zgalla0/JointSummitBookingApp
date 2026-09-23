@@ -406,7 +406,10 @@ export default function BookingFields({
           )}
 
           {(!isAttending || miniStep !== "events") && (
-            <Card eyebrow="Comments" title="Anything else you'd like the planning team to know?">
+            <Card
+              eyebrow="Comments"
+              title="Anything else we should know? Note that this gets sent straight to our inbox, so please keep it relevant."
+            >
               <textarea
                 className="field"
                 rows={3}
