@@ -294,13 +294,15 @@ export default function BookingFields({
                 eyebrow="Activity"
                 title="Which activities would you be interested in?"
               >
-                <p className="mb-3 text-sm text-muted">
+                <p className="text-sm text-muted">
                   Select all that apply -{" "}
                   <strong className="font-bold text-foreground">
                     this is just to help us gauge interest, not a final decision
                   </strong>{" "}
-                  on what we&apos;ll do. Driving/walking times shown are approximate, from the
-                  hotel.
+                  on what we&apos;ll do.
+                </p>
+                <p className="mb-3 text-sm text-muted">
+                  Approximate driving/walking times from the hotel are shown
                 </p>
                 <ActivityChecklist
                   selected={activityOptions}
