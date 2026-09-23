@@ -468,10 +468,12 @@ function DayTile({
   onSetCompanyPaid: (paid: boolean) => void;
   onPtoToggle: () => void;
 }) {
-  // Check-out is never a paid night - no toggle, no price, no PTO. Styled as
-  // a solid, high-contrast tile (not a lighter tint like the night states)
-  // so it unmistakably reads as its own thing rather than a plain unselected
-  // tile or a variant of a payment color.
+  // Check-out is never a paid night - no toggle, no price. PTO still
+  // applies, though - it's the traveler's own calendar day, not a hotel
+  // night - so it follows the same weekday/event-day rule (showPto) as
+  // every other tile. Styled as a solid, high-contrast tile (not a lighter
+  // tint like the night states) so it unmistakably reads as its own thing
+  // rather than a plain unselected tile or a variant of a payment color.
   if (isCheckOut) {
     return (
       <button
@@ -492,6 +494,20 @@ function DayTile({
         <span className="mt-1 rounded-full bg-white px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-slate-700 uppercase">
           Check out
         </span>
+        {showPto && (
+          <label
+            className="mt-1 flex items-center gap-1 text-[9px] font-semibold"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={ptoChecked}
+              onChange={onPtoToggle}
+              className="accent-accent-dark h-3 w-3"
+            />
+            PTO
+          </label>
+        )}
       </button>
     );
   }

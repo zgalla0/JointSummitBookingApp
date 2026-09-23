@@ -127,13 +127,27 @@ export default function BookingFields({
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field
-              label="First name for hotel reservation"
+              label={
+                <>
+                  First name{" "}
+                  <span className="rounded bg-warning-soft px-1 font-bold text-warning">
+                    for hotel reservation
+                  </span>
+                </>
+              }
               error={mainForm.formState.errors.reservationFirstName?.message}
             >
               <input className="field" {...mainForm.register("reservationFirstName")} />
             </Field>
             <Field
-              label="Last name for hotel reservation"
+              label={
+                <>
+                  Last name{" "}
+                  <span className="rounded bg-warning-soft px-1 font-bold text-warning">
+                    for hotel reservation
+                  </span>
+                </>
+              }
               error={mainForm.formState.errors.reservationLastName?.message}
             >
               <input className="field" {...mainForm.register("reservationLastName")} />
@@ -486,7 +500,7 @@ export function Field({
   error,
   children,
 }: {
-  label: string;
+  label: ReactNode;
   error?: string;
   children: ReactNode;
 }) {
