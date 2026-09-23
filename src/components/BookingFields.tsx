@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { BookingFormInput } from "@/lib/booking-schema";
 import { formatShortDate } from "@/lib/format";
@@ -76,6 +76,22 @@ export default function BookingFields({
     setMiniStepState(next);
     onGateDoneChange?.(next === "done");
   }
+
+  // Scrolls the newly-revealed section into view after each "Next" click -
+  // otherwise it renders below the fold and reads as if nothing happened
+  // until the attendee manually scrolls down to find it. Skipped on mount
+  // (the ref effect below only reacts to later miniStep changes).
+  const eventsSectionRef = useRef<HTMLElement>(null);
+  const doneSectionRef = useRef<HTMLElement>(null);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const ref = miniStep === "events" ? eventsSectionRef : miniStep === "done" ? doneSectionRef : null;
+    ref?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [miniStep]);
 
   const isAttending = mainForm.watch("isAttending");
 
@@ -248,6 +264,7 @@ export default function BookingFields({
                 eyebrow="Events"
                 title="Which events are you attending?"
                 className={mainForm.formState.errors.attendingHappyHour ? "border-2 border-red-500" : ""}
+                containerRef={eventsSectionRef}
               >
                 <div className="space-y-3">
                   <Checkbox
@@ -276,6 +293,7 @@ export default function BookingFields({
                     eyebrow="Food"
                     title="Dietary restrictions"
                     className={mainForm.formState.errors.dietaryOptions ? "border-2 border-red-500" : ""}
+                    containerRef={doneSectionRef}
                   >
                     <DietaryChecklist
                       selected={dietaryOptions}

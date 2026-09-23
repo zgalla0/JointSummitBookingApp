@@ -116,20 +116,37 @@ export function buildBookingReceiptText(booking: BookingWithGuests): string {
   if (booking.flightArrivalAirline || booking.flightDepartureAirline) {
     lines.push("");
     lines.push("Flights:");
-    if (booking.flightArrivalAirline) {
-      lines.push("   • Arrival:");
-      lines.push(`      • ${booking.flightArrivalAirline}`);
-      if (booking.flightArrivalNumber) lines.push(`      • ${booking.flightArrivalNumber}`);
-      const when = formatFlightDateTime(booking.flightArrival);
-      if (when) lines.push(`      • ${when}`);
+
+    const flightRows = [
+      booking.flightArrivalAirline && {
+        label: "Arrival:",
+        airline: booking.flightArrivalAirline,
+        number: booking.flightArrivalNumber || "",
+        when: formatFlightDateTime(booking.flightArrival),
+      },
+      booking.flightDepartureAirline && {
+        label: "Departure:",
+        airline: booking.flightDepartureAirline,
+        number: booking.flightDepartureNumber || "",
+        when: formatFlightDateTime(booking.flightDeparture),
+      },
+    ].filter((r): r is { label: string; airline: string; number: string; when: string } => Boolean(r));
+
+    // Column widths come from just these 1-2 rows (not a fixed constant),
+    // so "Arrival"/"Departure" and the airline/flight-number columns line
+    // up under each other whatever the actual airline name length is.
+    const labelWidth = Math.max(...flightRows.map((r) => r.label.length));
+    const airlineWidth = Math.max(...flightRows.map((r) => r.airline.length));
+    const numberWidth = Math.max(...flightRows.map((r) => r.number.length));
+    const showNumberColumn = flightRows.some((r) => r.number);
+
+    for (const row of flightRows) {
+      const columns = [row.airline.padEnd(airlineWidth)];
+      if (showNumberColumn) columns.push(row.number.padEnd(numberWidth));
+      if (row.when) columns.push(row.when);
+      lines.push(`   • ${row.label.padEnd(labelWidth)} ${columns.join("    |    ").trimEnd()}`);
     }
-    if (booking.flightDepartureAirline) {
-      lines.push("   • Departure:");
-      lines.push(`      • ${booking.flightDepartureAirline}`);
-      if (booking.flightDepartureNumber) lines.push(`      • ${booking.flightDepartureNumber}`);
-      const when = formatFlightDateTime(booking.flightDeparture);
-      if (when) lines.push(`      • ${when}`);
-    }
+
     if (booking.flightNotes) lines.push(`${bulletLabel("Flight notes:")}${booking.flightNotes}`);
   }
 
