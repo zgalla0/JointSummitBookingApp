@@ -12,6 +12,7 @@ import {
   type IdentityInput,
 } from "@/lib/booking-schema";
 import { formatShortDate, formatMonthDay } from "@/lib/format";
+import { addIsoDays } from "@/lib/stay-tiles-client";
 import { HOTEL_NAME, HOTEL_URL, HOTEL_ADDRESS } from "@/lib/hotel-info";
 import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
 import { SUBMIT_REMINDER, NO_ROOM_WARNING } from "@/lib/copy";
@@ -361,7 +362,15 @@ export default function BookingForm({
           )}
 
           <div className="lg:col-span-2">
-            <FaqSection />
+            <FaqSection
+              dates={{
+                happyHourDate: formatShortDate(formConfig.happyHourDate),
+                // Breakfast on "day three" is the morning after the All
+                // Hands/Dinner day, so the first day with no summit events
+                // at all is two days after that.
+                dayAfterSummitDate: formatShortDate(addIsoDays(formConfig.allHandsDate, 2)),
+              }}
+            />
           </div>
         </div>
       )}

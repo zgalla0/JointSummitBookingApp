@@ -23,24 +23,21 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         blocks: [
           p("You can expense:"),
           ul([
-            "Your flight",
+            {
+              text: "Your flight",
+              sublist: ["Book economy for flights, check with your manager first before upgrading"],
+            },
             "Transportation to/from the airport or airport parking, both from your home and at the summit destination",
             "Any transportation needed during the summit",
             "Food needed while traveling or at the summit",
           ]),
-          p("A few things to keep in mind:"),
+          p("Expenses on you:"),
           ul([
-            {
-              text: "Expenses on you:",
-              sublist: [
-                "Minibar snacks, in-room movies, and spa treatments",
-                "Sightseeing and side trips",
-                "If you bring a partner, friend, or family member, their costs (unless specifically stated otherwise)",
-              ],
-            },
-            "Book economy for flights, check with your manager first before upgrading",
+            "Minibar snacks, in-room movies, and spa treatments",
+            "Sightseeing and side trips",
+            "If you bring a partner, friend, or family member, their costs (unless specifically stated otherwise)",
           ]),
-          p("In Expensify, use the following:"),
+          p("If expensing in the US as an FTE in Expensify, use the following:"),
           ul([
             'Expense category: "Internal Travel - (meals, ground transportation etc)"',
             'Customer/Project: "Internal:2026 Q3 All Hands"',
@@ -95,11 +92,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         blocks: [
           p("The summit runs from Happy Hour on day one through breakfast on day three."),
           ul([
-            {
-              text: "Arrival: Happy Hour is usually around 6 to 7pm on the first day, plan to arrive in time to make it to that.",
-              emphasize: true,
-            },
-            "Departure: There are no events the day after the summit ends, so you're free to leave whenever works for you. Some people head home early that morning, others stay through the weekend to explore the city.",
+            "Arrival: Happy Hour is usually around 6 to 7pm on the first day ({{happyHourDate}}), plan to arrive in time to make it to that.",
+            "Departure: There are no events the day after the summit ends ({{dayAfterSummitDate}}), so you're free to leave whenever works for you. Some people head home early that morning, others stay through the weekend to explore the city.",
           ]),
         ],
       },

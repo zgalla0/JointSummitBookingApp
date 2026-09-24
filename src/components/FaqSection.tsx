@@ -4,17 +4,26 @@ import { useState } from "react";
 import Card from "./ui/Card";
 import { FAQ_CATEGORIES, type FaqBlock, type FaqListItem } from "@/lib/faq-data";
 
-function FaqListItemView({ item }: { item: FaqListItem }) {
+/** Real event dates substituted into FAQ text wherever it uses a
+ *  {{placeholder}} - keeps faq-data.ts's hardcoded copy from drifting out
+ *  of date the way the site's TLDR card year once did. */
+export type FaqDates = { happyHourDate: string; dayAfterSummitDate: string };
+
+function interpolate(text: string, dates: FaqDates): string {
+  return text.replace("{{happyHourDate}}", dates.happyHourDate).replace("{{dayAfterSummitDate}}", dates.dayAfterSummitDate);
+}
+
+function FaqListItemView({ item, dates }: { item: FaqListItem; dates: FaqDates }) {
   const text = typeof item === "string" ? item : item.text;
   const emphasize = typeof item === "object" && "emphasize" in item;
   const sublist = typeof item === "object" && "sublist" in item ? item.sublist : null;
   return (
     <li className={emphasize ? "font-bold text-foreground" : ""}>
-      {text}
+      {interpolate(text, dates)}
       {sublist && (
         <ul className="mt-1 list-disc space-y-1 pl-5">
           {sublist.map((subItem, i) => (
-            <li key={i}>{subItem}</li>
+            <li key={i}>{interpolate(subItem, dates)}</li>
           ))}
         </ul>
       )}
@@ -38,20 +47,28 @@ function renderInlineMarkdown(text: string) {
   );
 }
 
-function FaqBlockView({ block }: { block: FaqBlock }) {
+function FaqBlockView({ block, dates }: { block: FaqBlock; dates: FaqDates }) {
   if (block.type === "p") {
-    return <p className="text-sm text-muted">{renderInlineMarkdown(block.text)}</p>;
+    return <p className="text-sm text-muted">{renderInlineMarkdown(interpolate(block.text, dates))}</p>;
   }
   return (
     <ul className="list-disc space-y-1 pl-5 text-sm text-muted">
       {block.items.map((item, i) => (
-        <FaqListItemView key={i} item={item} />
+        <FaqListItemView key={i} item={item} dates={dates} />
       ))}
     </ul>
   );
 }
 
-function FaqQuestionRow({ question, blocks }: { question: string; blocks: FaqBlock[] }) {
+function FaqQuestionRow({
+  question,
+  blocks,
+  dates,
+}: {
+  question: string;
+  blocks: FaqBlock[];
+  dates: FaqDates;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-hairline py-3 last:border-0">
@@ -70,7 +87,13 @@ function FaqQuestionRow({ question, blocks }: { question: string; blocks: FaqBlo
           <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
-      {open && <div className="mt-3 space-y-3">{blocks.map((block, i) => <FaqBlockView key={i} block={block} />)}</div>}
+      {open && (
+        <div className="mt-3 space-y-3">
+          {blocks.map((block, i) => (
+            <FaqBlockView key={i} block={block} dates={dates} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -79,7 +102,7 @@ function FaqQuestionRow({ question, blocks }: { question: string; blocks: FaqBlo
  *  general pre-trip reference content (expenses, dress code, documents,
  *  etc.), separate from the admin-editable "Event info, Q&A, and timing"
  *  Reference card above it, which covers per-summit logistics instead. */
-export default function FaqSection() {
+export default function FaqSection({ dates }: { dates: FaqDates }) {
   return (
     <div className="space-y-6">
       <div className="animate-in space-y-1">
@@ -92,7 +115,7 @@ export default function FaqSection() {
           <Card key={category.title} title={category.title}>
             <div>
               {category.questions.map((q) => (
-                <FaqQuestionRow key={q.question} question={q.question} blocks={q.blocks} />
+                <FaqQuestionRow key={q.question} question={q.question} blocks={q.blocks} dates={dates} />
               ))}
             </div>
           </Card>
