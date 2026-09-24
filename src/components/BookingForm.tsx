@@ -365,10 +365,7 @@ export default function BookingForm({
             <FaqSection
               dates={{
                 happyHourDate: formatShortDate(formConfig.happyHourDate),
-                // Breakfast on "day three" is the morning after the All
-                // Hands/Dinner day, so the first day with no summit events
-                // at all is two days after that.
-                dayAfterSummitDate: formatShortDate(addIsoDays(formConfig.allHandsDate, 2)),
+                dayAfterSummitDate: formatShortDate(addIsoDays(formConfig.allHandsDate, 1)),
               }}
             />
           </div>
