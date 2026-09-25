@@ -18,9 +18,8 @@ export default async function AdminSuggestionsPage() {
           <p className="eyebrow">Admin</p>
           <h1 className="text-3xl font-bold tracking-tight">Suggestions</h1>
           <p className="text-sm text-muted">
-            Anonymous feedback submitted from the &quot;Ideas for the form?&quot; box on the public
-            page. Not tied to any booking, and nothing is emailed - this is the only place these show
-            up.
+            Anonymous feedback submitted from the feedback box on the public page. Not tied to any
+            booking, and nothing is emailed - this is the only place these show up.
           </p>
         </div>
 

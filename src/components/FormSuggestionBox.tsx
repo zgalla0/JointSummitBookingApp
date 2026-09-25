@@ -34,33 +34,28 @@ export default function FormSuggestionBox() {
     <div className="space-y-6">
       <div className="animate-in space-y-1">
         <p className="eyebrow">Feedback</p>
-        <h2 className="text-2xl font-bold tracking-tight">Ideas for the form?</h2>
+        <h2 className="text-2xl font-bold tracking-tight">
+          Any thoughts or suggestions on how we can improve this app?
+        </h2>
       </div>
       <Card>
         {status === "done" ? (
-          <p className="text-sm font-semibold text-foreground">
-            Thanks, we&apos;ll take a look!
-          </p>
+          <p className="text-sm font-semibold text-foreground">Thanks for submitting your feedback!</p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-3">
-            <p className="text-sm text-muted">
-              If there&apos;s anything you think would be helpful to add to this form, let us know.
-            </p>
             <textarea
               className="field"
-              rows={3}
-              placeholder="Your suggestion"
+              rows={4}
+              placeholder="Your feedback"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
             {status === "error" && (
               <p className="text-sm font-semibold text-warning">Something went wrong, please try again.</p>
             )}
-            <div className="flex justify-end">
-              <Button type="submit" disabled={status === "submitting" || !message.trim()}>
-                Send
-              </Button>
-            </div>
+            <Button type="submit" disabled={status === "submitting" || !message.trim()}>
+              Submit
+            </Button>
           </form>
         )}
       </Card>
