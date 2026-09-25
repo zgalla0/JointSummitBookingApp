@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import Card from "./ui/Card";
 import Button from "./ui/Button";
 
 /** Open-ended feedback on the form itself (not a booking action) - shown
@@ -31,34 +30,32 @@ export default function FormSuggestionBox() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="animate-in space-y-1">
+    <div className="animate-in space-y-4 rounded-2xl bg-accent-soft p-5 shadow-[0_1px_2px_rgba(42,36,32,0.04),0_8px_24px_rgba(42,36,32,0.06)] sm:p-6">
+      <div className="space-y-1">
         <p className="eyebrow">Feedback</p>
-        <h2 className="text-2xl font-bold tracking-tight">
+        <h2 className="text-lg font-semibold tracking-tight">
           Any thoughts or suggestions on how we can improve this app?
         </h2>
       </div>
-      <Card>
-        {status === "done" ? (
-          <p className="text-sm font-semibold text-foreground">Thanks for submitting your feedback!</p>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <textarea
-              className="field"
-              rows={4}
-              placeholder="Your feedback"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-            {status === "error" && (
-              <p className="text-sm font-semibold text-warning">Something went wrong, please try again.</p>
-            )}
-            <Button type="submit" disabled={status === "submitting" || !message.trim()}>
-              Submit
-            </Button>
-          </form>
-        )}
-      </Card>
+      {status === "done" ? (
+        <p className="text-sm font-semibold text-foreground">Thanks for submitting your feedback!</p>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <textarea
+            className="field"
+            rows={4}
+            placeholder="Your feedback"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+          {status === "error" && (
+            <p className="text-sm font-semibold text-warning">Something went wrong, please try again.</p>
+          )}
+          <Button type="submit" disabled={status === "submitting" || !message.trim()}>
+            Submit
+          </Button>
+        </form>
+      )}
     </div>
   );
 }

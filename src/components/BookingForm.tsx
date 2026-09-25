@@ -272,7 +272,7 @@ export default function BookingForm({
                 <li>
                   <strong className="text-foreground">Dates:</strong>{" "}
                   {formatMonthDay(formConfig.happyHourDate)}–
-                  {formatMonthDay(formConfig.allHandsDate)}, {formConfig.happyHourDate.slice(0, 4)}
+                  {formatMonthDay(addIsoDays(formConfig.allHandsDate, 1))}, {formConfig.happyHourDate.slice(0, 4)}
                 </li>
                 <li>
                   <strong className="text-foreground">Fly into:</strong> Mexico
