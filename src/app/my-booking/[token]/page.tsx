@@ -32,7 +32,7 @@ export default async function EditBookingPage({
     <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
       <EditBookingForm
         token={token}
-        defaultValues={bookingToFormInput(booking)}
+        defaultValues={bookingToFormInput(booking, formConfig.optionalCompanyPaidNights)}
         formConfig={formConfig}
         isCancelled={booking.status === "CANCELLED"}
         lockedIn={isLockedIn()}

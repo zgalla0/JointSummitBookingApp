@@ -23,6 +23,7 @@ import FormSuggestionBox from "./FormSuggestionBox";
 import BookingFields, {
   Field,
   needsRoomTypeChoice,
+  hasUndecidedNights,
   type FormConfig,
   type StaticContentItem,
 } from "./BookingFields";
@@ -48,6 +49,7 @@ const emptyDefaults: BookingFormInput = {
   stayStart: "",
   stayEnd: "",
   companyPaidNights: [],
+  selfPayNights: [],
   extraNightsRoomType: "",
   ptoDates: [],
   guests: [],
@@ -121,12 +123,23 @@ export default function BookingForm({
   }
 
   async function onMainSubmit(values: BookingFormInput) {
+    let hasCustomError = false;
+    if (hasUndecidedNights(values, formConfig)) {
+      mainForm.setError("selfPayNights", {
+        type: "manual",
+        message: "Please choose who pays for the optional night(s) above",
+      });
+      hasCustomError = true;
+    }
     if (values.extraNightsRoomType === "" && needsRoomTypeChoice(values)) {
       mainForm.setError("extraNightsRoomType", {
         type: "manual",
         message:
           "Please choose a room type for the night(s) outside the standard rate",
       });
+      hasCustomError = true;
+    }
+    if (hasCustomError) {
       onMainInvalid();
       return;
     }

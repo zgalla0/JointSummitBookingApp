@@ -4,7 +4,10 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { BookingFormInput } from "@/lib/booking-schema";
 import { formatShortDate } from "@/lib/format";
-import { needsRoomTypeChoice as nightsNeedRoomTypeChoice } from "@/lib/stay-tiles-client";
+import {
+  needsRoomTypeChoice as nightsNeedRoomTypeChoice,
+  hasUndecidedOptionalNights as nightsHaveUndecidedOptional,
+} from "@/lib/stay-tiles-client";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
 import { AIRLINE_OPTIONS } from "@/lib/airline-options";
 import Card from "./ui/Card";
@@ -40,6 +43,22 @@ export type StaticContentItem = { key: string; title: string | null; body: strin
  *  request goes out. */
 export function needsRoomTypeChoice(values: BookingFormInput): boolean {
   return values.isAttending && nightsNeedRoomTypeChoice(values.stayStart, values.stayEnd, values.companyPaidNights);
+}
+
+/** True when an optional (arrive-early) night is selected but the attendee
+ *  hasn't chosen who pays for it yet - blocks submission the same way
+ *  needsRoomTypeChoice does, rather than silently treating it as self-pay. */
+export function hasUndecidedNights(values: BookingFormInput, formConfig: FormConfig): boolean {
+  return (
+    values.isAttending &&
+    nightsHaveUndecidedOptional(
+      values.stayStart,
+      values.stayEnd,
+      values.companyPaidNights,
+      values.selfPayNights,
+      formConfig.optionalCompanyPaidNights,
+    )
+  );
 }
 
 /**
@@ -112,6 +131,7 @@ export default function BookingFields({
   const stayStart = mainForm.watch("stayStart");
   const stayEnd = mainForm.watch("stayEnd");
   const companyPaidNights = mainForm.watch("companyPaidNights");
+  const selfPayNights = mainForm.watch("selfPayNights");
   const ptoDates = mainForm.watch("ptoDates");
   const extraNightsRoomType = mainForm.watch("extraNightsRoomType");
   const cuestaEmail = mainForm.watch("cuestaEmail");
@@ -339,7 +359,8 @@ export default function BookingFields({
                     className={
                       mainForm.formState.errors.stayStart ||
                       mainForm.formState.errors.stayEnd ||
-                      mainForm.formState.errors.extraNightsRoomType
+                      mainForm.formState.errors.extraNightsRoomType ||
+                      mainForm.formState.errors.selfPayNights
                         ? "border-2 border-red-500"
                         : ""
                     }
@@ -351,7 +372,7 @@ export default function BookingFields({
                       discountEnd={formConfig.discountEnd}
                       defaultCompanyPaidNights={formConfig.defaultCompanyPaidNights}
                       optionalCompanyPaidNights={formConfig.optionalCompanyPaidNights}
-                      value={{ stayStart, stayEnd, companyPaidNights, ptoDates, extraNightsRoomType }}
+                      value={{ stayStart, stayEnd, companyPaidNights, selfPayNights, ptoDates, extraNightsRoomType }}
                       onChange={(patch) => {
                         for (const [key, val] of Object.entries(patch)) {
                           mainForm.setValue(key as keyof BookingFormInput, val as never, {
@@ -361,11 +382,19 @@ export default function BookingFields({
                         if (patch.extraNightsRoomType) {
                           mainForm.clearErrors("extraNightsRoomType");
                         }
+                        if (patch.companyPaidNights || patch.selfPayNights) {
+                          mainForm.clearErrors("selfPayNights");
+                        }
                       }}
                     />
                     {(mainForm.formState.errors.stayStart || mainForm.formState.errors.stayEnd) && (
                       <p className="mt-2 text-sm font-semibold text-red-600">
                         Please select your stay nights.
+                      </p>
+                    )}
+                    {mainForm.formState.errors.selfPayNights?.message && (
+                      <p className="mt-2 text-sm font-semibold text-red-600">
+                        {mainForm.formState.errors.selfPayNights.message}
                       </p>
                     )}
                     {mainForm.formState.errors.extraNightsRoomType?.message && (

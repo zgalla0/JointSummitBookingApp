@@ -9,7 +9,7 @@ import { bookingFormSchema, type BookingFormInput } from "@/lib/booking-schema";
 import { NoticeBannerFull, NoticeBannerShort } from "./ui/NoticeBanner";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
-import BookingFields, { needsRoomTypeChoice, type FormConfig } from "./BookingFields";
+import BookingFields, { needsRoomTypeChoice, hasUndecidedNights, type FormConfig } from "./BookingFields";
 
 type Step = "edit" | "confirmCancel" | "cancelled" | "saved";
 
@@ -37,11 +37,22 @@ export default function EditBookingForm({
   });
 
   async function onSave(values: BookingFormInput) {
+    let hasCustomError = false;
+    if (hasUndecidedNights(values, formConfig)) {
+      form.setError("selfPayNights", {
+        type: "manual",
+        message: "Please choose who pays for the optional night(s) above",
+      });
+      hasCustomError = true;
+    }
     if (values.extraNightsRoomType === "" && needsRoomTypeChoice(values)) {
       form.setError("extraNightsRoomType", {
         type: "manual",
         message: "Please choose a room type for the night(s) outside the standard rate",
       });
+      hasCustomError = true;
+    }
+    if (hasCustomError) {
       onSaveInvalid();
       return;
     }

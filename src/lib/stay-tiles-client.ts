@@ -39,6 +39,27 @@ export function needsRoomTypeChoice(
   return isoDateRange(stayStart, lastNight).some((night) => !companyPaid.has(night));
 }
 
+/** True when the stay includes an optional (arrive-early) night that's
+ *  neither marked self-pay nor company-paid yet - i.e. the attendee hasn't
+ *  actually made a choice for it. Forces an explicit choice instead of
+ *  silently treating "not company-paid" as "self-pay chosen". */
+export function hasUndecidedOptionalNights(
+  stayStart: string,
+  stayEnd: string,
+  companyPaidNights: string[],
+  selfPayNights: string[],
+  optionalCompanyPaidNights: string[],
+): boolean {
+  if (!stayStart || !stayEnd) return false;
+  const lastNight = addIsoDays(stayEnd, -1);
+  if (lastNight < stayStart) return false;
+  const companyPaid = new Set(companyPaidNights);
+  const selfPaid = new Set(selfPayNights);
+  return isoDateRange(stayStart, lastNight).some(
+    (night) => optionalCompanyPaidNights.includes(night) && !companyPaid.has(night) && !selfPaid.has(night),
+  );
+}
+
 export const WEEKDAY_HEADER_SUN_FIRST = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const MONTH_NAMES = [

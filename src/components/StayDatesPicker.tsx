@@ -40,6 +40,10 @@ export type StayDatesValue = {
   stayStart: string;
   stayEnd: string; // checkout date, i.e. the day after the last selected night
   companyPaidNights: string[];
+  // Optional (arrive-early) nights explicitly confirmed as self-pay -
+  // tracked separately from "absent from companyPaidNights" so that state
+  // can mean "hasn't chosen yet" instead of silently defaulting to self-pay.
+  selfPayNights: string[];
   ptoDates: string[];
   extraNightsRoomType: string; // "" | RoomTypeKey
 };
@@ -91,6 +95,7 @@ export default function StayDatesPicker({
 
   const selectedSet = useMemo(() => new Set(selectedNights), [selectedNights]);
   const companyPaidSet = useMemo(() => new Set(value.companyPaidNights), [value.companyPaidNights]);
+  const selfPaidSet = useMemo(() => new Set(value.selfPayNights), [value.selfPayNights]);
   const ptoSet = useMemo(() => new Set(value.ptoDates), [value.ptoDates]);
 
   const calendarRows = useMemo(
@@ -200,17 +205,21 @@ export default function StayDatesPicker({
         stayStart: "",
         stayEnd: "",
         companyPaidNights: [],
+        selfPayNights: [],
         ptoDates: value.ptoDates.filter((d) => d !== day),
         extraNightsRoomType: "",
       });
 
     // Rule 1, and the "clicked the current check-in / inside the range"
-    // half of rule 4: only a check-in is set after this, no check-out.
+    // half of rule 4: only a check-in is set after this, no check-out. A
+    // toggleable day starts undecided (neither array) - not defaulted to
+    // company-paid - so the attendee has to actively make a choice.
     const startNewSelection = (newDay: string) =>
       onChange({
         stayStart: newDay,
         stayEnd: "",
-        companyPaidNights: isForcedCompanyPaid(newDay) || isCompanyToggleable(newDay) ? [newDay] : [],
+        companyPaidNights: isForcedCompanyPaid(newDay) ? [newDay] : [],
+        selfPayNights: [],
         ptoDates: value.ptoDates.filter((d) => d === newDay),
         extraNightsRoomType: "",
       });
@@ -219,6 +228,7 @@ export default function StayDatesPicker({
     // `newCheckOut` (the clicked day itself, excluded from the nights).
     const setCheckOut = (checkIn: string, newCheckOut: string) => {
       const seededCompanyPaid = new Set(value.companyPaidNights);
+      const seededSelfPay = new Set(value.selfPayNights);
       const filled = isoDateRange(checkIn, addIsoDays(newCheckOut, -1));
       for (const d of filled) {
         if (isForcedCompanyPaid(d)) seededCompanyPaid.add(d);
@@ -227,6 +237,7 @@ export default function StayDatesPicker({
         stayStart: checkIn,
         stayEnd: newCheckOut,
         companyPaidNights: [...seededCompanyPaid].filter((d) => filled.includes(d)),
+        selfPayNights: [...seededSelfPay].filter((d) => filled.includes(d)),
       });
     };
 
@@ -234,6 +245,7 @@ export default function StayDatesPicker({
     // `newCheckIn`.
     const setCheckIn = (newCheckIn: string, checkOut: string) => {
       const seededCompanyPaid = new Set(value.companyPaidNights);
+      const seededSelfPay = new Set(value.selfPayNights);
       const filled = isoDateRange(newCheckIn, addIsoDays(checkOut, -1));
       for (const d of filled) {
         if (isForcedCompanyPaid(d)) seededCompanyPaid.add(d);
@@ -242,6 +254,7 @@ export default function StayDatesPicker({
         stayStart: newCheckIn,
         stayEnd: checkOut,
         companyPaidNights: [...seededCompanyPaid].filter((d) => filled.includes(d)),
+        selfPayNights: [...seededSelfPay].filter((d) => filled.includes(d)),
       });
     };
 
@@ -276,11 +289,20 @@ export default function StayDatesPicker({
     }
   }
 
+  // Explicitly decides a toggleable night one way or the other - always
+  // exclusive, so choosing one side clears any prior choice of the other
+  // (including "undecided", which is just absence from both sets).
   function setCompanyPaid(day: string, paid: boolean) {
-    const next = new Set(value.companyPaidNights);
-    if (paid) next.add(day);
-    else next.delete(day);
-    onChange({ companyPaidNights: [...next] });
+    const nextCompanyPaid = new Set(value.companyPaidNights);
+    const nextSelfPay = new Set(value.selfPayNights);
+    if (paid) {
+      nextCompanyPaid.add(day);
+      nextSelfPay.delete(day);
+    } else {
+      nextSelfPay.add(day);
+      nextCompanyPaid.delete(day);
+    }
+    onChange({ companyPaidNights: [...nextCompanyPaid], selfPayNights: [...nextSelfPay] });
   }
 
   return (
@@ -381,6 +403,7 @@ export default function StayDatesPicker({
                     isCheckIn={day === value.stayStart}
                     isCheckOut={day === value.stayEnd}
                     companyPaid={companyPaidSet.has(day)}
+                    selfPaid={selfPaidSet.has(day)}
                     toggleable={isCompanyToggleable(day)}
                     forcedCompanyPaid={isForcedCompanyPaid(day)}
                     showPto={showsPtoCheckbox(day)}
@@ -466,6 +489,7 @@ function DayTile({
   isCheckIn,
   isCheckOut,
   companyPaid,
+  selfPaid,
   toggleable,
   forcedCompanyPaid,
   showPto,
@@ -481,6 +505,7 @@ function DayTile({
   isCheckIn: boolean;
   isCheckOut: boolean;
   companyPaid: boolean;
+  selfPaid: boolean;
   toggleable: boolean;
   forcedCompanyPaid: boolean;
   showPto: boolean;
@@ -562,47 +587,55 @@ function DayTile({
       )}
 
       {selected && toggleable && (
-        // Spans with role="button", not real <button>s: the whole tile is
-        // already a <button>, and nested <button> elements are invalid HTML
-        // (breaks hydration and click handling in the browser).
-        <span
-          className="mt-1 flex h-6 w-full overflow-hidden rounded-full border border-hairline text-[8px] font-bold normal-case"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <span className="mt-1 flex w-full flex-col items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
+          <span className="text-[7px] font-bold tracking-wide text-muted uppercase">Choose one:</span>
+          {/* Spans with role="button", not real <button>s: the whole tile is
+              already a <button>, and nested <button> elements are invalid
+              HTML (breaks hydration and click handling in the browser). An
+              undecided night (neither self-pay nor company-paid chosen yet)
+              gets a warning ring around the whole control, so it stands out
+              as something that still needs attention - cleared the moment
+              either side is picked. */}
           <span
-            role="button"
-            tabIndex={0}
-            onClick={() => onSetCompanyPaid(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onSetCompanyPaid(false);
-              }
-            }}
-            className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${!companyPaid ? "bg-pay-self text-pay-self-text" : "bg-surface text-muted"}`}
+            className={`flex h-6 w-full overflow-hidden rounded-full text-[8px] font-bold normal-case ${
+              !companyPaid && !selfPaid ? "border-2 border-warning" : "border border-hairline"
+            }`}
           >
-            I Pay
-          </span>
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={() => onSetCompanyPaid(true)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onSetCompanyPaid(true);
-              }
-            }}
-            className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
-          >
-            Paid by Cuesta*
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={() => onSetCompanyPaid(false)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSetCompanyPaid(false);
+                }
+              }}
+              className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${selfPaid ? "bg-pay-self text-pay-self-text" : "bg-surface text-muted"}`}
+            >
+              Self pay
+            </span>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={() => onSetCompanyPaid(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSetCompanyPaid(true);
+                }
+              }}
+              className={`grid flex-1 h-full place-items-center px-1 text-center leading-tight ${companyPaid ? "bg-accent text-white" : "bg-surface text-muted"}`}
+            >
+              Paid by Cuesta*
+            </span>
           </span>
         </span>
       )}
 
       {/* Happy Hour / Summit nights are always company-paid - no toggle,
-          just a fixed label (no lock icon, matching the plain "I PAY" badge
-          below for the days that go the other way: always self-paid). */}
+          just a fixed label (no lock icon, matching the plain "SELF PAY"
+          badge below for the days that go the other way: always self-paid). */}
       {selected && !toggleable && forcedCompanyPaid && (
         <span className="mt-1 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold text-white">
           Paid by Cuesta
@@ -614,7 +647,7 @@ function DayTile({
           the interactive tiles that the individual is paying. */}
       {selected && !toggleable && !forcedCompanyPaid && (
         <span className="mt-1 rounded-full bg-pay-self px-1.5 py-0.5 text-[9px] font-bold text-pay-self-text">
-          I PAY
+          SELF PAY
         </span>
       )}
       {selected && showPto && (

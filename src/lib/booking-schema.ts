@@ -92,6 +92,12 @@ export const bookingFormSchema = z
     stayStart: z.string().trim(),
     stayEnd: z.string().trim(),
     companyPaidNights: z.array(isoDate).max(31),
+    // Optional (arrive-early) nights the attendee has explicitly confirmed
+    // as self-pay - tracked separately from "absent from companyPaidNights"
+    // so that state can mean "hasn't chosen yet" instead of silently
+    // defaulting to self-pay. Not persisted; checked at submit time only
+    // (see hasUndecidedNights in BookingFields.tsx).
+    selfPayNights: z.array(isoDate).max(31),
 
     // "" when the stay never leaves the standard block; required (checked
     // server-side, where the block config lives) whenever it does.
