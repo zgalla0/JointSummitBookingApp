@@ -127,7 +127,6 @@ export default async function AdminBookingDetailPage({
           <Row label="Departure airline" value={booking.flightDepartureAirline} />
           <Row label="Departure flight #" value={booking.flightDepartureNumber} />
           <Row label="Departure" value={booking.flightDeparture?.toISOString()} />
-          <Row label="Notes" value={booking.flightNotes} />
         </Card>
 
         <Card eyebrow="Anything else" title="Note for the planning team">

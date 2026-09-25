@@ -19,6 +19,7 @@ import { SUBMIT_REMINDER, NO_ROOM_WARNING } from "@/lib/copy";
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import FaqSection from "./FaqSection";
+import FormSuggestionBox from "./FormSuggestionBox";
 import BookingFields, {
   Field,
   needsRoomTypeChoice,
@@ -361,13 +362,14 @@ export default function BookingForm({
             </Card>
           )}
 
-          <div className="lg:col-span-2">
+          <div className="space-y-10 lg:col-span-2">
             <FaqSection
               dates={{
                 happyHourDate: formatShortDate(formConfig.happyHourDate),
                 dayAfterSummitDate: formatShortDate(addIsoDays(formConfig.allHandsDate, 1)),
               }}
             />
+            <FormSuggestionBox />
           </div>
         </div>
       )}

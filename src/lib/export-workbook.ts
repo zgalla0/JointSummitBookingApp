@@ -52,7 +52,6 @@ function fullRow(b: BookingWithGuests) {
     flightDepartureAirline: b.flightDepartureAirline ?? "",
     flightDepartureNumber: b.flightDepartureNumber ?? "",
     flightDeparture: b.flightDeparture ? b.flightDeparture.toISOString() : "",
-    flightNotes: b.flightNotes ?? "",
     additionalNotes: b.additionalNotes ?? "",
     flaggedForReview: b.flaggedForReview,
     flagReason: b.flagReason ?? "",

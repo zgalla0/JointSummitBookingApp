@@ -165,8 +165,6 @@ export function buildBookingReceiptText(booking: BookingWithGuests): string {
       if (row.when) columns.push(row.when);
       lines.push(`   • ${row.label.padEnd(labelWidth)} ${columns.join("    |    ").trimEnd()}`);
     }
-
-    if (booking.flightNotes) lines.push(`${bulletLabel("Flight notes:")}${booking.flightNotes}`);
   }
 
   if (booking.additionalNotes) {

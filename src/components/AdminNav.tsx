@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/admin/roster", label: "Roster check" },
   { href: "/admin/hotel-export", label: "Hotel export" },
   { href: "/admin/static-content", label: "Static content" },
+  { href: "/admin/suggestions", label: "Suggestions" },
 ];
 
 export default function AdminNav() {

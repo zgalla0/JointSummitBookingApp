@@ -98,7 +98,6 @@ model Booking {
   flightDepartureAirline String?
   flightDepartureNumber  String?
   flightDeparture        DateTime?
-  flightNotes            String?
 
   // Free-text note for the planning team; auto-emailed to them at submit
   // time when non-empty (src/lib/email.ts sendPlanningTeamNotesEmail).
@@ -201,6 +200,16 @@ model StaticContent {
   title     String?
   body      String? // markdown / plain text
   updatedAt DateTime @updatedAt
+}
+
+// Open-ended feedback on the form itself (not a booking), submitted from
+// the public page's "Ideas for the form?" box. Anonymous by design - no
+// name/email captured and no confirmation email sent, just a list admins
+// can read on the Suggestions page.
+model FormSuggestion {
+  id        String   @id @default(cuid())
+  message   String
+  createdAt DateTime @default(now())
 }
 
 // The single, currently-on-file HR roster used by the Roster check page -
