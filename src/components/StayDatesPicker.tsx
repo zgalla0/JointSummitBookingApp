@@ -339,6 +339,10 @@ export default function StayDatesPicker({
             </li>
           </ul>
         </li>
+        <li>
+          Extra nights range from $105-$145 USD + taxes depending on what you select in the below
+          calendar (click selection outside of summit range and it will pop up)
+        </li>
       </ul>
 
       {selectedNights.length > 0 && (
