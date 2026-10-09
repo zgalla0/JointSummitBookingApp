@@ -145,35 +145,82 @@ export function computeDietaryByEvent(allBookings: BookingWithGuests[]): Dietary
   return result;
 }
 
-export type ActivityInterestStats = {
+type ActivityCountsAndPercents = {
   total: number;
   counts: Record<ActivityOptionKey, number>;
   percents: Record<ActivityOptionKey, number>;
 };
 
+export type ActivityInterestStats = ActivityCountsAndPercents & {
+  byLocation: Record<LocationKey, ActivityCountsAndPercents>;
+  // Free text from everyone who picked "Other", so the planning team can
+  // actually read what was requested, not just see an "OTHER" count.
+  otherResponses: { name: string; text: string }[];
+};
+
+function emptyActivityCounts(): Record<ActivityOptionKey, number> {
+  return Object.fromEntries(ACTIVITY_OPTION_KEYS.map((key) => [key, 0])) as Record<ActivityOptionKey, number>;
+}
+
+function activityPercents(
+  counts: Record<ActivityOptionKey, number>,
+  total: number,
+): Record<ActivityOptionKey, number> {
+  return Object.fromEntries(
+    ACTIVITY_OPTION_KEYS.map((key) => [key, roundPercent(counts[key], total)]),
+  ) as Record<ActivityOptionKey, number>;
+}
+
 /** Attendee-only (no per-guest equivalent, same as activityOptions on the
  *  form itself) - percent of all attending, active bookings that selected
- *  each option, out of `total`. */
+ *  each option, out of `total`, both overall and split by location so the
+ *  two regions' interest can be compared side by side. */
 export function computeActivityInterest(allBookings: BookingWithGuests[]): ActivityInterestStats {
   const active = allBookings.filter((b) => b.status === "ACTIVE" && b.isAttending);
-  const counts = Object.fromEntries(ACTIVITY_OPTION_KEYS.map((key) => [key, 0])) as Record<
-    ActivityOptionKey,
+  const counts = emptyActivityCounts();
+  const locationTotals = Object.fromEntries(LOCATION_KEYS.map((key) => [key, 0])) as Record<
+    LocationKey,
     number
   >;
+  const locationCounts = Object.fromEntries(LOCATION_KEYS.map((key) => [key, emptyActivityCounts()])) as Record<
+    LocationKey,
+    Record<ActivityOptionKey, number>
+  >;
+  const otherResponses: { name: string; text: string }[] = [];
 
   for (const b of active) {
-    for (const key of parseJsonArray(b.activityOptions)) {
+    const loc = (LOCATION_KEYS as readonly string[]).includes(b.location) ? (b.location as LocationKey) : null;
+    if (loc) locationTotals[loc]++;
+
+    const keys = parseJsonArray(b.activityOptions);
+    for (const key of keys) {
       if ((ACTIVITY_OPTION_KEYS as readonly string[]).includes(key)) {
         counts[key as ActivityOptionKey]++;
+        if (loc) locationCounts[loc][key as ActivityOptionKey]++;
       }
+    }
+
+    if (keys.includes("OTHER") && b.activityOther) {
+      otherResponses.push({ name: `${b.firstName} ${b.lastName}`, text: b.activityOther });
     }
   }
 
-  const percents = Object.fromEntries(
-    ACTIVITY_OPTION_KEYS.map((key) => [key, roundPercent(counts[key], active.length)]),
-  ) as Record<ActivityOptionKey, number>;
-
-  return { total: active.length, counts, percents };
+  return {
+    total: active.length,
+    counts,
+    percents: activityPercents(counts, active.length),
+    byLocation: Object.fromEntries(
+      LOCATION_KEYS.map((key) => [
+        key,
+        {
+          total: locationTotals[key],
+          counts: locationCounts[key],
+          percents: activityPercents(locationCounts[key], locationTotals[key]),
+        },
+      ]),
+    ) as Record<LocationKey, ActivityCountsAndPercents>,
+    otherResponses,
+  };
 }
 
 function roundPercent(numerator: number, denominator: number): number {

@@ -10,7 +10,7 @@ import {
   type PtoBucketStats,
 } from "@/lib/admin-stats";
 import { DIETARY_OPTIONS, type DietaryOptionKey } from "@/lib/dietary-options";
-import { ACTIVITY_OPTIONS } from "@/lib/activity-options";
+import { ACTIVITY_OPTIONS, type ActivityOptionKey } from "@/lib/activity-options";
 import { ROOM_TYPES } from "@/lib/room-types";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
 import { formatMonthDay } from "@/lib/format";
@@ -82,6 +82,45 @@ function DietaryEventSection({
       <div className="grid grid-cols-2 gap-4 border-t border-hairline px-4 py-4 sm:grid-cols-3">
         {DIETARY_OPTIONS.map((option) => (
           <Stat key={option.key} label={option.label} value={counts[option.key]} />
+        ))}
+      </div>
+    </details>
+  );
+}
+
+/** Same collapsed-by-default shape as DietaryEventSection, but one section
+ *  per location rather than per event - lets US/Canada/Ireland and LATAM
+ *  interest be compared without the overall numbers (shown above, outside
+ *  this) hiding a split where the two regions actually disagree. Percents
+ *  are of that location's own attending count, not the combined total. */
+function ActivityLocationSection({
+  label,
+  percents,
+  counts,
+  total,
+}: {
+  label: string;
+  percents: Record<ActivityOptionKey, number>;
+  counts: Record<ActivityOptionKey, number>;
+  total: number;
+}) {
+  return (
+    <details className="group rounded-xl border border-hairline">
+      <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-foreground [&::-webkit-details-marker]:hidden">
+        <span>{label}</span>
+        <span className="flex items-center gap-2 text-xs font-medium text-muted">
+          {total} attending
+          <span className="transition-transform group-open:rotate-180">▾</span>
+        </span>
+      </summary>
+      <div className="grid grid-cols-2 gap-4 border-t border-hairline px-4 py-4 sm:grid-cols-3">
+        {ACTIVITY_OPTIONS.map((option) => (
+          <PercentStat
+            key={option.key}
+            label={option.label}
+            percent={percents[option.key]}
+            count={counts[option.key]}
+          />
         ))}
       </div>
     </details>
@@ -197,6 +236,35 @@ export default async function AdminDashboardPage() {
                 />
               ))}
             </div>
+
+            <div className="space-y-2 border-t border-hairline pt-3">
+              <p className="text-xs font-semibold tracking-wide text-muted uppercase">By location</p>
+              {LOCATION_OPTIONS.map((loc) => (
+                <ActivityLocationSection
+                  key={loc.key}
+                  label={loc.label}
+                  percents={activityInterest.byLocation[loc.key].percents}
+                  counts={activityInterest.byLocation[loc.key].counts}
+                  total={activityInterest.byLocation[loc.key].total}
+                />
+              ))}
+            </div>
+
+            {activityInterest.otherResponses.length > 0 && (
+              <div className="space-y-2 border-t border-hairline pt-3">
+                <p className="text-xs font-semibold tracking-wide text-muted uppercase">
+                  &quot;Other&quot; responses
+                </p>
+                <div className="divide-y divide-hairline rounded-xl border border-hairline">
+                  {activityInterest.otherResponses.map((r, i) => (
+                    <div key={i} className="px-4 py-3">
+                      <p className="text-xs font-semibold text-muted">{r.name}</p>
+                      <p className="text-sm text-foreground">{r.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 
