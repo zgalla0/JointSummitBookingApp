@@ -6,9 +6,11 @@ import {
   computePtoCoverage,
   computeFlightDetailsCoverage,
   computeDietaryByEvent,
+  computeActivityInterest,
   type PtoBucketStats,
 } from "@/lib/admin-stats";
 import { DIETARY_OPTIONS, type DietaryOptionKey } from "@/lib/dietary-options";
+import { ACTIVITY_OPTIONS } from "@/lib/activity-options";
 import { ROOM_TYPES } from "@/lib/room-types";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
 import { formatMonthDay } from "@/lib/format";
@@ -22,6 +24,22 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div>
       <p className="text-2xl font-bold tracking-tight">{value}</p>
+      <p className="text-sm text-muted">{label}</p>
+    </div>
+  );
+}
+
+/** Like Stat, but leads with the percentage of the whole (the number that
+ *  actually answers "how much interest is there") and tucks the raw count
+ *  alongside it in smaller text - rather than a bare count, which doesn't
+ *  say anything on its own without knowing how many people responded at
+ *  all. */
+function PercentStat({ label, percent, count }: { label: string; percent: number; count: number }) {
+  return (
+    <div>
+      <p className="text-2xl font-bold tracking-tight">
+        {percent}% <span className="text-sm font-semibold text-muted">({count})</span>
+      </p>
       <p className="text-sm text-muted">{label}</p>
     </div>
   );
@@ -90,6 +108,7 @@ export default async function AdminDashboardPage() {
   const pto = computePtoCoverage(bookings);
   const flightCoverage = computeFlightDetailsCoverage(bookings);
   const dietaryByEvent = computeDietaryByEvent(bookings);
+  const activityInterest = computeActivityInterest(bookings);
   const pivotLabel = formatMonthDay(pto.pivotIso);
 
   return (
@@ -159,6 +178,25 @@ export default async function AdminDashboardPage() {
             <DietaryEventSection label="Happy Hour" counts={dietaryByEvent.happyHour} />
             <DietaryEventSection label="All Hands" counts={dietaryByEvent.allHands} />
             <DietaryEventSection label="Dinner" counts={dietaryByEvent.dinner} />
+          </div>
+        </Card>
+
+        <Card eyebrow="Interest" title="Activity interest">
+          <div className="space-y-3">
+            <p className="text-sm text-muted">
+              Share of attending bookings ({activityInterest.total}) that selected each option - a
+              poll to gauge interest, not a final decision on what we&apos;ll do.
+            </p>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {ACTIVITY_OPTIONS.map((option) => (
+                <PercentStat
+                  key={option.key}
+                  label={option.label}
+                  percent={activityInterest.percents[option.key]}
+                  count={activityInterest.counts[option.key]}
+                />
+              ))}
+            </div>
           </div>
         </Card>
 

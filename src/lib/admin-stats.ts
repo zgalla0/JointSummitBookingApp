@@ -3,6 +3,7 @@ import { isWithinDiscountWindow, ptoBeforeAfterPivot } from "./config";
 import { isoDateRange, addIsoDays } from "./stay-tiles-client";
 import { toISODate } from "./format";
 import { DIETARY_OPTION_KEYS, type DietaryOptionKey } from "./dietary-options";
+import { ACTIVITY_OPTION_KEYS, type ActivityOptionKey } from "./activity-options";
 import { ROOM_TYPE_KEYS, type RoomTypeKey } from "./room-types";
 import { LOCATION_KEYS, type LocationKey } from "./location-options";
 
@@ -142,6 +143,37 @@ export function computeDietaryByEvent(allBookings: BookingWithGuests[]): Dietary
   }
 
   return result;
+}
+
+export type ActivityInterestStats = {
+  total: number;
+  counts: Record<ActivityOptionKey, number>;
+  percents: Record<ActivityOptionKey, number>;
+};
+
+/** Attendee-only (no per-guest equivalent, same as activityOptions on the
+ *  form itself) - percent of all attending, active bookings that selected
+ *  each option, out of `total`. */
+export function computeActivityInterest(allBookings: BookingWithGuests[]): ActivityInterestStats {
+  const active = allBookings.filter((b) => b.status === "ACTIVE" && b.isAttending);
+  const counts = Object.fromEntries(ACTIVITY_OPTION_KEYS.map((key) => [key, 0])) as Record<
+    ActivityOptionKey,
+    number
+  >;
+
+  for (const b of active) {
+    for (const key of parseJsonArray(b.activityOptions)) {
+      if ((ACTIVITY_OPTION_KEYS as readonly string[]).includes(key)) {
+        counts[key as ActivityOptionKey]++;
+      }
+    }
+  }
+
+  const percents = Object.fromEntries(
+    ACTIVITY_OPTION_KEYS.map((key) => [key, roundPercent(counts[key], active.length)]),
+  ) as Record<ActivityOptionKey, number>;
+
+  return { total: active.length, counts, percents };
 }
 
 function roundPercent(numerator: number, denominator: number): number {
