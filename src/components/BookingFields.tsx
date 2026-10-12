@@ -488,6 +488,17 @@ export default function BookingFields({
               eyebrow="Comments"
               title="Anything else we should know? Note that this gets sent straight to our inbox, so please keep it relevant."
             >
+              <p className="mb-3 text-xs text-muted">
+                The dates and room details you select in this form are your booking. Whatever you
+                choose on the calendar is what we send to the hotel, so{" "}
+                <strong className="font-bold text-foreground italic underline">
+                  there&apos;s no need to message us to confirm early arrivals, extra nights, or
+                  added guests
+                </strong>
+                . If you can select it, it&apos;s booked. Please only use this box for important
+                questions or details we can&apos;t capture elsewhere in the form, like
+                accessibility needs or a specific issue with your reservation.
+              </p>
               <textarea
                 className="field"
                 rows={3}

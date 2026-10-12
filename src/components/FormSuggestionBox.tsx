@@ -36,6 +36,10 @@ export default function FormSuggestionBox() {
         <h2 className="text-lg font-semibold tracking-tight">
           Any thoughts or suggestions on how we can improve this app?
         </h2>
+        <p className="text-xs text-muted">
+          This is anonymous and should only be used for suggestions on the app itself. Any other
+          booking information or questions should go directly in the notes on your booking instead.
+        </p>
       </div>
       {status === "done" ? (
         <p className="text-sm font-semibold text-foreground">Thanks for submitting your feedback!</p>
