@@ -6,6 +6,7 @@ import { magicLinkUrl } from "@/lib/magic-link";
 import { LOCATION_OPTIONS } from "@/lib/location-options";
 import AdminNav from "@/components/AdminNav";
 import AdminBookingActions from "@/components/AdminBookingActions";
+import AdminBookingOverrides from "@/components/AdminBookingOverrides";
 import Card from "@/components/ui/Card";
 
 export const dynamic = "force-dynamic";
@@ -92,6 +93,19 @@ export default async function AdminBookingDetailPage({
           <Row label="Company-paid nights" value={nights.filter((n) => companyPaid.has(n)).join(", ") || "None"} />
           <Row label="Extra-nights room type" value={booking.extraNightsRoomType} />
           <Row label="PTO dates" value={parseJsonArray(booking.ptoDates).join(", ")} />
+        </Card>
+
+        <Card eyebrow="Admin only" title="Overrides">
+          <p className="mb-4 text-sm text-muted">
+            Changes here fall outside the booking form&apos;s normal rules (e.g. which nights are
+            eligible to be company-paid) and aren&apos;t visible to the attendee.
+          </p>
+          <AdminBookingOverrides
+            bookingId={booking.id}
+            nights={nights}
+            companyPaidNights={nights.filter((n) => companyPaid.has(n))}
+            hotelNote={booking.hotelNote ?? ""}
+          />
         </Card>
 
         <Card eyebrow="Companion" title="Additional guests">

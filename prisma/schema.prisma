@@ -110,6 +110,13 @@ model Booking {
   flaggedForReview Boolean       @default(false)
   flagReason       String? // free-text note on why this record needs admin attention
 
+  // Admin-only free text that rides along on the Hotel Export (e.g. "early
+  // check-in the morning of, please hold the room from the prior night") -
+  // distinct from additionalNotes (goes to the planning team) and flagReason
+  // (admin-only, never leaves the app). Set from the admin booking detail
+  // page; attendees never see or edit this themselves.
+  hotelNote String?
+
   // Set once an admin confirms the hotel has actually processed this
   // cancellation ("Mark as cleared" on the Hotel Export page). Until then, a
   // cancelled booking keeps showing up - highlighted red - on every Hotel
@@ -172,6 +179,7 @@ model HotelExportSnapshot {
   totalOccupants       Int
   additionalGuestNames String
   contactEmail         String
+  hotelNote            String
 
   updatedAt DateTime @updatedAt
 }

@@ -46,6 +46,7 @@ const PREVIEW_COLUMNS: { key: keyof HotelExportPreviewRow["data"]; label: string
   { key: "totalOccupants", label: "Occupants" },
   { key: "additionalGuestNames", label: "Other occupants" },
   { key: "contactEmail", label: "Email" },
+  { key: "hotelNote", label: "Note" },
 ];
 
 function downloadBase64File(base64: string, filename: string) {

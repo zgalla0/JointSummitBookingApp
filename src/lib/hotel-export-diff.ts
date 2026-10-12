@@ -50,6 +50,7 @@ export type HotelExportFields = {
   totalOccupants: number;
   additionalGuestNames: string;
   contactEmail: string;
+  hotelNote: string;
 };
 
 export function computeHotelExportFields(b: BookingWithGuests): HotelExportFields {
@@ -71,6 +72,7 @@ export function computeHotelExportFields(b: BookingWithGuests): HotelExportField
     totalOccupants: 1 + b.guests.length,
     additionalGuestNames: b.guests.map((g) => `${g.firstName} ${g.lastName}`).join(", "),
     contactEmail: b.hotelEmail,
+    hotelNote: b.hotelNote ?? "",
   };
 }
 
@@ -86,6 +88,7 @@ const FIELD_LABELS: Record<keyof HotelExportFields, string> = {
   totalOccupants: "Occupants",
   additionalGuestNames: "Other occupants",
   contactEmail: "Contact email",
+  hotelNote: "Note for hotel",
 };
 
 function displayValue(value: string | number): string {
