@@ -201,6 +201,21 @@ model HotelExportLog {
   draftEmail String?
 }
 
+// Audit trail for every admin-made change to a booking - both the
+// full-booking edit form and the Overrides card write here, so there's a
+// record of who changed what and when any time an admin (rather than the
+// attendee themselves) touches a booking. `changes` is a human-readable,
+// one-line-per-field summary (see describeBookingChanges), not raw JSON.
+model BookingEditLog {
+  id        String   @id @default(cuid())
+  bookingId String
+  editedBy  String
+  changes   String
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+}
+
 // Simple key/value store for admin-editable static content (event info,
 // Q&A, links) shown on the public form page. Populated/edited in Stage 3.
 model StaticContent {

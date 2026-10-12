@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatShortDate } from "@/lib/format";
+import { HOTEL_EXPORT_PULLER_OPTIONS } from "@/lib/hotel-export-log-options";
 import Button from "./ui/Button";
 import Checkbox from "./ui/Checkbox";
 
@@ -27,6 +28,7 @@ export default function AdminBookingOverrides({
   const router = useRouter();
   const [selected, setSelected] = useState(new Set(companyPaidNights));
   const [note, setNote] = useState(hotelNote);
+  const [editedBy, setEditedBy] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -40,13 +42,17 @@ export default function AdminBookingOverrides({
   }
 
   async function save() {
+    if (!editedBy) {
+      setMessage("Please select who is making this edit.");
+      return;
+    }
     setSaving(true);
     setMessage(null);
     try {
       const res = await fetch(`/api/admin/bookings/${bookingId}/override`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyPaidNights: [...selected], hotelNote: note }),
+        body: JSON.stringify({ companyPaidNights: [...selected], hotelNote: note, editedBy }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.formErrors?.[0] ?? "Something went wrong.");
@@ -92,6 +98,25 @@ export default function AdminBookingOverrides({
           onChange={(e) => setNote(e.target.value)}
         />
         <p className="mt-1 text-xs text-muted">Shown on the Hotel Export - the hotel will see this.</p>
+      </div>
+
+      <div>
+        <label className="field-label mb-2 block" htmlFor="override-edited-by">
+          Who is making this edit?
+        </label>
+        <select
+          id="override-edited-by"
+          className="field max-w-xs"
+          value={editedBy}
+          onChange={(e) => setEditedBy(e.target.value)}
+        >
+          <option value="">Select a name</option>
+          {HOTEL_EXPORT_PULLER_OPTIONS.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex items-center gap-3">

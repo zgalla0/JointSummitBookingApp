@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { findBookingByIdOrNotFound } from "@/lib/require-booking";
 import { bookingNights, parseJsonArray } from "@/lib/admin-stats";
+import { describeBookingChanges } from "@/lib/booking-edit-log";
 
 /** Admin-only overrides that sit outside the normal booking-form rules -
  *  e.g. an extra night Cuesta agreed to cover that isn't one of the two
@@ -17,6 +18,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { booking } = result;
 
   const body = await req.json().catch(() => ({}));
+
+  const editedBy = typeof body?.editedBy === "string" ? body.editedBy.trim() : "";
+  if (!editedBy) {
+    return NextResponse.json(
+      { error: { formErrors: ["Please select who is making this edit."] } },
+      { status: 400 },
+    );
+  }
+
   const data: { companyPaidNights?: string; hotelNote?: string | null } = {};
 
   if (Array.isArray(body?.companyPaidNights)) {
@@ -34,7 +44,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     data.hotelNote = body.hotelNote.trim() || null;
   }
 
-  const updated = await prisma.booking.update({ where: { id }, data });
+  const updated = await prisma.$transaction(async (tx) => {
+    const result = await tx.booking.update({ where: { id }, data });
+    const changes = describeBookingChanges(booking, result);
+    if (changes.length > 0) {
+      await tx.bookingEditLog.create({
+        data: { bookingId: booking.id, editedBy, changes: changes.join("\n") },
+      });
+    }
+    return result;
+  });
 
   return NextResponse.json({
     id: updated.id,
