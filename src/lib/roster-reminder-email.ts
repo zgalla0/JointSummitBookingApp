@@ -1,13 +1,20 @@
-// Pure functions only (no server-only imports) - this is shared between the
-// admin's editable preview (client component) and the actual send (server
-// route/email.ts), so what an admin previews and edits is exactly what
-// goes out, with {{first_name}} substituted per recipient at send time.
+// Pure functions only (no server-only imports, e.g. magic-link.ts's use of
+// "crypto") - this is shared between the admin's editable preview (client
+// component) and the actual send (server route/email.ts), so what an admin
+// previews and edits is exactly what goes out, with {{first_name}}
+// substituted per recipient at send time.
+
+function appUrl(): string {
+  return process.env.NEXT_PUBLIC_BASE_URL ?? "https://joint-summit-booking-app.vercel.app";
+}
 
 export function defaultRosterReminderTemplate(): string {
   return [
     "Hi {{first_name}},",
     "",
     "Just a friendly reminder, we don't have a response from you yet for the Q1 Joint All Hands Summit Attendance and Hotel Booking form. Whether you're planning to attend or not, we'd appreciate you filling it out so we can plan accordingly.",
+    "",
+    `You can fill it out here: ${appUrl()}`,
     "",
     "If you already submitted this and think you're seeing this by mistake, double check that the email you used on the form matches your Cuesta email in Rippling exactly, we're comparing against that to confirm submissions.",
     "",
