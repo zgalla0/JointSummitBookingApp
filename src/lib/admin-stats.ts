@@ -251,10 +251,14 @@ export function computeFlightDetailsCoverage(allBookings: BookingWithGuests[]): 
   >;
 
   for (const b of active) {
-    const hasDetails = Boolean(
-      b.flightArrivalAirline || b.flightArrivalNumber || b.flightDepartureAirline || b.flightDepartureNumber,
-    );
-    if (hasDetails) {
+    // "Have" means both legs are actually filled in - someone who's only
+    // entered one leg still needs to finish the other, so they count as
+    // missing here the same as someone who hasn't started at all (see
+    // computeFlightStatusList for the finer-grained complete/partial/none
+    // breakdown the admin Flights page shows).
+    const arrivalFilled = Boolean(b.flightArrivalAirline || b.flightArrivalNumber);
+    const departureFilled = Boolean(b.flightDepartureAirline || b.flightDepartureNumber);
+    if (arrivalFilled && departureFilled) {
       have++;
     } else {
       missing++;
@@ -276,6 +280,37 @@ export function computeFlightDetailsCoverage(allBookings: BookingWithGuests[]): 
       ]),
     ) as Record<LocationKey, { missing: number; missingShare: number }>,
   };
+}
+
+export type FlightStatus = "complete" | "partial" | "none";
+
+export type FlightStatusRow = {
+  bookingId: string;
+  name: string;
+  email: string;
+  status: FlightStatus;
+};
+
+/** Per-booking flight-info status for the admin Flights page's have/haven't
+ *  table - "partial" (started one leg, not the other - nudge to finish
+ *  adding it) is kept distinct from "none" (hasn't booked at all - nudge to
+ *  actually book), since those need different follow-up. Sorted by name. */
+export function computeFlightStatusList(allBookings: Booking[]): FlightStatusRow[] {
+  const active = allBookings.filter((b) => b.status === "ACTIVE" && b.isAttending);
+  return active
+    .map((b) => {
+      const arrivalFilled = Boolean(b.flightArrivalAirline || b.flightArrivalNumber);
+      const departureFilled = Boolean(b.flightDepartureAirline || b.flightDepartureNumber);
+      const status: FlightStatus =
+        arrivalFilled && departureFilled ? "complete" : arrivalFilled || departureFilled ? "partial" : "none";
+      return {
+        bookingId: b.id,
+        name: `${b.firstName} ${b.lastName}`,
+        email: b.detailsEmail,
+        status,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function emptyPtoBucket(): PtoBucketStats {

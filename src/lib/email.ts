@@ -219,22 +219,17 @@ export async function sendAdminCancellationNotice(data: AdminCancellationNotice)
   });
 }
 
-// Admin-triggered, not sent automatically: a reminder to attendees who
-// haven't filled in flight details yet, so carpool groups can be finalized
-// closer to the event.
-export async function sendFlightDetailsReminderEmail(data: Omit<BookingEmailData, "booking">) {
+// Admin-triggered (bulk, from the Flights page), not sent automatically: a
+// reminder to attendees who haven't finished entering flight details, so
+// carpool groups can be finalized closer to the event. `body` is already
+// the per-recipient rendered text (see flight-reminder-email.ts) - the
+// admin previews and can edit it before any of these go out, same pattern
+// as sendFormReminderEmail.
+export async function sendFlightDetailsReminderEmail(data: { to: string; body: string }) {
   await sendEmail({
     to: data.to,
     subject: "Add your flight details for the Q1 Summit",
-    text: [
-      `Hi ${data.firstName},`,
-      "",
-      "We don't have your flight details yet for the Q1 Joint All Hands Summit. Add them here so we can help coordinate airport pickups and carpools:",
-      data.magicLink,
-      "",
-      "Thanks,",
-      "Q1 Summit Planning Team",
-    ].join("\n"),
+    text: data.body,
   });
 }
 

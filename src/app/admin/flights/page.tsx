@@ -1,15 +1,32 @@
 import { prisma } from "@/lib/prisma";
 import { computeFlightGroups, type FlightGroup } from "@/lib/flight-groups";
+import { computeFlightStatusList, type FlightStatus } from "@/lib/admin-stats";
 import { terminalLabel } from "@/lib/airport-terminals";
 import { formatMonthDay } from "@/lib/format";
 import AdminNav from "@/components/AdminNav";
+import FlightReminderButton from "@/components/FlightReminderButton";
 import Card from "@/components/ui/Card";
 
 export const dynamic = "force-dynamic";
 
+const STATUS_LABEL: Record<FlightStatus, string> = {
+  complete: "Complete",
+  partial: "Partial",
+  none: "Not booked yet",
+};
+
+const STATUS_CLASS: Record<FlightStatus, string> = {
+  complete: "bg-accent-soft text-accent-dark",
+  partial: "bg-warning-soft text-warning",
+  none: "bg-red-50 text-red-700",
+};
+
 export default async function AdminFlightsPage() {
   const bookings = await prisma.booking.findMany();
   const { arrivals, departures } = computeFlightGroups(bookings);
+  const statusList = computeFlightStatusList(bookings);
+  const incomplete = statusList.filter((row) => row.status !== "complete");
+  const complete = statusList.filter((row) => row.status === "complete");
 
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-10">
@@ -27,6 +44,75 @@ export default async function AdminFlightsPage() {
             Export (.xlsx)
           </a>
         </div>
+
+        <Card
+          eyebrow="Status"
+          title={`Missing or incomplete flight details (${incomplete.length})`}
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-muted">
+              &quot;Partial&quot; means they&apos;ve started entering one leg but not the other -
+              nudge them to finish. &quot;Not booked yet&quot; means nothing&apos;s on file at all -
+              nudge them to actually book, not just fill in the form.
+            </p>
+            {incomplete.length === 0 ? (
+              <p className="text-sm text-muted">Everyone attending has complete flight details.</p>
+            ) : (
+              <div className="overflow-x-auto rounded-xl border border-hairline">
+                <table className="w-full min-w-[500px] text-sm">
+                  <thead>
+                    <tr className="border-b border-hairline bg-background text-left text-xs text-muted uppercase">
+                      <th className="px-3 py-2 font-semibold">Name</th>
+                      <th className="px-3 py-2 font-semibold">Email</th>
+                      <th className="px-3 py-2 font-semibold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {incomplete.map((row) => (
+                      <tr key={row.bookingId} className="border-b border-hairline last:border-0">
+                        <td className="px-3 py-2 font-medium">{row.name}</td>
+                        <td className="px-3 py-2">{row.email}</td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_CLASS[row.status]}`}
+                          >
+                            {STATUS_LABEL[row.status]}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <FlightReminderButton missingCount={incomplete.length} />
+          </div>
+        </Card>
+
+        <Card eyebrow="Status" title={`Have complete flight details (${complete.length})`}>
+          {complete.length === 0 ? (
+            <p className="text-sm text-muted">Nobody attending has complete flight details yet.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-hairline">
+              <table className="w-full min-w-[400px] text-sm">
+                <thead>
+                  <tr className="border-b border-hairline bg-background text-left text-xs text-muted uppercase">
+                    <th className="px-3 py-2 font-semibold">Name</th>
+                    <th className="px-3 py-2 font-semibold">Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {complete.map((row) => (
+                    <tr key={row.bookingId} className="border-b border-hairline last:border-0">
+                      <td className="px-3 py-2 font-medium">{row.name}</td>
+                      <td className="px-3 py-2">{row.email}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
 
         <Card eyebrow="Legend" title="How these are grouped" className="text-sm text-muted">
           <p>

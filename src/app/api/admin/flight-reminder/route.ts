@@ -1,30 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { magicLinkUrl } from "@/lib/magic-link";
 import { sendFlightDetailsReminderEmail } from "@/lib/email";
+import { computeFlightStatusList } from "@/lib/admin-stats";
+import { defaultFlightReminderTemplate, renderFlightReminder } from "@/lib/flight-reminder-email";
 
-// Admin-triggered reminder to active attendees who haven't entered flight
-// details yet, so carpool groups can be finalized closer to the event.
-export async function POST() {
-  const missing = await prisma.booking.findMany({
-    where: {
-      status: "ACTIVE",
-      AND: [
-        { OR: [{ flightArrivalAirline: null }, { flightArrivalAirline: "" }] },
-        { OR: [{ flightArrivalNumber: null }, { flightArrivalNumber: "" }] },
-        { OR: [{ flightDepartureAirline: null }, { flightDepartureAirline: "" }] },
-        { OR: [{ flightDepartureNumber: null }, { flightDepartureNumber: "" }] },
-      ],
-    },
-  });
+// Admin-triggered reminder to active, attending bookings that aren't
+// "complete" (either leg still missing) - recomputed here from the database
+// rather than trusting a client-supplied list, so this always matches
+// what's actually on file. The admin can edit the template before sending.
+export async function POST(request: NextRequest) {
+  const body = await request.json().catch(() => ({}));
+  const rawTemplate = (body as { template?: unknown })?.template;
+  const template =
+    typeof rawTemplate === "string" && rawTemplate.trim() ? rawTemplate : defaultFlightReminderTemplate();
 
-  for (const booking of missing) {
+  const bookings = await prisma.booking.findMany();
+  const incompleteIds = new Set(
+    computeFlightStatusList(bookings)
+      .filter((row) => row.status !== "complete")
+      .map((row) => row.bookingId),
+  );
+  const recipients = bookings.filter((b) => incompleteIds.has(b.id));
+
+  for (const booking of recipients) {
     await sendFlightDetailsReminderEmail({
       to: booking.detailsEmail,
-      firstName: booking.firstName,
-      magicLink: magicLinkUrl(booking.magicLinkToken),
+      body: renderFlightReminder(template, booking.firstName, magicLinkUrl(booking.magicLinkToken)),
     });
   }
 
-  return NextResponse.json({ sent: missing.length });
+  return NextResponse.json({ sent: recipients.length });
 }
